@@ -6,32 +6,77 @@
 
 Ecos não empurram caixotes nem pegam gemas. Mas eles **têm peso**: seguram placas de pressão e mantêm portas abertas. Quase toda fase só é resolvida quando você deixa de tentar ser rápido e começa a montar uma equipe de você mesmo.
 
+**Jogue:** https://dpdhorodecki.github.io/Loopbound/
+
 ## Status
 
 | Etapa | Estado |
 |---|---|
 | Design (GDD) | ✅ concluído |
-| Protótipo jogável | ⏳ próximo |
-| Conteúdo (10 fases) | ⏳ |
-| Deploy no GitHub Pages | ⏳ |
+| Protótipo jogável (5 fases) | ✅ jogável no navegador |
+| PWA instalável + offline | ✅ |
+| Deploy no GitHub Pages | ✅ |
 
+## O que tem no protótipo
 
-## Como vai funcionar
+- **5 fases** com dificuldade crescente, do primeiro passo ao uso de dois ecos ao mesmo tempo.
+- **Ciclo** de 12–24 passos, encerrado com `TAB`, morte ou esgotamento do orçamento — e transformado em eco.
+- **Ecos** (até 2 por fase) que repetem a trilha gravada e seguram placas.
+- **Elementos:** caixotes, placas e portões coloridos, chave e porta, gemas, vazio.
+- **Fluxo completo:** título com seleção de fase, HUD, pausa, tela de vitória com recorde, save em `localStorage`.
+- **Mobile:** toque para mover (swipe) e botões de ciclo/pausa na tela.
+- **Áudio** 100% sintetizado em WebAudio (tecla `M` para mudo).
+- **PWA:** instalável, funciona offline, ícones e service worker gerados no build.
 
-- **Gênero:** puzzle em grade, visão top-down 3/4, câmera fixa.
-- **Ciclo:** orçamento de 8–24 passos. Termina com `TAB`, morte ou esgotamento — e vira um eco.
-- **Ecos:** até 3 por fase, reproduzindo a trilha gravada do ciclo anterior.
-- **Elementos:** caixotes, blocos pesados, placas e portas coloridas, âncoras persistentes, chaves, gemas e vazio.
-- **Plataforma:** navegador, teclado ou toque, 60 fps, sem downloads.
+## Kennedito
 
-## Stack prevista
+O protagonista é o **Kennedito**, um cachorro batedor de boné verde, capa e estrela dourada — sprite 16×24 desenhado em código, sem assets binários. O emblema **CEPK** aparece no boné, na tela-título, no ícone do app e no cartão de vitória.
 
-Vite + TypeScript + Canvas2D, sem engine e sem assets binários (sprites em mapas de caracteres e áudio sintetizado em WebAudio). Deploy automático no GitHub Pages.
+## Controles
 
-## Estrutura do repositório
+| Ação | Teclado | Toque |
+|---|---|---|
+| Mover | WASD / setas | swipe |
+| Encerrar ciclo | `TAB` | botão do ciclo |
+| Desfazer | `Z` | — |
+| Reiniciar fase | `R` | — |
+| Pausa / menu | `ESC` | botão ESC |
+| Som | `M` | item do menu |
+
+## Stack
+
+- **p5.js** para render e loop (canvas virtual 640×360, zoom 2× com escala inteira).
+- **TypeScript puro** para as regras: sem canvas, testável no Node.
+- **Vite** + **vite-plugin-pwa** (Workbox) para build e offline.
+- **Vitest**: 17 testes, incluindo o replay das soluções das 5 fases.
+- Sprites em mapas de caracteres, fonte bitmap 3×5 própria, áudio sintetizado — **zero assets binários** (só os PNGs de ícone gerados no build).
+
+## Desenvolvimento
+
+```bash
+npm install
+npm run dev       # http://localhost:5173/Loopbound/
+npm test          # regras + replay das 5 fases
+npm run build     # tsc + vite build (gera dist/ e o service worker)
+npm run preview   # serve o build em http://localhost:4173/Loopbound/
+npm run icons     # regenera os ícones do PWA
+npm run sprite    # gera um PNG de preview do Kennedito
+```
+
+Hooks de debug: `?level=3&moves=DDDR|DDRRRR` (o `|` encerra o ciclo) e `&pause=1`.
+
+## Estrutura
 
 ```
-docs/GAME_DESIGN.md   plano completo: regras, arte, fases, arquitetura e roadmap
+README.md                apresentação + GDD completo (regras, arte, fases, arquitetura)
+src/game/                regras canônicas, fases, save (TypeScript puro)
+src/render/              paleta, Kennedito, atlas, sala, entidades, fonte
+src/ui/                  HUD (640×360)
+src/app.ts               máquina de estados, input, telas
+src/sketch.ts            instância p5 e escala inteira do canvas
+src/main.ts              bootstrap, listeners, PWA
+tests/game.test.ts       17 testes (regras + soluções das fases)
+scripts/                 gerador de ícones e preview do sprite
 ```
 
 ---
@@ -45,12 +90,30 @@ docs/GAME_DESIGN.md   plano completo: regras, arte, fases, arquitetura e roadmap
 | Título | **Loopbound** |
 | Gênero | Puzzle em grade / quebra-cabeça de lógica com mecânica de eco |
 | Perspectiva | Top-down 3/4, câmera fixa por sala |
-| Plataforma | Navegador (desktop e mobile) |
-| Engine | Canvas2D + TypeScript, sem engine de terceiros |
-| Arte | Pixel art 16×16, paleta restrita, sem assets binários |
-| Idioma | PT-BR (com opção EN) |
+| Plataforma | Navegador (desktop e mobile) — PWA instalável e offline |
+| Engine | p5.js (render e loop) + TypeScript puro (regras) |
+| Arte | Pixel art 16×16, Kennedito 16×24, paleta restrita, sem assets binários |
+| Idioma | PT-BR |
 | Classificação | Livre |
-| Duração | 30–60 min (10 fases + clear perfeito) |
+| Duração | 15–25 min no protótipo (5 fases + clear perfeito) |
+
+---
+
+## 0. Estado do protótipo
+
+O protótipo jogável já cobre o fluxo completo com **5 fases**:
+
+| Fase | Nome | Ensina |
+|---|---|---|
+| 1 | Primeiros Passos | andar e chegar ao núcleo |
+| 2 | Peso Morto | caixote em placa segura o portão |
+| 3 | Primeiro Eco | o eco segura a placa por você |
+| 4 | O Vão | dois ecos, dois portões, vazio |
+| 5 | A Estrela do Batedor | chave, porta e eco sincronizado |
+
+Implementado: ciclo com orçamento e encerramento por `TAB`/morte, gravação e replay de ecos, caixotes, placas e portões coloridos, chave/porta, gemas, vazio, undo por passo, reinício, pausa, título com seleção de fase, tela de vitória com recorde, save em `localStorage`, áudio sintetizado, toque/swipe, PWA offline e canvas virtual 640×360 com zoom 2×.
+
+A visão de 10 fases da seção 6 permanece como alvo de conteúdo; o protótipo valida a mecânica com as 5 primeiras.
 
 ---
 
@@ -399,10 +462,12 @@ Acessibilidade:
 ### Stack
 
 - **Vite + TypeScript** (strict), build estático.
-- **Canvas2D** puro, loop fixo a 60 Hz com acumulador.
-- **Vitest** para regras e validação de fases.
-- **GitHub Pages** via GitHub Actions.
-- Sem dependências de runtime.
+- **p5.js** para render e loop; canvas virtual **640×360** com `translate` + `scale(2)` na sala, exibido em escala inteira (1280×720 = 2×).
+- **TypeScript puro** para as regras (`src/game`), sem canvas — testável no Node.
+- **Vitest** para regras e replay das soluções das fases.
+- **vite-plugin-pwa** (Workbox) para manifest, service worker e offline.
+- **GitHub Pages** para publicação.
+- Única dependência de runtime: `p5`.
 
 ### Estrutura de arquivos
 
@@ -412,36 +477,29 @@ loopbound/
 ├─ package.json
 ├─ tsconfig.json
 ├─ vite.config.ts
-├─ docs/GAME_DESIGN.md
+├─ README.md                 # apresentação + este GDD
 ├─ src/
-│  ├─ main.ts                 # bootstrap, canvas, resize, loop
-│  ├─ core/
-│  │  ├─ loop.ts              # timestep fixo, scenes
-│  │  ├─ input.ts             # buffer de 1 passo, remap
-│  │  └─ storage.ts           # progresso e settings
+│  ├─ main.ts                 # bootstrap, listeners, hook de debug, PWA
+│  ├─ sketch.ts               # instância p5 e fitCanvas (escala inteira)
+│  ├─ app.ts                  # máquina de estados, input, telas, HUD
+│  ├─ pwa.ts                  # registro do service worker e prompt de instalação
 │  ├─ game/
-│  │  ├─ grid.ts              # coords, vizinhança, tiles
-│  │  ├─ rules.ts             # passo canônico (seção 5)
-│  │  ├─ cycle.ts             # orçamento, transições
-│  │  ├─ echo.ts              # gravação e replay
-│  │  ├─ snapshot.ts          # undo por passo
-│  │  ├─ level.ts             # parse + validação
-│  │  └─ levels/01..10.ts
+│  │  ├─ types.ts             # tiles, direções, cores
+│  │  ├─ level.ts             # parse + validação do mapa
+│  │  ├─ rules.ts             # passo canônico, ecos, pressão, undo
+│  │  ├─ levels.ts            # 5 fases + soluções gravadas
+│  │  └─ save.ts              # progresso em localStorage
 │  ├─ render/
 │  │  ├─ palette.ts
-│  │  ├─ sprites.ts           # mapas de caracteres
+│  │  ├─ kennedito.ts         # sprite 16×24 em mapas de caracteres
 │  │  ├─ atlas.ts             # bake offscreen + tints
-│  │  ├─ font.ts              # bitmap 5×7
-│  │  ├─ renderer.ts          # tiles, entidades, ordem de desenho
-│  │  └─ effects.ts           # partículas, glow, shake
-│  ├─ ui/
-│  │  ├─ hud.ts
-│  │  └─ screens.ts           # título, seleção, pausa, vitória
-│  └─ audio/sfx.ts
-└─ tests/
-   ├─ rules.test.ts
-   ├─ echo.test.ts
-   └─ levels.test.ts          # replay das soluções
+│  │  ├─ room.ts              # bake do piso/parede/vazio
+│  │  ├─ renderer.ts          # caixote, placa, portão, gema, chave, porta, saída
+│  │  └─ font.ts              # bitmap 3×5 com acentos
+│  ├─ ui/hud.ts               # HUD 640×360, botões TAB/ESC, medidor de ciclo
+│  └─ audio/sfx.ts            # sons sintetizados em WebAudio
+├─ scripts/                   # gerador de ícones e preview do sprite
+└─ tests/game.test.ts         # 17 testes: regras + replay das 5 soluções
 ```
 
 ### Ordem de desenho
@@ -466,7 +524,7 @@ loopbound/
 | Frame | 16,6 ms (60 fps estável) |
 | Lógica | < 2 ms |
 | Render | < 4 ms |
-| Bundle JS | < 150 KB gzip |
+| Bundle JS | ~284 KB gzip (p5.js incluso) |
 | Requisições externas | 0 |
 | Tempo de carga | < 1,5 s em 3G |
 
@@ -490,12 +548,13 @@ loopbound/
 
 ### Critérios de aceite do produto
 
-- [ ] 10 fases completas e vencíveis.
-- [ ] 60 fps em notebook modesto e em celular médio.
-- [ ] Progresso salvo em `localStorage`.
-- [ ] Deploy automático no Pages a cada push em `main`.
-- [ ] Nenhum recurso externo carregado.
-- [ ] Navegação 100% por teclado e 100% por toque.
+- [x] 5 fases completas e vencíveis (protótipo).
+- [ ] 10 fases completas e vencíveis (conteúdo final).
+- [x] 60 fps em notebook modesto e em celular médio.
+- [x] Progresso salvo em `localStorage`.
+- [x] Deploy no GitHub Pages.
+- [x] Nenhum recurso externo carregado.
+- [x] Navegação 100% por teclado e por toque.
 
 ---
 
@@ -507,10 +566,10 @@ loopbound/
 | **M1 — Fundação** | Vite, loop fixo, input, paleta, tilemap | Sala estática renderizada a 60 fps |
 | **M2 — Corpo** | Movimento, empurrar, placas, portas, gemas, chave | Fases 1–2 jogáveis |
 | **M3 — Alma** | Ciclos, gravação e replay de ecos, undo | Fase 3 jogável |
-| **M4 — Conteúdo** | Fases 4–10, HUD, menus, áudio, save | Jogo completo |
-| **M5 — Polimento** | FX, acessibilidade, mobile, Pages | Link público, 60 fps, sem bugs |
+| **M4 — Conteúdo** | Fases 3–5, HUD, menus, áudio, save, PWA | Protótipo completo (5 fases) |
+| **M5 — Polimento** | Fases 6–10, FX, acessibilidade, mobile, Pages | Link público, 60 fps, sem bugs |
 
-Estimativa: M1 em 1 dia, M2 em 2, M3 em 2, M4 em 3, M5 em 1 — cerca de 9 dias de trabalho focado.
+Protótipo (M1–M4) concluído: 5 fases, fluxo completo, PWA offline e publicação no Pages. M5 segue com a expansão de conteúdo.
 
 ---
 
@@ -530,8 +589,9 @@ Estimativa: M1 em 1 dia, M2 em 2, M3 em 2, M4 em 3, M5 em 1 — cerca de 9 dias 
 
 ## 14. Deploy
 
-- Branch `main` → GitHub Actions roda `npm ci && npm run build && npm test`.
-- Publicação em GitHub Pages com `base: '/Loopbound/'` no `vite.config.ts`.
+- Build estático com `base: '/Loopbound/'` no `vite.config.ts`.
+- Publicação no GitHub Pages a partir do build (`npm run build`).
+- Service worker gerado pelo Workbox com precache de HTML/JS/CSS/ícones (16 entradas).
 - URL final: `https://dpdhorodecki.github.io/Loopbound/`.
 - Versão de desenvolvimento: `npm run dev` em `localhost:5173`.
 
@@ -547,9 +607,3 @@ Estimativa: M1 em 1 dia, M2 em 2, M3 em 2, M4 em 3, M5 em 1 — cerca de 9 dias 
 ---
 
 *Documento vivo. Toda mudança de regra deve atualizar a seção 3 e a tabela de invariantes antes de virar código.*
-
----
-
-## Licença
-
-A definir.

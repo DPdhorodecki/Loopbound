@@ -1,0 +1,123 @@
+import { LevelDef } from './level';
+
+export const LEVELS: LevelDef[] = [
+  {
+    id: 'primeiros-passos',
+    name: 'Primeiros Passos',
+    subtitle: 'Ande até o núcleo.',
+    cycleLength: 12,
+    maxEchoes: 0,
+    par: { cycles: 1, steps: 8 },
+    map: [
+      '###########',
+      '#P.......E#',
+      '#.........#',
+      '#....g....#',
+      '#.........#',
+      '#.........#',
+      '###########',
+    ],
+    solution: [['R', 'R', 'R', 'R', 'R', 'R', 'R', 'R']],
+  },
+  {
+    id: 'peso-morto',
+    name: 'Peso Morto',
+    subtitle: 'Caixotes seguram placas. Você, não.',
+    cycleLength: 24,
+    maxEchoes: 0,
+    par: { cycles: 1, steps: 20 },
+    map: [
+      '#############',
+      '#P.....#...E#',
+      '#......#....#',
+      '#..C...R....#',
+      '#......#....#',
+      '#...r..#....#',
+      '#......#....#',
+      '#############',
+    ],
+    solution: [
+      [
+        'D', 'R', 'R', 'D', 'D', 'L', 'D', 'R', 'U', 'U',
+        'R', 'R', 'R', 'R', 'R', 'R', 'R',
+        'U', 'U', 'R',
+      ],
+    ],
+  },
+  {
+    id: 'primeiro-eco',
+    name: 'Primeiro Eco',
+    subtitle: 'Terminar o ciclo também é um movimento.',
+    cycleLength: 16,
+    maxEchoes: 1,
+    par: { cycles: 2, steps: 19 },
+    map: [
+      '#################',
+      '#P...#......E...#',
+      '#....#..........#',
+      '#....R..........#',
+      '#.r..#..........#',
+      '#....#..........#',
+      '#################',
+    ],
+    solution: [
+      ['D', 'D', 'D', 'R'],
+      ['D', 'D', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'U', 'U'],
+    ],
+  },
+  {
+    id: 'o-vao',
+    name: 'O Vão',
+    subtitle: 'Duas placas, dois ecos, uma travessia.',
+    cycleLength: 20,
+    maxEchoes: 2,
+    par: { cycles: 3, steps: 25 },
+    map: [
+      '#################',
+      '#P......#...#...#',
+      '#.......#~~~#...#',
+      '#..r....R...L.E.#',
+      '#.......#~~~#...#',
+      '#..b....#...#...#',
+      '#.......#...#...#',
+      '#################',
+    ],
+    solution: [
+      ['D', 'D', 'R', 'R'],
+      ['D', 'D', 'D', 'D', 'R', 'R'],
+      [
+        'D', 'D',
+        'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R',
+      ],
+    ],
+  },
+  {
+    id: 'a-estrela-do-batedor',
+    name: 'A Estrela do Batedor',
+    subtitle: 'A chave abre a porta. O eco abre o resto.',
+    cycleLength: 16,
+    maxEchoes: 2,
+    par: { cycles: 2, steps: 19 },
+    map: [
+      '#################',
+      '#P..K.#.........#',
+      '#.....#.........#',
+      '#.....D...R.E...#',
+      '#.....#.........#',
+      '#..r..#.........#',
+      '#################',
+    ],
+    solution: [
+      ['D', 'D', 'D', 'D', 'R', 'R'],
+      [
+        'R', 'R', 'R',
+        'D', 'D',
+        'R', 'R',
+        'R', 'R', 'R', 'R',
+        'R', 'R',
+      ],
+    ],
+  },
+];
+
+export const levelById = (id: string): LevelDef | undefined => LEVELS.find((l) => l.id === id);
