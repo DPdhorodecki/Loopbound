@@ -150,3 +150,357 @@ canvas {
     display: flex;
   }
 }
+
+/* ------------------------------------------------------------------ shell */
+/* Login + menu em abas (estilo CEPK Rush), por cima do canvas do jogo. */
+
+.lb-root {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--cyan);
+}
+
+.lb-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  overflow: auto;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(53, 230, 242, 0.08), transparent 60%),
+    rgba(6, 10, 18, 0.94);
+}
+
+.lb-screen.hidden {
+  display: none;
+}
+
+.lb-card {
+  width: min(460px, 94vw);
+  max-height: 92vh;
+  overflow: auto;
+  padding: 22px;
+  background: #0d1626;
+  border: 2px solid var(--cyan-dim);
+  box-shadow: 0 0 40px rgba(53, 230, 242, 0.12);
+}
+
+.lb-card-wide {
+  width: min(760px, 96vw);
+}
+
+.lb-logo {
+  margin: 0;
+  font-size: 34px;
+  letter-spacing: 3px;
+  color: var(--cyan);
+  text-shadow: 2px 2px 0 #0a3b44;
+}
+
+.lb-tag {
+  margin: 6px 0 16px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #5c7369;
+}
+
+.lb-intro {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #8fb3a6;
+}
+
+.lb-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.lb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #8fb3a6;
+}
+
+.lb-field input {
+  padding: 10px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--cyan);
+  background: #08111d;
+  border: 2px solid var(--cyan-dim);
+  outline: none;
+}
+
+.lb-field input:focus {
+  border-color: var(--cyan);
+}
+
+.lb-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.lb-btn {
+  padding: 12px 18px;
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: #041018;
+  background: var(--cyan);
+  border: 2px solid var(--cyan);
+  cursor: pointer;
+}
+
+.lb-btn:hover {
+  background: #7df0f8;
+}
+
+.lb-btn-ghost {
+  color: var(--cyan);
+  background: transparent;
+}
+
+.lb-btn-ghost:hover {
+  background: rgba(53, 230, 242, 0.14);
+}
+
+.lb-btn-danger {
+  color: #ff8b80;
+  background: transparent;
+  border-color: #c43b31;
+}
+
+.lb-btn-big {
+  font-size: 16px;
+  padding: 14px 30px;
+}
+
+.lb-error {
+  min-height: 18px;
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: #ff8b80;
+}
+
+.lb-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.lb-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  font-size: 24px;
+  border: 2px solid var(--cyan);
+  background: #08111d;
+}
+
+.lb-who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.lb-who strong {
+  font-size: 15px;
+  letter-spacing: 2px;
+}
+
+.lb-who span {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #5c7369;
+}
+
+.lb-badge {
+  padding: 6px 10px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #d9a63c;
+  border: 2px solid #8f6a1f;
+}
+
+.lb-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+  border-bottom: 2px solid rgba(18, 127, 142, 0.5);
+}
+
+.lb-tab {
+  padding: 10px 16px;
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #8fb3a6;
+  background: transparent;
+  border: 2px solid transparent;
+  border-bottom: none;
+  cursor: pointer;
+}
+
+.lb-tab.active {
+  color: var(--cyan);
+  background: #08111d;
+  border-color: var(--cyan-dim);
+}
+
+.lb-panel {
+  min-height: 220px;
+}
+
+.lb-play {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lb-kicker {
+  margin: 6px 0 2px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #5c7369;
+}
+
+.lb-level-name {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: var(--cyan);
+}
+
+.lb-desc {
+  margin: 0;
+  font-size: 12px;
+  color: #cfe3da;
+}
+
+.lb-best,
+.lb-note,
+.lb-empty {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #8fb3a6;
+}
+
+.lb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.lb-level {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px;
+  font: inherit;
+  text-align: left;
+  color: var(--cyan);
+  background: #08111d;
+  border: 2px solid var(--cyan-dim);
+  cursor: pointer;
+}
+
+.lb-level:hover {
+  border-color: var(--cyan);
+}
+
+.lb-level.locked {
+  color: #40514b;
+  border-color: #243244;
+  cursor: not-allowed;
+}
+
+.lb-level-num {
+  font-size: 18px;
+  color: #d9a63c;
+}
+
+.lb-level-title {
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.lb-level-meta {
+  font-size: 10px;
+  color: #5c7369;
+}
+
+.lb-table-wrap {
+  overflow: auto;
+  max-height: 320px;
+}
+
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.lb-table th,
+.lb-table td {
+  padding: 7px 8px;
+  text-align: left;
+  border-bottom: 1px solid rgba(18, 127, 142, 0.35);
+}
+
+.lb-table th {
+  color: #5c7369;
+  letter-spacing: 1px;
+}
+
+.lb-profile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lb-avatars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lb-avatar-btn {
+  padding: 10px;
+  min-width: 84px;
+  white-space: pre-line;
+  font: inherit;
+  font-size: 11px;
+  text-align: center;
+  color: #8fb3a6;
+  background: #08111d;
+  border: 2px solid #243244;
+  cursor: pointer;
+}
+
+.lb-avatar-btn.active {
+  color: var(--cyan);
+  border-color: var(--cyan);
+}
+
+.lb-profile .lb-btn {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+

@@ -13,17 +13,23 @@ Ecos não empurram caixotes nem pegam gemas. Mas eles **têm peso**: seguram pla
 | Etapa | Estado |
 |---|---|
 | Design (GDD) | ✅ concluído |
-| Protótipo jogável (7 fases) | ✅ jogável no navegador |
+| Tutorial jogável (4 salas) | ✅ |
+| Campanha de 10 fases | ✅ jogável no navegador |
+| Labirintos e puzzles elaborados | ✅ |
+| Login + banco PostgreSQL + histórico | ✅ |
+| Menu em abas (estilo CEPK Rush) | ✅ |
 | PWA instalável + offline | ✅ |
 | Deploy no GitHub Pages | ✅ |
 
-## O que tem no protótipo
+## O que tem no jogo
 
-- **7 fases** com dificuldade crescente, do primeiro passo ao uso de três ecos ao mesmo tempo.
-- **Ciclo** de 12–24 passos, encerrado com `TAB`, morte ou esgotamento do orçamento — e transformado em eco.
+- **Tutorial de 4 salas** ensinando andar, empurrar, eco e chave — aparece no primeiro acesso e pode ser revisto pelo menu.
+- **10 fases** com dificuldade crescente, todas com paredes, corredores e salas (nenhuma fase é um campo aberto).
+- **Puzzles elaborados:** caixotes em cadeia, placas e portões coloridos, chave e porta, vazio, gema e o uso combinado de vários ecos.
+- **Ciclo** de 8–28 passos, encerrado com `TAB`, morte ou esgotamento do orçamento — e transformado em eco.
 - **Ecos** (até 3 por fase) que repetem a trilha gravada e seguram placas.
-- **Elementos:** caixotes, placas e portões coloridos, chave e porta, gemas, vazio.
-- **Fluxo completo:** título com seleção de fase, HUD, pausa, tela de vitória com recorde, save em `localStorage`.
+- **Contas:** login/cadastro, progresso, recordes e histórico de partidas no **PostgreSQL**.
+- **Menu em abas:** JOGAR, FASES, HISTÓRICO e PERFIL, com avatar, recordes e estatísticas.
 - **Mobile:** toque para mover (swipe) e botões de ciclo/pausa na tela.
 - **Áudio** 100% sintetizado em WebAudio (tecla `M` para mudo).
 - **PWA:** instalável, funciona offline, ícones e service worker gerados no build.
@@ -48,20 +54,50 @@ O protagonista é o **Kennedito**, um cachorro batedor de boné verde, capa e es
 - **p5.js** para render e loop (canvas virtual 640×360, zoom 2× com escala inteira).
 - **TypeScript puro** para as regras: sem canvas, testável no Node.
 - **Vite** + **vite-plugin-pwa** (Workbox) para build e offline.
-- **Vitest**: 22 testes, incluindo o replay das soluções das 7 fases.
+- **UI em HTML/CSS** (login e menu em abas) por cima do canvas.
+- **Node + Express + `pg` + Zod** no backend, com **PostgreSQL** (login, progresso e histórico).
+- **Vitest**: 32 testes, incluindo o replay das soluções do tutorial e das 10 fases.
 - Sprites em mapas de caracteres, fonte bitmap 3×5 própria, áudio sintetizado — **zero assets binários** (só os PNGs de ícone gerados no build).
+
+## Contas, banco e API
+
+O login é obrigatório. O progresso fica no PostgreSQL; o navegador mantém uma
+cópia em `localStorage` para jogar offline depois do primeiro acesso.
+
+| Rota | Método | O que faz |
+|---|---|---|
+| `/api/auth/register` | POST | cria a conta e devolve o token de sessão |
+| `/api/auth/login` | POST | entra na conta |
+| `/api/auth/logout` | POST | encerra a sessão |
+| `/api/me` | GET | usuário + progresso + recordes + histórico |
+| `/api/progress` | PUT | fase liberada, tutorial concluído, som e avatar |
+| `/api/runs` | POST | registra a partida e atualiza o recorde |
+| `/api/history` | GET | últimas partidas |
+| `/api/leaderboard` | GET | melhores passos por fase |
+
+Tabelas: `users`, `sessions`, `progress`, `level_bests` e `runs`
+(veja `server/migrations/001_init.sql`). Senhas com **bcrypt**; sessões com token
+aleatório hasheado (SHA-256) enviado no header `Authorization: Bearer`.
 
 ## Desenvolvimento
 
 ```bash
 npm install
-npm run dev       # http://localhost:5173/Loopbound/
-npm test          # regras + replay das 7 fases
-npm run build     # tsc + vite build (gera dist/ e o service worker)
-npm run preview   # serve o build em http://localhost:4173/Loopbound/
-npm run icons     # regenera os ícones do PWA
-npm run sprite    # gera um PNG de preview do Kennedito
+npm run db:up        # sobe o PostgreSQL local (docker compose)
+cp .env.example .env # ajuste DATABASE_URL se precisar
+npm run server       # API em http://localhost:3001
+npm run dev          # jogo em http://localhost:5173/Loopbound/ (com proxy /api)
+npm test             # regras + replay do tutorial e das 10 fases
+npm run build        # tsc + vite build (gera dist/ e o service worker)
+npm run preview      # serve o build em http://localhost:4173/Loopbound/
+npm run tighten      # regenera os mapas fechados das fases
+npm run icons        # regenera os ícones do PWA
+npm run sprite       # gera um PNG de preview do Kennedito
 ```
+
+Em produção, defina `VITE_API_URL` no build do front com a URL pública da API e
+`APP_ORIGIN` no servidor com o domínio do jogo. O banco pode ficar no Neon
+(use `DATABASE_SSL=1`).
 
 Hooks de debug: `?level=3&moves=DDDR|DDRRRR` (o `|` encerra o ciclo) e `&pause=1`.
 
@@ -69,14 +105,17 @@ Hooks de debug: `?level=3&moves=DDDR|DDRRRR` (o `|` encerra o ciclo) e `&pause=1
 
 ```
 README.md                apresentação + GDD completo (regras, arte, fases, arquitetura)
-src/game/                regras canônicas, fases, save (TypeScript puro)
+server/                  API Express + PostgreSQL (auth, progresso, histórico)
+docker-compose.yml       PostgreSQL de desenvolvimento
+src/game/                regras canônicas, fases, tutorial, save (TypeScript puro)
+src/net/api.ts           cliente da API e sessão
 src/render/              paleta, Kennedito, atlas, sala, entidades, fonte
-src/ui/                  HUD (640×360)
-src/app.ts               máquina de estados, input, telas
+src/ui/                  HUD (640×360) e casca DOM (login + menu em abas)
+src/app.ts               máquina de estados, input, tutorial, telas
 src/sketch.ts            instância p5 e escala inteira do canvas
 src/main.ts              bootstrap, listeners, PWA
-tests/game.test.ts       22 testes (regras + soluções das fases)
-scripts/                 gerador de ícones e preview do sprite
+tests/                   32 testes (regras, tutorial e soluções das fases)
+scripts/                 gerador de ícones, preview do sprite e fechamento dos mapas
 ```
 
 ---
@@ -99,12 +138,13 @@ scripts/                 gerador de ícones e preview do sprite
 
 ---
 
-## 0. Estado do protótipo
+## 0. Estado do jogo
 
-O protótipo jogável já cobre o fluxo completo com **7 fases**:
+O jogo cobre o fluxo completo com **tutorial + 10 fases**:
 
 | Fase | Nome | Ensina |
 |---|---|---|
+| TUT | Tutorial (4 salas) | andar, empurrar, eco, chave |
 | 1 | Primeiros Passos | andar e chegar ao núcleo |
 | 2 | Peso Morto | caixote em placa segura o portão |
 | 3 | Primeiro Eco | o eco segura a placa por você |
@@ -112,10 +152,13 @@ O protótipo jogável já cobre o fluxo completo com **7 fases**:
 | 5 | A Estrela do Batedor | chave, porta e eco sincronizado |
 | 6 | Peso Extra | caixote e eco segurando placas ao mesmo tempo |
 | 7 | Três Portões | três ecos, três cores, quatro ciclos |
+| 8 | Pavio Curto | ciclo de 8 passos e rota cirúrgica |
+| 9 | Caminhos Cruzados | caixote e eco em rotas diferentes |
+| 10 | Última Luz | três portões, dois ecos e um caixote |
 
-Implementado: ciclo com orçamento e encerramento por `TAB`/morte, gravação e replay de ecos, caixotes, placas e portões coloridos, chave/porta, gemas, vazio, undo por passo, reinício, pausa, título com seleção de fase, tela de vitória com recorde, save em `localStorage`, áudio sintetizado, toque/swipe, PWA offline e canvas virtual 640×360 com zoom 2×.
+Implementado: tutorial em 4 salas, ciclo com orçamento e encerramento por `TAB`/morte, gravação e replay de ecos, caixotes, placas e portões coloridos, chave/porta, gemas, vazio, undo por passo, reinício, pausa, tela de vitória com recorde, **login e progresso no PostgreSQL**, menu em abas com histórico, áudio sintetizado, toque/swipe, PWA offline e canvas virtual 640×360 com zoom 2×.
 
-A visão de 10 fases permanece como alvo de conteúdo; o protótipo valida a mecânica com as 7 primeiras.
+Todos os mapas passam por `scripts/tighten.ts`, que reaproveita a solução gravada para tapar com parede todo piso que nenhum ciclo pisa — por isso nenhuma fase é um campo aberto e todas continuam com solução verificada no CI.
 
 ---
 

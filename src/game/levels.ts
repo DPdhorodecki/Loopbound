@@ -1,23 +1,38 @@
 import { LevelDef } from './level';
 
+/**
+ * Campanha principal (10 fases).
+ *
+ * Cada fase tem `solution`: um array de movimentos por ciclo. O teste
+ * `tests/game.test.ts` replaya cada solução e falha se ela não vencer.
+ *
+ * Os mapas das fases foram "fechados" por `scripts/tighten.ts`, que replaya a
+ * solução e transforma em parede todo tile de piso que nenhum ciclo pisa. Assim
+ * nenhuma fase é um campo aberto: todas têm corredores, salas e becos.
+ *
+ * Para ajustar um mapa à mão, edite aqui e rode `npm test`; se preferir gerar a
+ * versão fechada de novo, rode `npx vite-node scripts/tighten.ts`.
+ */
 export const LEVELS: LevelDef[] = [
   {
     id: 'primeiros-passos',
     name: 'Primeiros Passos',
     subtitle: 'Ande até o núcleo.',
-    cycleLength: 12,
+    cycleLength: 16,
     maxEchoes: 0,
-    par: { cycles: 1, steps: 8 },
+    par: { cycles: 1, steps: 12 },
     map: [
-      '###########',
-      '#P.......E#',
-      '#.........#',
-      '#....g....#',
-      '#.........#',
-      '#.........#',
-      '###########',
+      '###############',
+      '#P..###########',
+      '##.############',
+      '#..############',
+      '#.#############',
+      '#..############',
+      '#.#############',
+      '#...gE.########',
+      '###############',
     ],
-    solution: [['R', 'R', 'R', 'R', 'R', 'R', 'R', 'R']],
+    solution: [['R', 'D', 'D', 'L', 'D', 'D', 'D', 'D', 'R', 'R', 'R', 'R']],
   },
   {
     id: 'peso-morto',
@@ -28,12 +43,12 @@ export const LEVELS: LevelDef[] = [
     par: { cycles: 1, steps: 20 },
     map: [
       '#############',
-      '#P.....#...E#',
+      '#P..#####..E#',
       '#......#....#',
       '#..C...R....#',
-      '#......#....#',
-      '#...r..#....#',
-      '#......#....#',
+      '#......#...##',
+      '#...r.#######',
+      '##...########',
       '#############',
     ],
     solution: [
@@ -53,11 +68,11 @@ export const LEVELS: LevelDef[] = [
     par: { cycles: 2, steps: 19 },
     map: [
       '#################',
-      '#P...#......E...#',
-      '#....#..........#',
-      '#....R..........#',
-      '#.r..#..........#',
-      '#....#..........#',
+      '#P.########.E.###',
+      '#....#........###',
+      '#....R........###',
+      '#.r..#.......####',
+      '#..##############',
       '#################',
     ],
     solution: [
@@ -74,12 +89,12 @@ export const LEVELS: LevelDef[] = [
     par: { cycles: 3, steps: 25 },
     map: [
       '#################',
-      '#P......#...#...#',
-      '#.......#~~~#...#',
+      '#P.##############',
+      '#.......#~~~#..##',
       '#..r....R...L.E.#',
-      '#.......#~~~#...#',
-      '#..b....#...#...#',
-      '#.......#...#...#',
+      '#.......#~~~#..##',
+      '#..b.############',
+      '#...#############',
       '#################',
     ],
     solution: [
@@ -100,11 +115,11 @@ export const LEVELS: LevelDef[] = [
     par: { cycles: 2, steps: 19 },
     map: [
       '#################',
-      '#P..K.#.........#',
-      '#.....#.........#',
-      '#.....D...R.E...#',
-      '#.....#.........#',
-      '#..r..#.........#',
+      '#P..K.###########',
+      '#.....#......####',
+      '#.....D...R.E.###',
+      '#.....#......####',
+      '#..r.############',
       '#################',
     ],
     solution: [
@@ -127,12 +142,12 @@ export const LEVELS: LevelDef[] = [
     par: { cycles: 2, steps: 26 },
     map: [
       '###############',
-      '#P............#',
+      '#P.....########',
       '#....C........#',
-      '#......g.R.L.E#',
+      '#..#...g.R.L.E#',
       '#.............#',
-      '#..b..r.......#',
-      '#.............#',
+      '#..b..r.#######',
+      '#......########',
       '###############',
     ],
     solution: [
@@ -155,12 +170,12 @@ export const LEVELS: LevelDef[] = [
     par: { cycles: 4, steps: 34 },
     map: [
       '#################',
-      '#P..............#',
-      '#..r...R........#',
-      '#...............#',
-      '#..b...L........#',
-      '#...............#',
-      '#..y...Y.......E#',
+      '#P......#########',
+      '#..r...R.########',
+      '#........########',
+      '#..b.#.L.########',
+      '#...##..........#',
+      '#..y.#.Y.......E#',
       '#################',
     ],
     solution: [
@@ -173,6 +188,94 @@ export const LEVELS: LevelDef[] = [
         'D', 'D',
         'D', 'D',
         'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R',
+      ],
+    ],
+  },
+  {
+    id: 'pavio-curto',
+    name: 'Pavio Curto',
+    subtitle: 'O ciclo é curto. O eco é a ponte.',
+    cycleLength: 8,
+    maxEchoes: 1,
+    par: { cycles: 2, steps: 10 },
+    map: [
+      '#################',
+      '#P....R.E.#######',
+      '#.....#..########',
+      '#...#############',
+      '#.r.#############',
+      '##.##############',
+      '#################',
+    ],
+    solution: [
+      ['R', 'D', 'D', 'D'],
+      ['R', 'R', 'R', 'R', 'R', 'R', 'R'],
+    ],
+  },
+  {
+    id: 'caminhos-cruzados',
+    name: 'Caminhos Cruzados',
+    subtitle: 'O caixote abre um lado. O eco, o outro.',
+    cycleLength: 28,
+    maxEchoes: 1,
+    par: { cycles: 2, steps: 39 },
+    map: [
+      '#################',
+      '#P...........####',
+      '#....C.........##',
+      '##.....L.R....E.#',
+      '##.............##',
+      '##.b...###.r.####',
+      '###.#######.#####',
+      '#################',
+      '#################',
+    ],
+    solution: [
+      ['R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'D', 'D', 'D', 'D'],
+      [
+        'R', 'R', 'R', 'R', 'R',
+        'D',
+        'L', 'L',
+        'U', 'L',
+        'D', 'D', 'D',
+        'R', 'R', 'R',
+        'U',
+        'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R',
+      ],
+    ],
+  },
+  {
+    id: 'ultima-luz',
+    name: 'Última Luz',
+    subtitle: 'Três portões, dois ecos e um caixote.',
+    cycleLength: 28,
+    maxEchoes: 2,
+    par: { cycles: 3, steps: 38 },
+    map: [
+      '###############',
+      '#############E#',
+      '#############R#',
+      '#############L#',
+      '#############Y#',
+      '#############.#',
+      '#############.#',
+      '#############.#',
+      '#.............#',
+      '#P..r..bC.y...#',
+      '###############',
+    ],
+    solution: [
+      ['R', 'R', 'R'],
+      [
+        'R', 'R', 'R', 'R', 'R', 'R',
+        'U', 'R', 'R', 'D', 'R',
+      ],
+      [
+        'R', 'R', 'R', 'R', 'R', 'R',
+        'U', 'R', 'R', 'D',
+        'L',
+        'R', 'R', 'R', 'R', 'R',
+        'U', 'U', 'U', 'U', 'U', 'U', 'U', 'U',
       ],
     ],
   },

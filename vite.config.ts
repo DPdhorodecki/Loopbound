@@ -5,6 +5,14 @@ const BASE = '/Loopbound/';
 
 export default defineConfig({
   base: BASE,
+  server: {
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_PROXY ?? 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
+  },
   build: {
     target: 'es2020',
     assetsInlineLimit: 0,

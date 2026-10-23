@@ -1,6 +1,7 @@
 import p5 from 'p5';
 import { LEVELS } from './game/levels';
-import { Level, parseLevel } from './game/level';
+import { TUTORIAL_ROOMS } from './game/tutorial';
+import { Level, LevelDef, parseLevel } from './game/level';
 import { Runtime, createRuntime, endCycle, echoPoses, pressure, tryMove, undo } from './game/rules';
 import { LevelBest, persistSave, loadSave } from './game/save';
 import { Dir, Pose, Vec, cellKey } from './game/types';
@@ -25,6 +26,16 @@ import { HUD_ESC, HUD_TAB, HUD_UNDO, VIEW_H, VIEW_W, drawFrame, drawHud } from '
 
 export type Screen = 'title' | 'play' | 'win';
 
+export interface WinResult {
+  levelId: string;
+  levelName: string;
+  steps: number;
+  cycles: number;
+  gems: number;
+  totalGems: number;
+  won: boolean;
+}
+
 const STEP_DUR = 90;
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -35,12 +46,21 @@ export class App {
   readonly sfx = new Sfx();
   save = loadSave();
 
+  /** Callbacks ligados pela casca DOM (login/menu). */
+  onWin: ((result: WinResult) => void) | null = null;
+  onRequestMenu: (() => void) | null = null;
+  onTutorialDone: (() => void) | null = null;
+
   screen: Screen = 'title';
+  /** Quando o menu DOM está aberto, o jogo ignora o teclado e o ponteiro. */
+  menuOpen = true;
   paused = false;
   pauseIndex = 0;
 
   levelIndex = 0;
   titleIndex = 0;
+  tutorialIndex = 0;
+  inTutorial = false;
   level: Level | null = null;
   rt: Runtime | null = null;
   room: p5.Graphics | null = null;
@@ -73,6 +93,17 @@ export class App {
     const def = LEVELS[index];
     if (!def) return;
     this.levelIndex = index;
+    this.inTutorial = false;
+    this.load(def);
+  }
+
+  startTutorial(): void {
+    this.inTutorial = true;
+    this.tutorialIndex = 0;
+    this.load(TUTORIAL_ROOMS[0].def);
+  }
+
+  private load(def: LevelDef): void {
     this.level = parseLevel(def);
     this.rt = createRuntime(this.level);
     this.room = bakeRoom(this.p, this.level);
@@ -80,29 +111,54 @@ export class App {
     this.ox = Math.max(64, Math.round((VIEW_W - this.level.w * 16 * this.zoom) / 2));
     this.oy = Math.round((VIEW_H - this.level.h * 16 * this.zoom) / 2);
     this.screen = 'play';
+    this.menuOpen = false;
     this.paused = false;
     this.queue = [];
     this.stepTimer = 0;
     this.prevPlayer = null;
     this.prevCrates = this.rt.crates.map((c) => ({ ...c }));
     this.flash = 0;
-    this.hintTimer = 5;
+    this.hintTimer = this.inTutorial ? 0 : 5;
     this.sfx.unlock();
     this.sfx.play('ui');
   }
 
+  setMuted(muted: boolean): void {
+    this.save.muted = muted;
+    this.sfx.muted = muted;
+    persistSave(this.save);
+  }
+
   backToTitle(): void {
     this.screen = 'title';
+    this.menuOpen = true;
     this.paused = false;
+    this.inTutorial = false;
     this.titleIndex = Math.min(this.levelIndex, this.save.unlocked - 1);
     this.rt = null;
     this.level = null;
     this.room = null;
+    this.onRequestMenu?.();
   }
 
   private finishLevel(): void {
     const rt = this.rt!;
     const def = rt.level.def;
+
+    if (this.inTutorial) {
+      if (this.tutorialIndex + 1 < TUTORIAL_ROOMS.length) {
+        this.tutorialIndex++;
+        this.load(TUTORIAL_ROOMS[this.tutorialIndex].def);
+        return;
+      }
+      this.save.tutorialDone = true;
+      persistSave(this.save);
+      this.sfx.play('win');
+      this.onTutorialDone?.();
+      this.backToTitle();
+      return;
+    }
+
     const best: LevelBest = {
       steps: rt.stepsTotal,
       cycles: rt.cyclesUsed + 1,
@@ -112,6 +168,15 @@ export class App {
     if (!prev || best.steps < prev.steps) this.save.best[def.id] = best;
     this.save.unlocked = clamp(Math.max(this.save.unlocked, this.levelIndex + 2), 1, LEVELS.length);
     persistSave(this.save);
+    this.onWin?.({
+      levelId: def.id,
+      levelName: def.name,
+      steps: rt.stepsTotal,
+      cycles: rt.cyclesUsed + 1,
+      gems: rt.gems.size,
+      totalGems: rt.level.gems.length,
+      won: true,
+    });
     this.screen = 'win';
     this.sfx.play('win');
   }
@@ -206,7 +271,8 @@ export class App {
 
   restart(): void {
     if (!this.level) return;
-    this.startLevel(this.levelIndex);
+    if (this.inTutorial) this.load(TUTORIAL_ROOMS[this.tutorialIndex].def);
+    else this.startLevel(this.levelIndex);
   }
 
   /** Hooks de desenvolvimento: ?level=3&moves=RRD|DD */
@@ -228,6 +294,7 @@ export class App {
 
   onKey(key: string): void {
     this.sfx.unlock();
+    if (this.menuOpen) return;
     const k = key.length === 1 ? key.toLowerCase() : key;
 
     if (k === 'm') {
@@ -326,6 +393,7 @@ export class App {
 
   onPointer(x: number, y: number): void {
     this.sfx.unlock();
+    if (this.menuOpen) return;
     if (this.screen === 'title') {
       if (y > 228 && y < 284) {
         this.startLevel(this.titleIndex);
@@ -364,6 +432,7 @@ export class App {
   }
 
   onSwipe(dir: Dir): void {
+    if (this.menuOpen) return;
     if (this.screen === 'play' && !this.paused) this.enqueue(dir);
   }
 
@@ -544,9 +613,28 @@ export class App {
     }
 
     if (this.screen === 'play') {
-      this.drawHint(rt);
+      if (this.inTutorial) this.drawTutorialHint();
+      else this.drawHint(rt);
       drawHud(p, rt, this.time, this.save.muted);
     }
+  }
+
+  private drawTutorialHint(): void {
+    const p = this.p;
+    const room = TUTORIAL_ROOMS[this.tutorialIndex];
+    if (!room) return;
+    const step = `SALA ${this.tutorialIndex + 1} DE ${TUTORIAL_ROOMS.length}`;
+    const widths = [textWidth(room.title, 1), textWidth(step, 1), ...room.lines.map((l) => textWidth(l, 1))];
+    const w = Math.max(...widths) + 34;
+    const h = 22 + room.lines.length * 12 + 8;
+    const x = Math.round(VIEW_W / 2 - w / 2);
+    const y = 10;
+    drawFrame(p, x, y, w, h, true);
+    drawText(p, room.title, VIEW_W / 2, y + 9, 1, PALETTE.cyan, 'center');
+    room.lines.forEach((line, i) => {
+      drawText(p, line, VIEW_W / 2, y + 26 + i * 12, 1, '#CFE3DA', 'center');
+    });
+    drawText(p, step, VIEW_W / 2, y + h - 9, 1, PALETTE.cyanDim, 'center');
   }
 
   private drawHint(rt: Runtime): void {

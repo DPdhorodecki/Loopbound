@@ -2,6 +2,7 @@ import './style.css';
 import p5 from 'p5';
 import { App } from './app';
 import { createSketch } from './sketch';
+import { Shell } from './ui/shell';
 import { initPWA } from './pwa';
 import { VIEW_H, VIEW_W } from './ui/hud';
 import { Dir } from './game/types';
@@ -22,10 +23,15 @@ new p5(
   createSketch((instance, canvas) => {
     app = instance;
 
+    const shell = new Shell(instance, container);
+
     window.addEventListener('keydown', (event) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Tab'].includes(event.key)) {
+      const target = event.target as HTMLElement | null;
+      const typing = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
+      if (!typing && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Tab'].includes(event.key)) {
         event.preventDefault();
       }
+      if (typing) return;
       app?.onKey(event.key);
     });
 
@@ -63,13 +69,19 @@ new p5(
       }
     });
 
+    // Hooks de desenvolvimento: ?level=3&moves=RRD|DD&pause=1
     const params = new URLSearchParams(window.location.search);
     const levelParam = params.get('level');
     if (levelParam) {
+      document.querySelector('.lb-root')?.remove();
+      container.classList.add('playing');
+      instance.menuOpen = false;
       const moves = params.get('moves') ?? '';
       instance.debugRun(Number.parseInt(levelParam, 10), moves);
       if (params.get('pause')) instance.debugPause();
     }
+
+    void shell;
   }),
   container,
 );
@@ -88,4 +100,3 @@ if (isIOS && !standalone) {
 document.getElementById('ios-hint')?.addEventListener('click', (event) => {
   (event.currentTarget as HTMLElement).classList.remove('visible');
 });
-
