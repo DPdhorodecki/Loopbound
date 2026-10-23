@@ -13,15 +13,15 @@ Ecos não empurram caixotes nem pegam gemas. Mas eles **têm peso**: seguram pla
 | Etapa | Estado |
 |---|---|
 | Design (GDD) | ✅ concluído |
-| Protótipo jogável (5 fases) | ✅ jogável no navegador |
+| Protótipo jogável (7 fases) | ✅ jogável no navegador |
 | PWA instalável + offline | ✅ |
 | Deploy no GitHub Pages | ✅ |
 
 ## O que tem no protótipo
 
-- **5 fases** com dificuldade crescente, do primeiro passo ao uso de dois ecos ao mesmo tempo.
+- **7 fases** com dificuldade crescente, do primeiro passo ao uso de três ecos ao mesmo tempo.
 - **Ciclo** de 12–24 passos, encerrado com `TAB`, morte ou esgotamento do orçamento — e transformado em eco.
-- **Ecos** (até 2 por fase) que repetem a trilha gravada e seguram placas.
+- **Ecos** (até 3 por fase) que repetem a trilha gravada e seguram placas.
 - **Elementos:** caixotes, placas e portões coloridos, chave e porta, gemas, vazio.
 - **Fluxo completo:** título com seleção de fase, HUD, pausa, tela de vitória com recorde, save em `localStorage`.
 - **Mobile:** toque para mover (swipe) e botões de ciclo/pausa na tela.
@@ -48,7 +48,7 @@ O protagonista é o **Kennedito**, um cachorro batedor de boné verde, capa e es
 - **p5.js** para render e loop (canvas virtual 640×360, zoom 2× com escala inteira).
 - **TypeScript puro** para as regras: sem canvas, testável no Node.
 - **Vite** + **vite-plugin-pwa** (Workbox) para build e offline.
-- **Vitest**: 17 testes, incluindo o replay das soluções das 5 fases.
+- **Vitest**: 22 testes, incluindo o replay das soluções das 7 fases.
 - Sprites em mapas de caracteres, fonte bitmap 3×5 própria, áudio sintetizado — **zero assets binários** (só os PNGs de ícone gerados no build).
 
 ## Desenvolvimento
@@ -56,7 +56,7 @@ O protagonista é o **Kennedito**, um cachorro batedor de boné verde, capa e es
 ```bash
 npm install
 npm run dev       # http://localhost:5173/Loopbound/
-npm test          # regras + replay das 5 fases
+npm test          # regras + replay das 7 fases
 npm run build     # tsc + vite build (gera dist/ e o service worker)
 npm run preview   # serve o build em http://localhost:4173/Loopbound/
 npm run icons     # regenera os ícones do PWA
@@ -75,7 +75,7 @@ src/ui/                  HUD (640×360)
 src/app.ts               máquina de estados, input, telas
 src/sketch.ts            instância p5 e escala inteira do canvas
 src/main.ts              bootstrap, listeners, PWA
-tests/game.test.ts       17 testes (regras + soluções das fases)
+tests/game.test.ts       22 testes (regras + soluções das fases)
 scripts/                 gerador de ícones e preview do sprite
 ```
 
@@ -95,13 +95,13 @@ scripts/                 gerador de ícones e preview do sprite
 | Arte | Pixel art 16×16, Kennedito 16×24, paleta restrita, sem assets binários |
 | Idioma | PT-BR |
 | Classificação | Livre |
-| Duração | 15–25 min no protótipo (5 fases + clear perfeito) |
+| Duração | 20–35 min no protótipo (7 fases + clear perfeito) |
 
 ---
 
 ## 0. Estado do protótipo
 
-O protótipo jogável já cobre o fluxo completo com **5 fases**:
+O protótipo jogável já cobre o fluxo completo com **7 fases**:
 
 | Fase | Nome | Ensina |
 |---|---|---|
@@ -110,10 +110,12 @@ O protótipo jogável já cobre o fluxo completo com **5 fases**:
 | 3 | Primeiro Eco | o eco segura a placa por você |
 | 4 | O Vão | dois ecos, dois portões, vazio |
 | 5 | A Estrela do Batedor | chave, porta e eco sincronizado |
+| 6 | Peso Extra | caixote e eco segurando placas ao mesmo tempo |
+| 7 | Três Portões | três ecos, três cores, quatro ciclos |
 
 Implementado: ciclo com orçamento e encerramento por `TAB`/morte, gravação e replay de ecos, caixotes, placas e portões coloridos, chave/porta, gemas, vazio, undo por passo, reinício, pausa, título com seleção de fase, tela de vitória com recorde, save em `localStorage`, áudio sintetizado, toque/swipe, PWA offline e canvas virtual 640×360 com zoom 2×.
 
-A visão de 10 fases da seção 6 permanece como alvo de conteúdo; o protótipo valida a mecânica com as 5 primeiras.
+A visão de 10 fases permanece como alvo de conteúdo; o protótipo valida a mecânica com as 7 primeiras.
 
 ---
 
@@ -253,60 +255,35 @@ Se o eco reexecutasse o input, ele colidiria com caixotes em posições diferent
 
 ---
 
-## 6. Curva de aprendizado — 10 fases
+## 6. Curva de aprendizado — 7 fases
 
 Cada fase ensina **um** conceito e o recombina. Nenhuma delas exige mais ciclos do que `maxEchoes + 1`.
 
 | # | Nome | Ensina | Ciclo | Ecos | Par (ciclos/passos) |
 |---|---|---|---|---|---|
-| 1 | Step In | Andar, ler a sala, sair | 24 | 0 | 1 / 8 |
-| 2 | Weight | Empurrar caixote em placa | 24 | 0 | 1 / 12 |
-| 3 | First Echo | Terminar ciclo de propósito; eco segura placa | 16 | 1 | 2 / 17 |
-| 4 | Two Hands | Dois ecos, duas placas, uma porta | 16 | 2 | 3 / 30 |
-| 5 | Gem Trail | Persistência de coletáveis entre ciclos | 14 | 1 | 3 / 26 |
-| 6 | Key & Door | Chave persistente + eco como peso | 16 | 2 | 3 / 32 |
-| 7 | The Gap | Vazio; morrer em local útil | 16 | 2 | 3 / 34 |
-| 8 | Short Fuse | Ciclo de 8 passos, rota cirúrgica | 8 | 2 | 4 / 30 |
-| 9 | Crossed Paths | Ecos ocupam o tile que você precisa | 16 | 3 | 4 / 40 |
-| 10 | Last Light | Tudo junto | 12 | 3 | 5 / 46 |
+| 1 | Primeiros Passos | Andar, ler a sala, sair | 12 | 0 | 1 / 8 |
+| 2 | Peso Morto | Empurrar caixote em placa | 24 | 0 | 1 / 20 |
+| 3 | Primeiro Eco | Terminar ciclo de propósito; eco segura placa | 16 | 1 | 2 / 19 |
+| 4 | O Vão | Dois ecos, duas portas, vazio | 20 | 2 | 3 / 25 |
+| 5 | A Estrela do Batedor | Chave, porta e eco sincronizado | 16 | 2 | 2 / 19 |
+| 6 | Peso Extra | Caixote e eco segurando placas ao mesmo tempo | 24 | 1 | 2 / 26 |
+| 7 | Três Portões | Três ecos, três cores, quatro ciclos | 24 | 3 | 4 / 34 |
 
-### Exemplo de layout — fase 3 (First Echo)
+Depois do protótipo, o plano de conteúdo segue com: **8 Short Fuse** (ciclo de 8 passos, rota cirúrgica), **9 Crossed Paths** (ecos como obstáculo) e **10 Last Light** (tudo junto).
+
+### Exemplo de layout — fase 3 (Primeiro Eco)
 
 ```
-#####################
-#..P....#.....E.....#
-#....r..#...........#
-#.......R...........#
-#.......#...........#
-#.......#...........#
-#####################
+#################
+#P...#......E...#
+#....#..........#
+#....R..........#
+#.r..#..........#
+#....#..........#
+#################
 ```
 
-Leitura: a placa vermelha (`r`) fica no mesmo lado do spawn, mas a porta vermelha (`R`) está na parede do meio. Pisar na placa abre a porta — só que, ao sair da placa para atravessar, ela fecha de novo. A solução é de dois ciclos: no primeiro, ande 3 passos até a placa e encerre o ciclo com `TAB`; o eco fica estacionado ali. No segundo ciclo, a porta vermelha permanece aberta e você contorna até o núcleo em 14 passos. A fase tem exatamente uma solução, e a parede do meio garante que não há atalho.
-
-### Estrutura de dados da fase
-
-```ts
-export interface Level {
-  id: string;
-  name: string;
-  cycleLength: number;
-  maxEchoes: number;
-  requiresGems: number;        // 0 = saída livre
-  map: string[];               // char-grid, linhas iguais
-  par: { cycles: number; steps: number };
-  solution: CycleSolution[];   // replay validado no CI
-}
-
-export interface CycleSolution {
-  moves: Dir[];                // U D L R
-  endsWith: "tab" | "death" | "win";
-}
-```
-
-Validação automática: dimensões retangulares, exatamente 1 `P` e 1 `E`, elementos obrigatórios presentes, `requiresGems <= gemas no mapa`, e a solução termina em `win`.
-
----
+Leitura: a placa vermelha (`r`) fica no mesmo lado do spawn, mas o portão vermelho (`R`) está na parede do meio. Pisar na placa abre o portão — só que, ao sair da placa para atravessar, ele fecha de novo. A solução é de dois ciclos: no primeiro, desça e ande até a placa (4 passos) e encerre o ciclo com `TAB`; o eco fica estacionado ali. No segundo ciclo, o portão permanece aberto e você contorna até o núcleo em 15 passos. A parede do meio garante que não há atalho.
 
 ## 7. Direção de arte
 
@@ -487,7 +464,7 @@ loopbound/
 │  │  ├─ types.ts             # tiles, direções, cores
 │  │  ├─ level.ts             # parse + validação do mapa
 │  │  ├─ rules.ts             # passo canônico, ecos, pressão, undo
-│  │  ├─ levels.ts            # 5 fases + soluções gravadas
+│  │  ├─ levels.ts            # 7 fases + soluções gravadas
 │  │  └─ save.ts              # progresso em localStorage
 │  ├─ render/
 │  │  ├─ palette.ts
@@ -499,7 +476,7 @@ loopbound/
 │  ├─ ui/hud.ts               # HUD 640×360, botões TAB/ESC, medidor de ciclo
 │  └─ audio/sfx.ts            # sons sintetizados em WebAudio
 ├─ scripts/                   # gerador de ícones e preview do sprite
-└─ tests/game.test.ts         # 17 testes: regras + replay das 5 soluções
+└─ tests/game.test.ts         # 22 testes: regras + replay das 7 soluções
 ```
 
 ### Ordem de desenho
@@ -548,7 +525,7 @@ loopbound/
 
 ### Critérios de aceite do produto
 
-- [x] 5 fases completas e vencíveis (protótipo).
+- [x] 7 fases completas e vencíveis (protótipo).
 - [ ] 10 fases completas e vencíveis (conteúdo final).
 - [x] 60 fps em notebook modesto e em celular médio.
 - [x] Progresso salvo em `localStorage`.
@@ -566,10 +543,10 @@ loopbound/
 | **M1 — Fundação** | Vite, loop fixo, input, paleta, tilemap | Sala estática renderizada a 60 fps |
 | **M2 — Corpo** | Movimento, empurrar, placas, portas, gemas, chave | Fases 1–2 jogáveis |
 | **M3 — Alma** | Ciclos, gravação e replay de ecos, undo | Fase 3 jogável |
-| **M4 — Conteúdo** | Fases 3–5, HUD, menus, áudio, save, PWA | Protótipo completo (5 fases) |
+| **M4 — Conteúdo** | Fases 3–7, HUD, menus, áudio, save, PWA | Protótipo completo (7 fases) |
 | **M5 — Polimento** | Fases 6–10, FX, acessibilidade, mobile, Pages | Link público, 60 fps, sem bugs |
 
-Protótipo (M1–M4) concluído: 5 fases, fluxo completo, PWA offline e publicação no Pages. M5 segue com a expansão de conteúdo.
+Protótipo (M1–M4) concluído: 7 fases, fluxo completo, PWA offline e publicação no Pages. M5 segue com a expansão de conteúdo.
 
 ---
 
@@ -583,7 +560,7 @@ Protótipo (M1–M4) concluído: 5 fases, fluxo completo, PWA offline e publica�
 | Pixel art gerada em código ficar fraca | Médio | Atlas com mapas de caracteres revisáveis + preview de sprites em página de debug |
 | Escala fracionária borrar a arte | Médio | Escala inteira obrigatória + letterbox |
 | Áudio irritar em sessões longas | Baixo | Mute com `M`, volume 25%, lembrado entre sessões |
-| Escopo de conteúdo crescer | Médio | 10 fases fixas; ideias novas vão para `docs/IDEAS.md` |
+| Escopo de conteúdo crescer | Médio | 10 fases fixas; ideias novas vão para `IDEAS.md` |
 
 ---
 
