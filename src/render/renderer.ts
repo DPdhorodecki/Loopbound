@@ -88,6 +88,19 @@ export function drawGate(p: p5, x: number, y: number, color: ColorKey, open: boo
     p.fill(c.bright);
     p.rect(x + 1, y + 1, 14, 1);
     p.rect(x + 1, y + 14, 14, 1);
+    // marca de forma (acessibilidade: combina com a placa sem depender da cor)
+    p.fill(0, 0, 0, 210);
+    p.rect(x + 4, y + 4, 8, 8);
+    p.push();
+    p.noFill();
+    p.stroke(255, 255, 255, 210);
+    p.strokeWeight(1);
+    const cx = x + 8;
+    const cy = y + 8;
+    if (color === 'red') p.circle(cx, cy, 5);
+    else if (color === 'blue') p.rect(cx - 2.5, cy - 2.5, 5, 5);
+    else p.triangle(cx, cy - 3, cx - 3, cy + 2, cx + 3, cy + 2);
+    p.pop();
   } else {
     const glow = 0.35 + Math.sin(t * 3) * 0.12;
     p.fill(c.bright);
