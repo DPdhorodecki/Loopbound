@@ -1,0 +1,47 @@
+# Blueprint do Render: frontend (Static Site) + API (Web Service).
+# O banco fica no Neon (grátis e sem expiração) — só a DATABASE_URL é pedida
+# na hora de criar o Blueprint.
+#
+# Importante: os nomes abaixo definem as URLs públicas.
+#   front: https://loopbound-web.onrender.com
+#   API:   https://loopbound-api.onrender.com
+# Se algum nome já estiver em uso no Render, ele ganha um sufixo e você precisa
+# atualizar VITE_API_URL e APP_ORIGIN aqui e redeployar.
+
+services:
+  - type: web
+    name: loopbound-web
+    runtime: static
+    buildCommand: npm ci --include=dev && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_BASE
+        value: /
+      - key: VITE_API_URL
+        value: https://loopbound-api.onrender.com
+    headers:
+      - path: /sw.js
+        name: Cache-Control
+        value: no-cache
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+
+  - type: web
+    name: loopbound-api
+    runtime: node
+    plan: free
+    region: ohio
+    buildCommand: npm ci --include=dev
+    startCommand: npm run server:start
+    healthCheckPath: /api/health
+    envVars:
+      # Cole aqui o connection string do Neon (o "direto", sem -pooler).
+      # Ex.: postgresql://user:senha@ep-xxx.us-east-2.aws.neon.tech/loopbound?sslmode=require
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: "1"
+      # Origem liberada no CORS (o domínio do Static Site).
+      - key: APP_ORIGIN
+        value: https://loopbound-web.onrender.com

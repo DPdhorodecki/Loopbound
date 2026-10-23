@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import { z } from 'zod';
 import { migrate, pool, requireDatabaseURL } from './db.js';
@@ -14,6 +15,9 @@ import {
 requireDatabaseURL();
 
 const app = express();
+// No Render a API fica atrás do proxy TLS: sem isso o rate limit enxerga
+// sempre o mesmo IP e acaba bloqueando o site inteiro.
+app.set('trust proxy', 1);
 app.use(express.json({ limit: '64kb' }));
 
 const ORIGINS = (process.env.APP_ORIGIN ?? 'http://localhost:5173,http://localhost:4173')

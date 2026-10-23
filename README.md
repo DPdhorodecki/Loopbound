@@ -6,7 +6,7 @@
 
 Ecos não empurram caixotes nem pegam gemas. Mas eles **têm peso**: seguram placas de pressão e mantêm portas abertas. Quase toda fase só é resolvida quando você deixa de tentar ser rápido e começa a montar uma equipe de você mesmo.
 
-**Jogue:** https://dpdhorodecki.github.io/Loopbound/
+**Jogue:** https://loopbound-web.onrender.com
 
 ## Status
 
@@ -19,7 +19,7 @@ Ecos não empurram caixotes nem pegam gemas. Mas eles **têm peso**: seguram pla
 | Login + banco PostgreSQL + histórico | ✅ |
 | Menu em abas (estilo CEPK Rush) | ✅ |
 | PWA instalável + offline | ✅ |
-| Deploy no GitHub Pages | ✅ |
+| Deploy no Render + Neon | ✅ (Blueprint em `render.yaml`) |
 
 ## O que tem no jogo
 
@@ -86,18 +86,18 @@ npm install
 npm run db:up        # sobe o PostgreSQL local (docker compose)
 cp .env.example .env # ajuste DATABASE_URL se precisar
 npm run server       # API em http://localhost:3001
-npm run dev          # jogo em http://localhost:5173/Loopbound/ (com proxy /api)
+npm run dev          # jogo em http://localhost:5173/ (com proxy /api)
 npm test             # regras + replay do tutorial e das 10 fases
 npm run build        # tsc + vite build (gera dist/ e o service worker)
-npm run preview      # serve o build em http://localhost:4173/Loopbound/
+npm run preview      # serve o build em http://localhost:4173/
 npm run tighten      # regenera os mapas fechados das fases
 npm run icons        # regenera os ícones do PWA
 npm run sprite       # gera um PNG de preview do Kennedito
 ```
 
-Em produção, defina `VITE_API_URL` no build do front com a URL pública da API e
-`APP_ORIGIN` no servidor com o domínio do jogo. O banco pode ficar no Neon
-(use `DATABASE_SSL=1`).
+Em produção o deploy é feito no Render a partir do `render.yaml`: o frontend é
+um **Static Site**, a API é um **Web Service** e o banco é um **PostgreSQL no
+Neon**. Veja a seção 14.
 
 Hooks de debug: `?level=3&moves=DDDR|DDRRRR` (o `|` encerra o ciclo) e `&pause=1`.
 
@@ -105,6 +105,7 @@ Hooks de debug: `?level=3&moves=DDDR|DDRRRR` (o `|` encerra o ciclo) e `&pause=1
 
 ```
 README.md                apresentação + GDD completo (regras, arte, fases, arquitetura)
+render.yaml              Blueprint do Render (Static Site + Web Service)
 server/                  API Express + PostgreSQL (auth, progresso, histórico)
 docker-compose.yml       PostgreSQL de desenvolvimento
 src/game/                regras canônicas, fases, tutorial, save (TypeScript puro)
@@ -486,8 +487,8 @@ Acessibilidade:
 - **TypeScript puro** para as regras (`src/game`), sem canvas — testável no Node.
 - **Vitest** para regras e replay das soluções das fases.
 - **vite-plugin-pwa** (Workbox) para manifest, service worker e offline.
-- **GitHub Pages** para publicação.
-- Única dependência de runtime: `p5`.
+- **Render** (Static Site) + **Neon** (PostgreSQL) para publicação e banco.
+- Dependência de runtime do frontend: `p5`; no backend, Express + `pg`.
 
 ### Estrutura de arquivos
 
@@ -568,11 +569,10 @@ loopbound/
 
 ### Critérios de aceite do produto
 
-- [x] 7 fases completas e vencíveis (protótipo).
-- [ ] 10 fases completas e vencíveis (conteúdo final).
+- [x] 10 fases completas e vencíveis (conteúdo final).
 - [x] 60 fps em notebook modesto e em celular médio.
-- [x] Progresso salvo em `localStorage`.
-- [x] Deploy no GitHub Pages.
+- [x] Progresso salvo no PostgreSQL (com cache em `localStorage`).
+- [x] Deploy no Render (Static Site + Web Service) com banco no Neon.
 - [x] Nenhum recurso externo carregado.
 - [x] Navegação 100% por teclado e por toque.
 
@@ -587,9 +587,9 @@ loopbound/
 | **M2 — Corpo** | Movimento, empurrar, placas, portas, gemas, chave | Fases 1–2 jogáveis |
 | **M3 — Alma** | Ciclos, gravação e replay de ecos, undo | Fase 3 jogável |
 | **M4 — Conteúdo** | Fases 3–7, HUD, menus, áudio, save, PWA | Protótipo completo (7 fases) |
-| **M5 — Polimento** | Fases 6–10, FX, acessibilidade, mobile, Pages | Link público, 60 fps, sem bugs |
+| **M5 — Polimento** | Fases 6–10, FX, acessibilidade, mobile, deploy | Link público, 60 fps, sem bugs |
 
-Protótipo (M1–M4) concluído: 7 fases, fluxo completo, PWA offline e publicação no Pages. M5 segue com a expansão de conteúdo.
+Protótipo (M1–M4) concluído: 7 fases, fluxo completo, PWA offline. M5 concluído: 10 fases, tutorial, login com PostgreSQL e publicação no Render.
 
 ---
 
@@ -609,11 +609,46 @@ Protótipo (M1–M4) concluído: 7 fases, fluxo completo, PWA offline e publica�
 
 ## 14. Deploy
 
-- Build estático com `base: '/Loopbound/'` no `vite.config.ts`.
-- Publicação no GitHub Pages a partir do build (`npm run build`).
-- Service worker gerado pelo Workbox com precache de HTML/JS/CSS/ícones (16 entradas).
-- URL final: `https://dpdhorodecki.github.io/Loopbound/`.
-- Versão de desenvolvimento: `npm run dev` em `localhost:5173`.
+O deploy usa três peças, todas gratuitas:
+
+| Peça | Onde | Endereço |
+|---|---|---|
+| Frontend (build do Vite) | Render **Static Site** | `https://loopbound-web.onrender.com` |
+| API (Express) | Render **Web Service** | `https://loopbound-api.onrender.com` |
+| PostgreSQL | **Neon** | connection string privada |
+
+O `render.yaml` na raiz descreve o Static Site e o Web Service, então o Render
+cria os dois de uma vez:
+
+1. No painel do Render: **New → Blueprint** e conecte o repositório.
+2. O Render pede o valor de `DATABASE_URL` (marcado com `sync: false`). Cole o
+   connection string **direto** do Neon (o host sem `-pooler`), no formato
+   `postgresql://usuario:senha@ep-xxx.neon.tech/loopbound?sslmode=require`.
+3. A API roda as migrações sozinha no primeiro boot e responde em `/api/health`.
+4. Confira as URLs geradas. Se `loopbound-web` ou `loopbound-api` já existirem,
+   o Render adiciona um sufixo: atualize `VITE_API_URL` e `APP_ORIGIN` no
+   `render.yaml` e faça novo deploy.
+
+Variáveis relevantes:
+
+| Variável | Onde | Valor |
+|---|---|---|
+| `VITE_BASE` | Static Site (build) | `/` |
+| `VITE_API_URL` | Static Site (build) | URL pública da API |
+| `DATABASE_URL` | Web Service | connection string do Neon |
+| `DATABASE_SSL` | Web Service | `1` |
+| `APP_ORIGIN` | Web Service | URL pública do Static Site (CORS) |
+
+Observações do plano gratuito:
+
+- O Web Service hiberna após 15 minutos sem tráfego; o primeiro acesso depois
+  disso leva cerca de um minuto. Um ping externo (ex.: UptimeRobot) a cada
+  10 minutos evita a espera.
+- O Neon não expira, mas o plano grátis tem 0,5 GB e suspende o banco após
+  inatividade prolongada (acorda sozinho na primeira consulta).
+- O service worker do Workbox faz precache de HTML/JS/CSS/ícones (16 entradas);
+  o `sw.js` é servido com `Cache-Control: no-cache` para as atualizações
+  chegarem.
 
 ---
 
