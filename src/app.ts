@@ -21,7 +21,7 @@ import {
   drawPlayer,
   drawShadow,
 } from './render/renderer';
-import { HUD_ESC, HUD_TAB, VIEW_H, VIEW_W, drawFrame, drawHud } from './ui/hud';
+import { HUD_ESC, HUD_TAB, HUD_UNDO, VIEW_H, VIEW_W, drawFrame, drawHud } from './ui/hud';
 
 export type Screen = 'title' | 'play' | 'win';
 
@@ -58,6 +58,7 @@ export class App {
   flashColor: string = PALETTE.cyan;
   showWinAt = 0;
   toast = '';
+  hintTimer = 0;
 
   constructor(p: p5) {
     this.p = p;
@@ -85,6 +86,7 @@ export class App {
     this.prevPlayer = null;
     this.prevCrates = this.rt.crates.map((c) => ({ ...c }));
     this.flash = 0;
+    this.hintTimer = 5;
     this.sfx.unlock();
     this.sfx.play('ui');
   }
@@ -127,6 +129,7 @@ export class App {
     this.flash = Math.max(0, this.flash - seconds * 2.5);
     this.pushTimer = Math.max(0, this.pushTimer - seconds);
     this.stepTimer = Math.max(0, this.stepTimer - dt);
+    this.hintTimer = Math.max(0, this.hintTimer - seconds);
 
     if (this.screen !== 'play' || this.paused || !this.rt) return;
 
@@ -327,9 +330,10 @@ export class App {
       if (y > 228 && y < 284) {
         this.startLevel(this.titleIndex);
       } else if (y > 138 && y < 176) {
-        if (x < 330 && this.titleIndex > 0) this.titleIndex = clamp(this.titleIndex - 1, 0, this.save.unlocked - 1);
-        else if (x > 530 && this.titleIndex < this.save.unlocked - 1)
-          this.titleIndex = clamp(this.titleIndex + 1, 0, this.save.unlocked - 1);
+        for (let i = 0; i < LEVELS.length; i++) {
+          const dx = 430 + (i - (LEVELS.length - 1) / 2) * 26;
+          if (x > dx - 9 && x < dx + 9 && i < this.save.unlocked) this.titleIndex = i;
+        }
       }
       return;
     }
@@ -351,6 +355,8 @@ export class App {
 
     if (this.inside(x, y, HUD_TAB)) {
       this.endCycle();
+    } else if (this.inside(x, y, HUD_UNDO)) {
+      this.doUndo();
     } else if (this.inside(x, y, HUD_ESC)) {
       this.paused = true;
       this.pauseIndex = 0;
@@ -448,7 +454,7 @@ export class App {
     drawText(p, 'TAB  ENCERRAR CICLO    Z  DESFAZER', 430, 314, 1, '#5C7369', 'center');
     drawText(p, 'R  REINICIAR    ESC  MENU    M  SOM', 430, 328, 1, '#5C7369', 'center');
 
-    drawText(p, 'V0.1 — PROTÓTIPO', 14, VIEW_H - 16, 1, '#2F4640', 'left');
+    drawText(p, 'V0.1 - PROTÓTIPO', 14, VIEW_H - 16, 1, '#2F4640', 'left');
   }
 
   private drawPlay(): void {
@@ -537,7 +543,28 @@ export class App {
       p.drawingContext.globalAlpha = 1;
     }
 
-    if (this.screen === 'play') drawHud(p, rt, this.time, this.save.muted);
+    if (this.screen === 'play') {
+      this.drawHint(rt);
+      drawHud(p, rt, this.time, this.save.muted);
+    }
+  }
+
+  private drawHint(rt: Runtime): void {
+    if (this.hintTimer <= 0 || rt.beat > 0) return;
+    const p = this.p;
+    const def = rt.level.def;
+    const title = `FASE ${this.levelIndex + 1} - ${def.name.toUpperCase()}`;
+    const sub = def.subtitle.toUpperCase();
+    const w = Math.max(textWidth(title, 1), textWidth(sub, 1)) + 44;
+    const h = 40;
+    const x = Math.round(VIEW_W / 2 - w / 2);
+    const y = 12;
+    const alpha = Math.min(1, this.hintTimer / 0.7);
+    p.drawingContext.globalAlpha = alpha;
+    drawFrame(p, x, y, w, h, true);
+    drawText(p, title, VIEW_W / 2, y + 9, 1, PALETTE.cyan, 'center');
+    drawText(p, sub, VIEW_W / 2, y + 24, 1, '#CFE3DA', 'center');
+    p.drawingContext.globalAlpha = 1;
   }
 
   private drawWin(): void {
@@ -570,9 +597,10 @@ export class App {
     drawText(p, `${best ? best.steps : steps}`, x + 232, y + 148, 2, PALETTE.cyanDim, 'right');
 
     const perfect = gems === rt.level.gems.length && cycles <= def.par.cycles;
+    const last = this.levelIndex === LEVELS.length - 1;
     drawText(
       p,
-      perfect ? 'PERFEITO!' : 'CICLO FECHADO',
+      perfect ? 'PERFEITO!' : last ? 'FIM DO PROTÓTIPO' : 'CICLO FECHADO',
       x + w / 2 - 40,
       y + 180,
       2,
@@ -583,7 +611,15 @@ export class App {
     p.image(this.atlas.ken.cheer, x + w - 100, y + 40, 72, 108);
     drawText(p, 'CEPK', x + w - 64, y + 156, 1, PALETTE.gold, 'center');
 
-    drawText(p, 'ENTER — PRÓXIMA      ESC — TÍTULO', x + w / 2, y + h - 20, 1, PALETTE.cyanDim, 'center');
+    drawText(
+      p,
+      last ? 'ENTER - TÍTULO' : 'ENTER - PRÓXIMA      ESC - TÍTULO',
+      x + w / 2,
+      y + h - 20,
+      1,
+      PALETTE.cyanDim,
+      'center',
+    );
   }
 
   private drawPause(): void {

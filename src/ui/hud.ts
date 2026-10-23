@@ -8,6 +8,7 @@ export const VIEW_H = 360;
 
 export const HUD_TAB = { x: 10, y: 10, w: 44, h: 44 };
 export const HUD_ESC = { x: 10, y: VIEW_H - 54, w: 44, h: 44 };
+export const HUD_UNDO = { x: 10, y: VIEW_H - 106, w: 44, h: 44 };
 
 export function drawFrame(p: p5, x: number, y: number, w: number, h: number, active = false): void {
   p.noStroke();
@@ -62,6 +63,21 @@ function drawMenuGlyph(p: p5, x: number, y: number, s: number, color: string): v
   }
 }
 
+function drawUndoGlyph(p: p5, x: number, y: number, s: number, color: string): void {
+  p.noStroke();
+  p.fill(color);
+  // ponta da seta
+  p.rect(x, y + 3 * s, s, s);
+  p.rect(x + s, y + 2 * s, s, s);
+  p.rect(x + s, y + 4 * s, s, s);
+  p.rect(x + 2 * s, y + s, s, s);
+  p.rect(x + 2 * s, y + 5 * s, s, s);
+  p.rect(x + 3 * s, y, s, s);
+  p.rect(x + 3 * s, y + 6 * s, s, s);
+  // haste
+  p.rect(x + 3 * s, y + 3 * s, 5 * s, s);
+}
+
 function drawGemIcon(p: p5, x: number, y: number, scale = 1): void {
   p.noStroke();
   p.fill(PALETTE.emeraldDark);
@@ -89,6 +105,11 @@ export function drawHud(p: p5, rt: Runtime, t: number, muted: boolean): void {
   drawFrame(p, HUD_TAB.x, HUD_TAB.y, HUD_TAB.w, HUD_TAB.h, rt.beat > 0);
   drawLoopGlyph(p, HUD_TAB.x + 9, HUD_TAB.y + 5, 3, rt.beat > 0 ? PALETTE.cyan : PALETTE.cyanDim);
   drawText(p, 'TAB', HUD_TAB.x + HUD_TAB.w / 2, HUD_TAB.y + HUD_TAB.h - 9, 1, PALETTE.cyan, 'center');
+
+  // Desfazer
+  drawFrame(p, HUD_UNDO.x, HUD_UNDO.y, HUD_UNDO.w, HUD_UNDO.h, rt.beat > 0);
+  drawUndoGlyph(p, HUD_UNDO.x + 10, HUD_UNDO.y + 8, 3, rt.beat > 0 ? PALETTE.cyan : PALETTE.cyanDim);
+  drawText(p, 'Z', HUD_UNDO.x + HUD_UNDO.w / 2, HUD_UNDO.y + HUD_UNDO.h - 9, 1, rt.beat > 0 ? PALETTE.cyan : PALETTE.cyanDim, 'center');
 
   // ESC
   drawFrame(p, HUD_ESC.x, HUD_ESC.y, HUD_ESC.w, HUD_ESC.h, false);

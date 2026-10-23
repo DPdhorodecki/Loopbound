@@ -75,6 +75,33 @@ canvas {
   background: rgba(53, 230, 242, 0.15);
 }
 
+#update {
+  position: fixed;
+  right: 16px;
+  bottom: 64px;
+  z-index: 10;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #0b1220;
+  background: var(--cyan);
+  border: 2px solid var(--cyan);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+#update.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#update:active {
+  background: rgba(53, 230, 242, 0.7);
+}
+
 #ios-hint {
   position: fixed;
   left: 50%;

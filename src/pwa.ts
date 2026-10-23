@@ -8,15 +8,23 @@ interface InstallPromptEvent extends Event {
 let deferredPrompt: InstallPromptEvent | null = null;
 
 export function initPWA(notify: (msg: string) => void): void {
+  const updateBtn = document.getElementById('update');
+
   try {
-    registerSW({
+    const updateSW = registerSW({
       immediate: true,
       onNeedRefresh() {
-        notify('Nova versao pronta — recarregue');
+        updateBtn?.classList.add('visible');
+        notify('Nova versão pronta');
       },
       onOfflineReady() {
         notify('Pronto para jogar offline');
       },
+    });
+    updateBtn?.addEventListener('click', () => {
+      updateBtn.classList.remove('visible');
+      notify('Atualizando…');
+      void updateSW(true);
     });
   } catch {
     /* dev sem service worker */
