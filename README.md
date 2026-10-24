@@ -25,13 +25,13 @@ Ecos não empurram caixotes nem pegam gemas. Mas eles **têm peso**: seguram pla
 ## O que tem no jogo
 
 - **Tutorial de 8 salas** ensinando andar, empurrar, eco, chave, alavanca, botão, duto e código — aparece no primeiro acesso e pode ser revisto pelo menu.
-- **30 fases** com dificuldade crescente, todas com paredes, corredores e salas (nenhuma fase é um campo aberto).
+- **30 fases** com dificuldade crescente, **100% fechadas** por corredores e paredes: não existe atalho — resolver o puzzle (portão/senha) é sempre obrigatório. Cada ciclo tem orçamento mínimo (folga zero).
 - **Puzzles elaborados:** caixotes em cadeia, placas e portões coloridos, chave e porta, vazio, gema e o uso combinado de vários ecos.
 - **Alavanca (`E`):** liga e fica ligada (persiste entre ciclos); aperte `E` de novo para desligar.
 - **Botão (`E`):** só fica pressionado com peso — um caixote em cima o mantém ligado.
 - **Duto:** pisar teleporta para o par; fica inativo se um caixote cobrir o par.
 - **Porta de código:** leia as pistas no chão (números romanos ou cores), abra a tela (`E`) e digite a senha no painel (`1`–`9`, `C` confirma, `X` limpa).
-- **Ciclo** de 8–30 passos, encerrado com `TAB`, morte ou esgotamento do orçamento — e transformado em eco.
+- **Ciclo** curto (orçamento mínimo para a solução: 8–25 passos), encerrado com `TAB`, morte ou esgotamento do orçamento — e transformado em eco.
 - **Ecos** (até 3 por fase) que repetem a trilha gravada e seguram placas.
 - **Contas:** login/cadastro, progresso, recordes e histórico de partidas no **PostgreSQL**.
 - **Menu em abas:** JOGAR, FASES, HISTÓRICO e PERFIL, com avatar, recordes e estatísticas.
@@ -63,7 +63,7 @@ O protagonista é o **Kennedito**, um cachorro batedor de boné verde, capa e es
 - **Vite** + **vite-plugin-pwa** (Workbox) para build e offline.
 - **UI em HTML/CSS** (login e menu em abas) por cima do canvas.
 - **Node + Express + `pg` + Zod** no backend, com **PostgreSQL** (login, progresso e histórico).
-- **Vitest**: 80 testes, incluindo o replay das soluções do tutorial e das 30 fases.
+- **Vitest**: 148 testes — regras, invariantes de design (nenhuma fase tem caminho livre; nenhuma solução estoura o ciclo) e replays.
 - Sprites em mapas de caracteres, fonte bitmap 3×5 própria, áudio sintetizado — **zero assets binários** (só os PNGs de ícone gerados no build).
 
 ## Contas, banco e API
@@ -96,10 +96,11 @@ npm run db:up        # sobe o PostgreSQL local (docker compose)
 cp .env.example .env # ajuste DATABASE_URL se precisar
 npm run server       # API em http://localhost:3001
 npm run dev          # jogo em http://localhost:5173/ (com proxy /api)
-npm test             # regras + replay do tutorial e das 30 fases
+npm test             # regras + invariantes + replay do tutorial e das 30 fases
 npm run build        # tsc + vite build (gera dist/ e o service worker)
 npm run preview      # serve o build em http://localhost:4173/
-npm run tighten      # regenera os mapas fechados das fases
+npm run tighten      # regenera os mapas fechados das fases (halo 0)
+npm run audit        # audita as fases: caminho livre, fim de ciclo prematuro, folga
 npm run icons        # regenera os ícones do PWA
 npm run sprite       # gera um PNG de preview do Kennedito
 ```
@@ -124,7 +125,7 @@ src/ui/                  HUD (640×360) e casca DOM (login + menu em abas)
 src/app.ts               máquina de estados, input, tutorial, telas
 src/sketch.ts            instância p5 e escala inteira do canvas
 src/main.ts              bootstrap, listeners, PWA
-tests/                   80 testes (regras, tutorial e soluções das fases)
+tests/                   148 testes (regras, invariantes e soluções das fases)
 scripts/                 gerador de ícones, preview do sprite e fechamento dos mapas
 ```
 
@@ -241,7 +242,7 @@ Sair de cada sala quase nunca exige ser mais rápido. Exige ser **várias pessoa
 
 ### Anatomia de um ciclo
 
-- Um ciclo tem `cycleLength` **passos** (movimentos válidos). O padrão é 16; fases avançadas usam 8.
+- Um ciclo tem `cycleLength` **passos** (movimentos válidos), fixado no **mínimo que a solução de referência exige** (folga zero): cada ciclo é uma corrida contra o tempo.
 - O ciclo termina por: `TAB` (manual), orçamento esgotado, morte, ou vitória.
 - Ao terminar, o trajeto inteiro é congelado como **eco** e o ciclo seguinte começa do zero.
 - O eco reproduz a trilha do passo 0 ao N e **estaciona na última posição** até o fim do ciclo; no ciclo seguinte, recomeça do início.
@@ -343,13 +344,13 @@ Cada fase ensina **um** conceito e o recombina. Nenhuma delas exige mais ciclos 
 
 | # | Nome | Ensina | Ciclo | Ecos | Par (ciclos/passos) |
 |---|---|---|---|---|---|
-| 1 | Primeiros Passos | Andar, ler a sala, sair | 16 | 0 | 1 / 12 |
-| 2 | Peso Morto | Empurrar caixote em placa | 24 | 0 | 1 / 20 |
+| 1 | Primeiros Passos | Andar, ler a sala, sair | 13 | 0 | 1 / 12 |
+| 2 | Peso Morto | Empurrar caixote em placa | 21 | 0 | 1 / 20 |
 | 3 | Primeiro Eco | Terminar ciclo de propósito; eco segura placa | 16 | 1 | 2 / 19 |
-| 4 | O Vão | Dois ecos, duas portas, vazio | 20 | 2 | 3 / 25 |
-| 5 | A Estrela do Batedor | Chave, porta e eco sincronizado | 16 | 2 | 2 / 19 |
-| 6 | Peso Extra | Caixote e eco segurando placas ao mesmo tempo | 20 | 1 | 2 / 26 |
-| 7 | Três Portões | Três ecos, três cores, quatro ciclos | 19 | 3 | 4 / 34 |
+| 4 | O Vão | Dois ecos, duas portas, vazio | 16 | 2 | 3 / 25 |
+| 5 | A Estrela do Batedor | Chave, porta e eco sincronizado | 14 | 2 | 2 / 19 |
+| 6 | Peso Extra | Caixote e eco segurando placas ao mesmo tempo | 21 | 1 | 2 / 26 |
+| 7 | Três Portões | Três ecos, três cores, quatro ciclos | 20 | 3 | 4 / 34 |
 
 As fases 11–30 introduzem, em grupos, **alavanca**, **botão**, **duto** e **porta de código**, e depois recombinam tudo com os ecos:
 
@@ -558,7 +559,7 @@ loopbound/
 │  ├─ ui/hud.ts               # HUD 640×360, botões TAB/ESC, medidor de ciclo
 │  └─ audio/sfx.ts            # sons sintetizados em WebAudio
 ├─ scripts/                   # gerador de ícones e preview do sprite
-└─ tests/game.test.ts         # 80 testes: regras + replay das 30 soluções + tutorial
+└─ tests/game.test.ts         # 148 testes: regras + invariantes + replay das 30 soluções + tutorial
 ```
 
 ### Ordem de desenho
@@ -595,15 +596,15 @@ loopbound/
 
 - **Regras**: empurrar em cadeia, bloqueio por parede/vazio/porta, peso de eco em placa, coleta persistente, morte, vitória.
 - **Ecos**: replay com trilha mais curta que o ciclo (estaciona na última posição até o fim do ciclo e recomeça no ciclo seguinte), sobreposição, dissolução do mais antigo.
-- **Fases**: formato válido, exatamente 1 spawn e 1 saída, solução gravada vence, nenhuma fase exige mais que `maxEchoes + 1` ciclos.
+- **Fases**: formato válido, exatamente 1 spawn e 1 saída, solução gravada vence, nenhuma fase exige mais que `maxEchoes + 1` ciclos, **nenhuma fase tem caminho livre** (a mecânica é obrigatória) e nenhuma solução estoura o ciclo antes da hora.
 
 ### Critérios de aceite por fase
 
 - [ ] Intenção legível sem texto.
 - [ ] Solução do CI chega ao núcleo.
-- [ ] Existe uma segunda solução não trivial **ou** a fase é explicitamente linear (fases 1–2).
+- [ ] Nenhum caminho livre: sem acionar a mecânica, a saída é inalcançável (fase 1 é a única exceção, pois ensina a andar).
 - [ ] Par de passos documentado.
-- [ ] Nenhum tile inalcançável sem mecânica ainda não ensinada.
+- [ ] Nenhum tile inalcançável sem mecânica ainda não ensinada e nenhum atalho que fure o puzzle.
 
 ### Critérios de aceite do produto
 

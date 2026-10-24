@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LEVELS } from '../src/game/levels';
-import { parseLevel } from '../src/game/level';
+import { TUTORIAL_ROOMS } from '../src/game/tutorial';
+import { LevelDef, parseLevel, tileAt } from '../src/game/level';
 import {
   clearCode,
   colorPowered,
@@ -13,7 +14,7 @@ import {
   tryMove,
   undo,
 } from '../src/game/rules';
-import { Action, Dir } from '../src/game/types';
+import { Action, Dir, TILE_VOID, TILE_WALL } from '../src/game/types';
 
 const MOVES: Dir[] = ['U', 'D', 'L', 'R'];
 
@@ -25,6 +26,63 @@ function applyAction(rt: ReturnType<typeof createRuntime>, token: Action) {
   else if (token === 'X') clearCode(rt);
   else pressCode(rt, Number(token) - 1);
   return null;
+}
+
+/**
+ * Caminho "sem mecânica": portões, portas, portão de código e dutos são
+ * tratados como parede (o jogador não pode andar por cima deles) e caixotes
+ * bloqueiam. Se ainda assim dá pra chegar à saída, a fase tem caminho livre e a
+ * mecânica é opcional — o que não pode acontecer.
+ */
+function hasFreePath(def: LevelDef): boolean {
+  const level = parseLevel(def);
+  const blocked = (x: number, y: number) =>
+    tileAt(level, x, y) === TILE_WALL ||
+    tileAt(level, x, y) === TILE_VOID ||
+    level.gates.some((g) => g.x === x && g.y === y) ||
+    level.doors.some((d) => d.x === x && d.y === y) ||
+    level.codeGates.some((g) => g.x === x && g.y === y) ||
+    level.crates.some((c) => c.x === x && c.y === y) ||
+    level.ducts.some((d) => d.x === x && d.y === y);
+
+  const start = level.spawn;
+  const seen = new Set<string>([`${start.x},${start.y}`]);
+  const queue: { x: number; y: number }[] = [start];
+  while (queue.length) {
+    const cur = queue.shift()!;
+    if (cur.x === level.exit.x && cur.y === level.exit.y) return true;
+    for (const [dx, dy] of [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ] as const) {
+      const nx = cur.x + dx;
+      const ny = cur.y + dy;
+      const key = `${nx},${ny}`;
+      if (nx < 0 || ny < 0 || nx >= level.w || ny >= level.h) continue;
+      if (seen.has(key) || blocked(nx, ny)) continue;
+      seen.add(key);
+      queue.push({ x: nx, y: ny });
+    }
+  }
+  return false;
+}
+
+/** A solução de referência não pode estourar o orçamento no meio de um ciclo. */
+function hasPrematureCycleEnd(def: LevelDef): boolean {
+  const level = parseLevel(def);
+  const rt = createRuntime(level);
+  let bad = false;
+  def.solution.forEach((moves, index) => {
+    const isLast = index === def.solution.length - 1;
+    moves.forEach((token) => {
+      const res = applyAction(rt, token);
+      if (res?.cycleEnded && !(isLast && res.won)) bad = true;
+    });
+    if (!isLast) endCycle(rt, 'tab');
+  });
+  return bad;
 }
 
 describe('fases', () => {
@@ -143,7 +201,7 @@ describe('regras', () => {
     const level = parseLevel(LEVELS[2]);
     const rt = createRuntime(level);
     for (let i = 0; i < 3; i++) {
-      tryMove(rt, i % 2 === 0 ? 'R' : 'L');
+      tryMove(rt, 'D');
       endCycle(rt, 'tab');
     }
     expect(rt.echoes).toHaveLength(level.def.maxEchoes);
@@ -226,4 +284,31 @@ describe('mecânicas novas', () => {
     expect(confirmCode(rt)).toBe(true);
     expect(rt.codeSolved).toBe(true);
   });
+});
+
+/**
+ * Invariantes de design. A fase `primeiros-passos` (e a sala `tuto-andar`) são
+ * intencionalmente um caminho livre, pois ensinam a andar.
+ */
+const FREE_PATH_OK = new Set(['primeiros-passos', 'tuto-andar']);
+
+describe('invariantes das fases', () => {
+  for (const def of LEVELS) {
+    it(`${def.id}: não tem caminho livre`, () => {
+      if (FREE_PATH_OK.has(def.id)) return;
+      expect(hasFreePath(def)).toBe(false);
+    });
+    it(`${def.id}: solução não encerra o ciclo antes da hora`, () => {
+      expect(hasPrematureCycleEnd(def)).toBe(false);
+    });
+  }
+});
+
+describe('invariantes do tutorial', () => {
+  for (const room of TUTORIAL_ROOMS) {
+    it(`${room.def.id}: não tem caminho livre`, () => {
+      if (FREE_PATH_OK.has(room.def.id)) return;
+      expect(hasFreePath(room.def)).toBe(false);
+    });
+  }
 });

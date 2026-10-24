@@ -14,13 +14,17 @@ import { Action, Dir, TILE_VOID, TILE_WALL } from '../src/game/types';
 
 /**
  * Fecha as salas: replaya a solução de cada fase e transforma em parede todo
- * tile de piso que nenhum ciclo pisa (mantendo um halo de 1 tile e todas as
- * células de placas, portões, portas, gemas, chave, caixotes, spawn e saída).
+ * tile de piso que nenhum ciclo pisa (mantendo todas as células de placas,
+ * portões, portas, gemas, chave, caixotes, spawn e saída).
  *
- * Uso: npx vite-node scripts/tighten.ts
+ * Por padrão o halo é 0: o mapa fica exatamente no caminho da solução, sem
+ * corredores paralelos que deixariam a mecânica opcional. Um halo maior abre
+ * um respiro de N tiles ao redor do caminho.
+ *
+ * Uso: npx vite-node scripts/tighten.ts [halo]
  * O resultado é impresso como um bloco pronto para colar em src/game/levels.ts.
  */
-function tighten(def: LevelDef, halo = 1): string[] {
+function tighten(def: LevelDef, halo = Number(process.argv[2] ?? 0)): string[] {
   const level = parseLevel(def);
   const keep = new Set<string>();
   const add = (x: number, y: number) => keep.add(`${x},${y}`);
