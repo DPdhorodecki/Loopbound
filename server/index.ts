@@ -93,7 +93,24 @@ async function loadMe(userId: string) {
   };
 }
 
-app.get('/api/health', (_req, res) => {
+// Health check do Render: prova que a API subiu E que o banco responde.
+app.get('/api/health', async (_req, res) => {
+  try {
+    // Consulta trivial: acorda o Neon se estiver suspenso e detecta banco fora
+    // do ar. Como o Render só faz esse check no deploy, ele não consome a cota
+    // de compute do Neon no dia a dia.
+    await pool.query('select 1');
+    res.json({ ok: true, db: true });
+  } catch (error) {
+    console.error('Health check falhou:', error);
+    res.status(503).json({ ok: false, db: false });
+  }
+});
+
+// Ping leve para o monitor externo (UptimeRobot): mantém o Render acordado,
+// mas NÃO consulta o banco — assim o Neon continua podendo escalar a zero e a
+// cota grátis de 100 CU-hours/projeto/mês não é consumida à toa.
+app.get('/api/ping', (_req, res) => {
   res.json({ ok: true });
 });
 

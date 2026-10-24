@@ -8,6 +8,10 @@ const here = dirname(fileURLToPath(import.meta.url));
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_SSL === '1' ? { rejectUnauthorized: false } : undefined,
+  // Se o Neon estiver acordando (ou fora do ar), não deixe o health check
+  // pendurado: o Render considera o serviço doente depois de alguns segundos.
+  connectionTimeoutMillis: 8000,
+  query_timeout: 8000,
 });
 
 export async function migrate(): Promise<void> {

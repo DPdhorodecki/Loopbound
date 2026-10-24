@@ -74,6 +74,8 @@ cópia em `localStorage` para jogar offline depois do primeiro acesso.
 | `/api/runs` | POST | registra a partida e atualiza o recorde |
 | `/api/history` | GET | últimas partidas |
 | `/api/leaderboard` | GET | melhores passos por fase |
+| `/api/health` | GET | health check do Render: `{"ok":true,"db":true}` (consulta o banco) |
+| `/api/ping` | GET | `{"ok":true}` sem tocar no banco (para o monitor externo) |
 
 Tabelas: `users`, `sessions`, `progress`, `level_bests` e `runs`
 (veja `server/migrations/001_init.sql`). Senhas com **bcrypt**; sessões com token
@@ -641,14 +643,69 @@ Variáveis relevantes:
 
 Observações do plano gratuito:
 
-- O Web Service hiberna após 15 minutos sem tráfego; o primeiro acesso depois
-  disso leva cerca de um minuto. Um ping externo (ex.: UptimeRobot) a cada
-  10 minutos evita a espera.
-- O Neon não expira, mas o plano grátis tem 0,5 GB e suspende o banco após
-  inatividade prolongada (acorda sozinho na primeira consulta).
+- O Web Service do Render hiberna após **15 minutos sem tráfego**; o primeiro
+  acesso depois disso leva cerca de um minuto. Veja a subseção *Manter a API
+  acordada* para eliminar essa espera.
+- O Render dá **750 h de instância grátis por mês** (por workspace). Um serviço
+  ligado 24/7 usa ~730 h, então cabe — mas não sobra muito. Só há um Web Service
+  neste projeto.
+- O Neon **não expira**, mas o plano grátis tem **1 GB de Postgres por projeto**
+  (até 20 GB somando todos), **100 CU-hours/projeto/mês** e **5 GB de tráfego
+  por projeto/mês**. O compute **escala para zero após 5 min** ocioso e acorda
+  na primeira consulta em menos de 1 s.
 - O service worker do Workbox faz precache de HTML/JS/CSS/ícones (16 entradas);
   o `sw.js` é servido com `Cache-Control: no-cache` para as atualizações
   chegarem.
+
+### Manter a API acordada (opcional)
+
+O `loopbound-api` hiberna após 15 min sem tráfego. Um monitor externo batendo
+na API a cada 5 min evita o cold start de ~1 min. O **UptimeRobot** faz isso de
+graça:
+
+1. Crie a conta em [uptimerobot.com](https://uptimerobot.com) e confirme o
+   e-mail (sem confirmar, não chegam alertas).
+2. **+ Add New Monitor** → **Monitor Type: HTTP(s)**.
+3. Preencha:
+   - **Friendly Name:** `Loopbound API`
+   - **URL:** `https://loopbound-api.onrender.com/api/ping`
+   - **Monitoring Interval:** `5 minutes` (mínimo do plano grátis)
+   - **Alert Contacts:** deixe seu e-mail marcado
+4. **Create Monitor**. Em poucos minutos o status fica **Up** (verde).
+5. Opcional: **My Settings → Alert Contacts → Test Notification** para conferir
+   que o e-mail chega.
+
+> O campo **HTTP Method** só existe no plano pago (Pro) — **não é preciso**. O
+> monitor usa o método padrão e o `/api/ping` responde `200` de qualquer forma.
+
+#### Por que apontar para `/api/ping`, e não para `/api/health`
+
+O `/api/health` roda um `select 1` no banco. Se o monitor de 5 em 5 minutos
+batesse nele, o compute do Neon **nunca** escalaria a zero — e a conta não
+fecha:
+
+```
+0,25 CU (mínimo do Neon) × ~720 h/mês ≈ 180 CU-hours/mês
+```
+
+Isso estoura a cota grátis de **100 CU-hours/projeto/mês** e o Neon **suspende o
+compute até o próximo mês**. Por isso o monitor bate no `/api/ping` (sem banco):
+o Render fica quente, o Neon dorme à vontade e acorda em menos de 1 s quando
+alguém realmente joga. O `/api/health` continua existindo para o Render e para
+checagens manuais (ele consulta o banco e devolve `503` se o banco cair).
+
+#### Alternativas
+
+- **cron-job.org** (grátis) permite escolher as horas do dia (ex.: 8h–22h), o que
+  economiza horas do Render. Mesma configuração, URL `/api/ping`.
+- **Sem monitor:** o custo é só esperar ~1 min no primeiro acesso após 15 min de
+  inatividade — aceitável para um projeto de aula.
+- **Pausar o monitor** (botão ⏸ no UptimeRobot) quando não estiver usando: o
+  comportamento volta ao normal e a espera reaparece.
+
+> Não use `/robots.txt` para o ping: quando o serviço está dormindo, o Render
+> responde esse caminho sozinho, sem acordar a aplicação. O endpoint certo é o
+> `/api/ping`.
 
 ---
 
