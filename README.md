@@ -25,7 +25,7 @@ Ecos não empurram caixotes nem pegam gemas. Mas eles **têm peso**: seguram pla
 ## O que tem no jogo
 
 - **Tutorial de 8 salas** ensinando andar, empurrar, eco, chave, alavanca, botão, duto e código — aparece no primeiro acesso e pode ser revisto pelo menu.
-- **30 fases** com dificuldade crescente, **100% fechadas** por corredores e paredes: não existe atalho — resolver o puzzle (portão/senha) é sempre obrigatório. Cada ciclo tem orçamento mínimo (folga zero).
+- **30 fases** com dificuldade crescente, **100% fechadas** por corredores e paredes: não existe atalho — resolver o puzzle (portão/senha) é sempre obrigatório. Cada ciclo tem orçamento mínimo (folga zero), com uma folga extra na fase 28.
 - **Fases 13–30 redesenhadas:** mapas maiores (até três salas ligadas por portões), **pelo menos 3 mecânicas por fase** e seis fases com senha (quatro delas de cor), recombinando caixote, placa, alavanca, botão, duto, vazio e código.
 - **Puzzles elaborados:** caixotes em cadeia, placas e portões coloridos, chave e porta, vazio, gema e o uso combinado de vários ecos.
 - **Alavanca (`E`):** liga e fica ligada (persiste entre ciclos); aperte `E` de novo para desligar.
@@ -244,7 +244,7 @@ Sair de cada sala quase nunca exige ser mais rápido. Exige ser **várias pessoa
 
 ### Anatomia de um ciclo
 
-- Um ciclo tem `cycleLength` **passos** (movimentos válidos), fixado no **mínimo que a solução de referência exige** (folga zero): cada ciclo é uma corrida contra o tempo.
+- Um ciclo tem `cycleLength` **passos** (movimentos válidos), fixado no **mínimo que a solução de referência exige** (folga zero): cada ciclo é uma corrida contra o tempo. A fase 28 tem folga extra (orçamento de 40 para uma solução de 31 passos).
 - O ciclo termina por: `TAB` (manual), orçamento esgotado, morte, ou vitória.
 - Ao terminar, o trajeto inteiro é congelado como **eco** e o ciclo seguinte começa do zero.
 - O eco reproduz a trilha do passo 0 ao N e **estaciona na última posição** até o fim do ciclo; no ciclo seguinte, recomeça do início.

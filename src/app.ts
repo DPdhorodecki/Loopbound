@@ -56,6 +56,9 @@ export class App {
   onWin: ((result: WinResult) => void) | null = null;
   onRequestMenu: (() => void) | null = null;
   onTutorialDone: (() => void) | null = null;
+  /** Avisa a casca DOM para abrir a pausa (ou a senha) em overlay. */
+  onPause: (() => void) | null = null;
+  onCode: (() => void) | null = null;
 
   screen: Screen = 'title';
   /** Quando o menu DOM está aberto, o jogo ignora o teclado e o ponteiro. */
@@ -304,7 +307,51 @@ export class App {
   }
 
   debugPause(): void {
-    if (this.screen === 'play') this.paused = true;
+    if (this.screen === 'play') this.openPause();
+  }
+
+  /** Abre a pausa e avisa a casca DOM (que decide se desenha o overlay). */
+  private openPause(): void {
+    this.paused = true;
+    this.pauseIndex = 0;
+    this.onPause?.();
+  }
+
+  /** Fecha a pausa (usado pelo overlay DOM). */
+  resume(): void {
+    if (this.screen !== 'play') return;
+    this.paused = false;
+    this.pauseIndex = 0;
+  }
+
+  // ------------------------------------------------ senha (overlay DOM)
+
+  codePress(index: number): void {
+    if (this.rt) {
+      pressCode(this.rt, index);
+      this.sfx.play('ui');
+    }
+  }
+
+  codeClear(): void {
+    if (this.rt) {
+      clearCode(this.rt);
+      this.sfx.play('ui');
+    }
+  }
+
+  codeConfirm(): boolean {
+    if (!this.rt) return false;
+    const ok = confirmCode(this.rt);
+    this.sfx.play(ok ? 'key' : 'blocked');
+    return ok;
+  }
+
+  codeClose(): void {
+    if (this.rt) {
+      closeTerminal(this.rt);
+      this.sfx.play('ui');
+    }
   }
 
   // ---------------------------------------------------------------- input
@@ -383,6 +430,7 @@ export class App {
     if (k === 'e') {
       const target = this.rt ? interact(this.rt) : null;
       if (target) this.sfx.play('ui');
+      if (target === 'terminal') this.onCode?.();
       return;
     }
     if (k === 'z') {
@@ -394,8 +442,7 @@ export class App {
       return;
     }
     if (k === 'Escape') {
-      this.paused = true;
-      this.pauseIndex = 0;
+      this.openPause();
       this.sfx.play('ui');
       return;
     }
@@ -490,9 +537,10 @@ export class App {
     } else if (this.inside(x, y, HUD_E)) {
       const target = this.rt ? interact(this.rt) : null;
       if (target) this.sfx.play('ui');
+      if (target === 'terminal') this.onCode?.();
     } else if (this.inside(x, y, HUD_ESC)) {
-      this.paused = true;
-      this.pauseIndex = 0;
+      this.openPause();
+      this.sfx.play('ui');
     }
   }
 
@@ -514,9 +562,9 @@ export class App {
       this.drawTitle();
     } else {
       this.drawPlay();
-      if (this.rt?.terminalOpen) this.drawCodePanel();
+      if (this.rt?.terminalOpen && !this.menuOpen) this.drawCodePanel();
       if (this.screen === 'win' && !this.menuOpen) this.drawWin();
-      if (this.paused) this.drawPause();
+      if (this.paused && !this.menuOpen) this.drawPause();
     }
     if (this.toast) {
       drawText(p, this.toast, VIEW_W / 2, VIEW_H - 24, 1, PALETTE.cyan, 'center');

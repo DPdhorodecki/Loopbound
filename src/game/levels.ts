@@ -581,7 +581,7 @@ export const LEVELS: LevelDef[] = [
     id: 'quatro-mecanismos',
     name: 'Quatro Mecanismos',
     subtitle: 'Duto, alavanca, botão e senha numa travessia.',
-    cycleLength: 32,
+    cycleLength: 40,
     maxEchoes: 0,
     par: { cycles: 1, steps: 31 },
     map: [

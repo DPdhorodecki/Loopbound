@@ -2,6 +2,7 @@ import type { App, WinResult } from '../app';
 import { LEVELS } from '../game/levels';
 import { TUTORIAL_ROOMS } from '../game/tutorial';
 import { persistSave } from '../game/save';
+import { CODE_COLORS, ROMAN } from '../game/types';
 import * as api from '../net/api';
 
 type Tab = 'jogar' | 'fases' | 'historico' | 'perfil';
@@ -42,6 +43,8 @@ export class Shell {
   private authEl: HTMLDivElement;
   private menuEl: HTMLDivElement;
   private winEl: HTMLDivElement;
+  private pauseEl: HTMLDivElement;
+  private codeEl: HTMLDivElement;
   private me: api.Me | null = null;
   private offline = false;
   private tab: Tab = 'jogar';
@@ -55,12 +58,19 @@ export class Shell {
     this.authEl = h('div', { class: 'lb-screen lb-auth' });
     this.menuEl = h('div', { class: 'lb-screen lb-menu hidden' });
     this.winEl = h('div', { class: 'lb-screen lb-win hidden' });
-    this.root.append(this.authEl, this.menuEl, this.winEl);
+    this.pauseEl = h('div', { class: 'lb-screen lb-pause hidden' });
+    this.codeEl = h('div', { class: 'lb-screen lb-code hidden' });
+    this.root.append(this.authEl, this.menuEl, this.winEl, this.pauseEl, this.codeEl);
     document.body.append(this.root);
 
     app.onWin = (result) => this.handleWin(result);
     app.onRequestMenu = () => this.openMenu();
     app.onTutorialDone = () => this.markTutorialDone();
+    app.onPause = () => this.handlePause();
+    app.onCode = () => this.handleCode();
+
+    // Teclado dos overlays (o canvas ignora input enquanto `menuOpen`).
+    window.addEventListener('keydown', (event) => this.overlayKey(event));
 
     void this.boot();
   }
@@ -113,6 +123,8 @@ export class Shell {
     this.app.menuOpen = true;
     this.authEl.classList.add('hidden');
     this.menuEl.classList.remove('hidden');
+    this.pauseEl.classList.add('hidden');
+    this.codeEl.classList.add('hidden');
     this.renderMenu();
   }
 
@@ -131,6 +143,8 @@ export class Shell {
     this.authEl.classList.add('hidden');
     this.menuEl.classList.add('hidden');
     this.winEl.classList.add('hidden');
+    this.pauseEl.classList.add('hidden');
+    this.codeEl.classList.add('hidden');
     this.gameEl.classList.add('playing');
   }
 
@@ -146,6 +160,8 @@ export class Shell {
     this.authEl.classList.add('hidden');
     this.menuEl.classList.add('hidden');
     this.winEl.classList.remove('hidden');
+    this.pauseEl.classList.add('hidden');
+    this.codeEl.classList.add('hidden');
     const card = this.winCard(result);
     this.winEl.replaceChildren(card);
     (card.querySelector('.lb-btn-big') as HTMLButtonElement | null)?.focus();
@@ -196,6 +212,238 @@ export class Shell {
         }),
       ),
     );
+  }
+
+  // ---------------------------------------------------------------- pausa
+
+  private handlePause(): void {
+    // No modo debug (?pause=1) o `.lb-root` foi removido: o canvas desenha a pausa.
+    if (this.root.isConnected) this.openPause();
+  }
+
+  private openPause(): void {
+    this.app.menuOpen = true;
+    this.authEl.classList.add('hidden');
+    this.menuEl.classList.add('hidden');
+    this.winEl.classList.add('hidden');
+    this.codeEl.classList.add('hidden');
+    this.pauseEl.classList.remove('hidden');
+    this.renderPause();
+  }
+
+  private closePause(): void {
+    this.pauseEl.classList.add('hidden');
+    this.app.menuOpen = false;
+  }
+
+  private renderPause(): void {
+    const muted = this.app.save.muted;
+    const card = h(
+      'div',
+      { class: 'lb-card lb-pause-card' },
+      h('p', { class: 'lb-kicker', text: 'PAUSA' }),
+      h('h1', { class: 'lb-level-name', text: this.app.level?.def.name.toUpperCase() ?? '' }),
+      h(
+        'div',
+        { class: 'lb-pause-actions' },
+        h('button', {
+          class: 'lb-btn lb-btn-big',
+          text: 'CONTINUAR',
+          onclick: () => this.resume(),
+        }),
+        h('button', {
+          class: 'lb-btn lb-btn-ghost',
+          text: 'REINICIAR',
+          onclick: () => {
+            this.closePause();
+            this.app.restart();
+          },
+        }),
+        h('button', {
+          class: 'lb-btn lb-btn-ghost',
+          text: muted ? 'SOM: MUDO' : 'SOM: LIGADO',
+          onclick: () => {
+            this.app.setMuted(!this.app.save.muted);
+            this.renderPause();
+          },
+        }),
+        h('button', {
+          class: 'lb-btn lb-btn-danger',
+          text: 'MENU',
+          onclick: () => {
+            this.closePause();
+            this.app.backToTitle();
+          },
+        }),
+      ),
+      h('p', { class: 'lb-note', text: 'ESC CONTINUA' }),
+    );
+    this.pauseEl.replaceChildren(card);
+    (card.querySelector('.lb-btn-big') as HTMLButtonElement | null)?.focus();
+  }
+
+  private resume(): void {
+    this.closePause();
+    this.app.resume();
+  }
+
+  // ---------------------------------------------------------------- senha
+
+  private handleCode(): void {
+    // No modo debug (?level=) o `.lb-root` foi removido: o canvas desenha a senha.
+    if (this.root.isConnected) this.openCode();
+  }
+
+  private openCode(): void {
+    const rt = this.app.rt;
+    if (!rt?.terminalOpen || !rt.level.code) return;
+    this.app.menuOpen = true;
+    this.authEl.classList.add('hidden');
+    this.menuEl.classList.add('hidden');
+    this.winEl.classList.add('hidden');
+    this.pauseEl.classList.add('hidden');
+    this.codeEl.classList.remove('hidden');
+    this.renderCode();
+  }
+
+  private closeCode(): void {
+    this.codeEl.classList.add('hidden');
+    this.app.menuOpen = false;
+  }
+
+  private renderCode(): void {
+    const rt = this.app.rt;
+    const code = rt?.level.code;
+    if (!rt || !code || !rt.terminalOpen) {
+      this.closeCode();
+      return;
+    }
+    const isRoman = code.type === 'roman';
+
+    const slots = h('div', { class: 'lb-code-slots' });
+    for (let i = 0; i < code.sequence.length; i++) {
+      const val = rt.codeEntry[i];
+      slots.append(
+        h(
+          'span',
+          { class: 'lb-code-slot' },
+          val === undefined ? '' : isRoman ? ROMAN[val] : this.swatch(CODE_COLORS[val]),
+        ),
+      );
+    }
+
+    const grid = h('div', { class: 'lb-code-grid' });
+    for (let i = 0; i < 9; i++) {
+      grid.append(
+        h(
+          'button',
+          {
+            class: 'lb-code-key',
+            type: 'button',
+            onclick: () => {
+              this.app.codePress(i);
+              this.renderCode();
+            },
+          },
+          isRoman ? h('span', { text: ROMAN[i] }) : this.swatch(CODE_COLORS[i]),
+        ),
+      );
+    }
+
+    const type = isRoman ? 'ROMANO' : 'DE COR';
+    const card = h(
+      'div',
+      { class: 'lb-card lb-code-card' },
+      h('p', { class: 'lb-kicker', text: `CÓDIGO ${type}` }),
+      h('h1', { class: 'lb-level-name', text: 'SENHA' }),
+      slots,
+      grid,
+      h(
+        'div',
+        { class: 'lb-code-nav' },
+        h('button', {
+          class: 'lb-btn lb-btn-ghost',
+          text: 'LIMPAR',
+          onclick: () => {
+            this.app.codeClear();
+            this.renderCode();
+          },
+        }),
+        h('button', {
+          class: 'lb-btn',
+          text: 'CONFIRMAR',
+          onclick: () => {
+            this.app.codeConfirm();
+            if (this.app.rt?.terminalOpen) this.renderCode();
+            else this.closeCode();
+          },
+        }),
+        h('button', {
+          class: 'lb-btn lb-btn-ghost',
+          text: 'SAIR',
+          onclick: () => {
+            this.app.codeClose();
+            this.closeCode();
+          },
+        }),
+      ),
+      h('p', { class: 'lb-note', text: '1-9 ESCOLHER · ENTER CONFIRMA · C LIMPA · ESC SAIR' }),
+    );
+    this.codeEl.replaceChildren(card);
+  }
+
+  private swatch(color: string): HTMLElement {
+    const span = h('span', { class: 'lb-code-swatch' });
+    span.style.background = color;
+    return span;
+  }
+
+  // ---------------------------------------------------------------- teclado dos overlays
+
+  private overlayKey(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement | null;
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+    const codeOpen = !this.codeEl.classList.contains('hidden');
+    const pauseOpen = !this.pauseEl.classList.contains('hidden');
+    if (!codeOpen && !pauseOpen) return;
+    // A casca DOM assume o teclado: impede que o listener do `main.ts`
+    // processe o mesmo evento do canvas (senão o Esc reabriria a pausa).
+    event.stopImmediatePropagation();
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Tab'].includes(event.key)) {
+      event.preventDefault();
+    }
+    if (codeOpen) this.codeKey(event);
+    else this.pauseKey(event);
+  }
+
+  private codeKey(event: KeyboardEvent): void {
+    const k = event.key;
+    if (k === 'Enter' && (document.activeElement as HTMLElement | null)?.tagName === 'BUTTON') return;
+    if (k === 'Escape') {
+      event.preventDefault();
+      this.app.codeClose();
+      this.closeCode();
+    } else if (k === 'Enter') {
+      event.preventDefault();
+      this.app.codeConfirm();
+      if (this.app.rt?.terminalOpen) this.renderCode();
+      else this.closeCode();
+    } else if (k === 'Backspace' || k === 'c' || k === 'C' || k === 'x' || k === 'X') {
+      event.preventDefault();
+      this.app.codeClear();
+      this.renderCode();
+    } else if (k >= '1' && k <= '9') {
+      event.preventDefault();
+      this.app.codePress(Number(k) - 1);
+      this.renderCode();
+    }
+  }
+
+  private pauseKey(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.resume();
+    }
   }
 
   private async syncWin(result: WinResult): Promise<void> {
