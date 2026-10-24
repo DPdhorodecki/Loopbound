@@ -1,11 +1,36 @@
 import { describe, expect, it } from 'vitest';
 import { LEVELS } from '../src/game/levels';
 import { parseLevel } from '../src/game/level';
-import { createRuntime, endCycle, pressure, tryMove, undo } from '../src/game/rules';
+import {
+  clearCode,
+  colorPowered,
+  confirmCode,
+  createRuntime,
+  endCycle,
+  interact,
+  pressCode,
+  pressure,
+  tryMove,
+  undo,
+} from '../src/game/rules';
+import { Action, Dir } from '../src/game/types';
+
+const MOVES: Dir[] = ['U', 'D', 'L', 'R'];
+
+/** Aplica um token da solução; devolve o resultado quando é um movimento. */
+function applyAction(rt: ReturnType<typeof createRuntime>, token: Action) {
+  if (MOVES.includes(token as Dir)) return tryMove(rt, token as Dir);
+  if (token === 'E') interact(rt);
+  else if (token === 'C') confirmCode(rt);
+  else if (token === 'X') clearCode(rt);
+  else pressCode(rt, Number(token) - 1);
+  return null;
+}
 
 describe('fases', () => {
-  it('tem ids únicos', () => {
+  it('tem 30 fases com ids únicos', () => {
     const ids = LEVELS.map((l) => l.id);
+    expect(LEVELS).toHaveLength(30);
     expect(new Set(ids).size).toBe(ids.length);
   });
 
@@ -16,9 +41,10 @@ describe('fases', () => {
 
       def.solution.forEach((moves, index) => {
         const isLast = index === def.solution.length - 1;
-        moves.forEach((dir) => {
-          const res = tryMove(rt, dir);
-          expect(res.moved, `movimento ${dir} bloqueado no ciclo ${index + 1}`).toBe(true);
+        moves.forEach((token) => {
+          const res = applyAction(rt, token);
+          if (!res) return;
+          expect(res.moved, `movimento ${token} bloqueado no ciclo ${index + 1}`).toBe(true);
           expect(rt.status === 'won').toBe(res.won ?? false);
         });
         if (!isLast) {
@@ -121,5 +147,83 @@ describe('regras', () => {
       endCycle(rt, 'tab');
     }
     expect(rt.echoes).toHaveLength(level.def.maxEchoes);
+  });
+});
+
+describe('mecânicas novas', () => {
+  it('alavanca abre o portão e fica ligada', () => {
+    const level = parseLevel({
+      ...LEVELS[0],
+      id: 'teste-alavanca',
+      map: ['########', '#P.VR.E#', '########'],
+      maxEchoes: 0,
+      solution: [],
+    });
+    const rt = createRuntime(level);
+    tryMove(rt, 'R'); // (2,1), encara a alavanca
+    expect(interact(rt)).toBe('lever');
+    expect(rt.leversOn.size).toBe(1);
+    tryMove(rt, 'R'); // pisa na alavanca
+    tryMove(rt, 'R'); // cruza o portão aberto
+    expect(rt.player.x).toBe(4);
+  });
+
+  it('botão liga com caixote em cima', () => {
+    const level = parseLevel({
+      ...LEVELS[0],
+      id: 'teste-botao',
+      map: ['#########', '#P...R.E#', '#.C.....#', '#.H.....#', '#########'],
+      maxEchoes: 0,
+      solution: [],
+    });
+    const rt = createRuntime(level);
+    tryMove(rt, 'R'); // (2,1)
+    tryMove(rt, 'D'); // empurra o caixote para o botão
+    expect(colorPowered(rt).red).toBe(true);
+    tryMove(rt, 'U');
+    for (const dir of ['R', 'R', 'R', 'R', 'R'] as const) {
+      expect(tryMove(rt, dir).moved).toBe(true);
+    }
+    expect(rt.status).toBe('won');
+  });
+
+  it('duto teleporta para o par', () => {
+    const level = parseLevel({
+      ...LEVELS[0],
+      id: 'teste-duto',
+      map: ['########', '#P.O.###', '#...#oE#', '########'],
+      maxEchoes: 0,
+      solution: [],
+    });
+    const rt = createRuntime(level);
+    tryMove(rt, 'R');
+    const res = tryMove(rt, 'R');
+    expect(res.teleported).toBe(true);
+    expect(rt.player.x).toBe(5);
+    expect(rt.player.y).toBe(2);
+  });
+
+  it('tela de código abre com a sequência certa', () => {
+    const level = parseLevel({
+      ...LEVELS[0],
+      id: 'teste-codigo',
+      map: ['########', '#P.X..E#', '########'],
+      maxEchoes: 0,
+      solution: [],
+      code: { type: 'roman', sequence: [2, 0, 1] },
+    });
+    const rt = createRuntime(level);
+    tryMove(rt, 'R');
+    expect(interact(rt)).toBe('terminal');
+    expect(rt.terminalOpen).toBe(true);
+    pressCode(rt, 0);
+    expect(confirmCode(rt)).toBe(false);
+    expect(rt.codeSolved).toBe(false);
+    expect(interact(rt)).toBe('terminal');
+    pressCode(rt, 2);
+    pressCode(rt, 0);
+    pressCode(rt, 1);
+    expect(confirmCode(rt)).toBe(true);
+    expect(rt.codeSolved).toBe(true);
   });
 });

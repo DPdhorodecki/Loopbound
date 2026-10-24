@@ -1,5 +1,6 @@
 import p5 from 'p5';
-import { ColorKey, Dir } from '../game/types';
+import { ColorKey, CODE_COLORS, Dir, ROMAN } from '../game/types';
+import { drawText } from './font';
 import { PALETTE } from './palette';
 
 export const COLOR_RAMP: Record<ColorKey, { bright: string; light: string; dark: string }> = {
@@ -237,4 +238,152 @@ export function drawPlayer(
   }
   p.pop();
   p.noTint();
+}
+
+// ------------------------------------------------------- mecânicas novas
+
+/** Alavanca: acionada com `E`; fica ligada até ser acionada de novo. */
+export function drawLever(p: p5, x: number, y: number, color: ColorKey, on: boolean, t: number): void {
+  const c = COLOR_RAMP[color];
+  p.noStroke();
+  p.fill(PALETTE.stoneShadow);
+  p.rect(x + 1, y + 1, 14, 14);
+  p.fill('#2A3A36');
+  p.rect(x + 2, y + 2, 12, 12);
+  p.fill(on ? c.dark : '#3C4E48');
+  p.rect(x + 3, y + 10, 10, 3);
+  // cabo
+  const sway = on ? 4 : 10;
+  p.fill('#1A221F');
+  p.rect(x + (on ? 11 : 4), y + sway, 3, 3);
+  p.fill(on ? c.bright : PALETTE.stoneHi);
+  p.rect(x + (on ? 11 : 4), y + sway, 3, 2);
+  // brilho quando ligada
+  if (on) {
+    p.drawingContext.globalAlpha = 0.4 + Math.sin(t * 4) * 0.2;
+    p.fill(c.bright);
+    p.rect(x + 1, y + 1, 14, 1);
+    p.rect(x + 1, y + 14, 14, 1);
+    p.drawingContext.globalAlpha = 1;
+  }
+  p.fill(c.bright);
+  p.rect(x + 4, y + 4, 2, 2);
+}
+
+/** Botão: precisa de peso (caixote) para ficar pressionado. */
+export function drawButton(p: p5, x: number, y: number, color: ColorKey, pressed: boolean, t: number): void {
+  const c = COLOR_RAMP[color];
+  p.noStroke();
+  p.fill(PALETTE.stoneShadow);
+  p.rect(x + 1, y + 1, 14, 14);
+  p.fill('#26332F');
+  p.rect(x + 2, y + 2, 12, 12);
+  const inset = pressed ? 4 : 3;
+  const size = 16 - inset * 2;
+  p.fill(c.dark);
+  p.rect(x + inset, y + inset + (pressed ? 1 : 0), size, size);
+  p.fill(pressed ? c.bright : c.dark);
+  p.rect(x + inset + 1, y + inset + 1, size - 2, size - 2);
+  if (!pressed) {
+    const pulse = 0.5 + Math.sin(t * 3) * 0.15;
+    p.fill(c.bright);
+    p.drawingContext.globalAlpha = pulse;
+    p.rect(x + 5, y + 5, 6, 6);
+    p.drawingContext.globalAlpha = 1;
+  }
+}
+
+/** Duto: teleporta. Fica escuro/inativo quando um caixote cobre. */
+export function drawDuct(p: p5, x: number, y: number, active: boolean, t: number): void {
+  p.noStroke();
+  p.fill(PALETTE.stoneShadow);
+  p.rect(x + 1, y + 1, 14, 14);
+  p.fill(active ? '#123A44' : '#1B2733');
+  p.rect(x + 2, y + 2, 12, 12);
+  const glow = active ? 120 + Math.sin(t * 4) * 60 : 40;
+  p.fill(53, 230, 242, glow);
+  // aberturas em cruz
+  p.rect(x + 4, y + 7, 8, 2);
+  p.rect(x + 7, y + 4, 2, 8);
+  p.fill('#9BEFF6');
+  p.rect(x + 7, y + 7, 2, 2);
+}
+
+/** Portão de código (`@`): abre quando a tela de código é resolvida. */
+export function drawCodeGate(p: p5, x: number, y: number, open: boolean, t: number): void {
+  const violet = '#8B5BE0';
+  const violetDark = '#4A2E86';
+  p.noStroke();
+  p.fill(PALETTE.stoneShadow);
+  p.rect(x, y, 16, 16);
+  if (!open) {
+    p.fill(0, 0, 0, 160);
+    p.rect(x + 1, y + 1, 14, 14);
+    for (let i = 0; i < 3; i++) {
+      const bx = x + 2 + i * 4;
+      p.fill(violetDark);
+      p.rect(bx, y + 1, 3, 14);
+      p.fill(violet);
+      p.rect(bx, y + 1, 2, 14);
+    }
+    // cadeado
+    p.fill('#0A0F16');
+    p.rect(x + 4, y + 5, 8, 7);
+    p.fill(violet);
+    p.rect(x + 5, y + 6, 6, 5);
+    p.noStroke();
+    p.fill('#0A0F16');
+    p.rect(x + 7, y + 7, 2, 3);
+  } else {
+    const glow = 0.35 + Math.sin(t * 3) * 0.12;
+    p.fill(violet);
+    p.rect(x + 1, y + 1, 14, 2);
+    p.rect(x + 1, y + 13, 14, 2);
+    p.drawingContext.globalAlpha = glow;
+    p.fill(violet);
+    p.rect(x + 1, y + 3, 1, 10);
+    p.rect(x + 14, y + 3, 1, 10);
+    p.drawingContext.globalAlpha = 1;
+  }
+}
+
+/** Tela de código (`X`). */
+export function drawTerminal(p: p5, x: number, y: number, solved: boolean, t: number): void {
+  p.noStroke();
+  p.fill(PALETTE.stoneShadow);
+  p.rect(x + 1, y + 1, 14, 14);
+  p.fill(solved ? '#0F3B2A' : '#1B2733');
+  p.rect(x + 3, y + 2, 10, 10);
+  const c = solved ? PALETTE.emerald : PALETTE.cyan;
+  const glow = 0.5 + Math.sin(t * 4) * 0.25;
+  p.drawingContext.globalAlpha = glow;
+  p.fill(c);
+  p.rect(x + 4, y + 3, 8, 1);
+  p.rect(x + 4, y + 5, 5, 1);
+  p.rect(x + 4, y + 7, 7, 1);
+  p.rect(x + 4, y + 9, 4, 1);
+  p.drawingContext.globalAlpha = 1;
+  p.fill(PALETTE.stoneHi);
+  p.rect(x + 2, y + 12, 12, 2);
+}
+
+/** Quadrado de pista no chão (romano ou cor). */
+export function drawClue(p: p5, x: number, y: number, kind: 'roman' | 'color', value: number, t: number): void {
+  p.noStroke();
+  if (kind === 'roman') {
+    p.fill('#1B2733');
+    p.rect(x + 2, y + 2, 12, 12);
+    p.fill(PALETTE.stoneHi);
+    p.rect(x + 2, y + 2, 12, 1);
+    p.rect(x + 2, y + 13, 12, 1);
+    drawText(p, ROMAN[value - 1] ?? String(value), x + 8, y + 6, 1, PALETTE.cyan, 'center');
+  } else {
+    const col = CODE_COLORS[value] ?? PALETTE.cyan;
+    p.fill('#1B2733');
+    p.rect(x + 2, y + 2, 12, 12);
+    p.fill(col);
+    p.rect(x + 4, y + 4, 8, 8);
+    p.fill(255, 255, 255, 60 + Math.sin(t * 3) * 30);
+    p.rect(x + 4, y + 4, 8, 2);
+  }
 }

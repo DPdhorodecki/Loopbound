@@ -2,9 +2,9 @@ import p5 from 'p5';
 import { LEVELS } from './game/levels';
 import { TUTORIAL_ROOMS } from './game/tutorial';
 import { Level, LevelDef, parseLevel } from './game/level';
-import { Runtime, createRuntime, endCycle, echoPoses, pressure, tryMove, undo } from './game/rules';
+import { Runtime, clearCode, closeTerminal, colorPowered, confirmCode, createRuntime, endCycle, echoPoses, interact, pressCode, pressure, tryMove, undo } from './game/rules';
 import { LevelBest, persistSave, loadSave } from './game/save';
-import { Dir, Pose, Vec, cellKey } from './game/types';
+import { CODE_COLORS, Dir, Pose, ROMAN, Vec, cellKey } from './game/types';
 import { Sfx } from './audio/sfx';
 import { Atlas, buildAtlas } from './render/atlas';
 import { drawText, textWidth } from './render/font';
@@ -12,17 +12,23 @@ import { CHAR_COLORS, PALETTE } from './render/palette';
 import { bakeRoom } from './render/room';
 import {
   COLOR_RAMP,
+  drawButton,
+  drawClue,
+  drawCodeGate,
   drawCrate,
   drawDoor,
+  drawDuct,
   drawExit,
   drawGate,
   drawGem,
   drawKey,
+  drawLever,
   drawPlate,
   drawPlayer,
   drawShadow,
+  drawTerminal,
 } from './render/renderer';
-import { HUD_ESC, HUD_TAB, HUD_UNDO, VIEW_H, VIEW_W, drawFrame, drawHud } from './ui/hud';
+import { HUD_E, HUD_ESC, HUD_TAB, HUD_UNDO, VIEW_H, VIEW_W, drawFrame, drawHud } from './ui/hud';
 
 export type Screen = 'title' | 'play' | 'win';
 
@@ -282,6 +288,12 @@ export class App {
     for (const token of script) {
       if (token === '|') this.endCycle();
       else if (map[token]) this.step(map[token]);
+      else if (this.rt) {
+        if (token === 'E') interact(this.rt);
+        else if (token === 'C') confirmCode(this.rt);
+        else if (token === 'X') clearCode(this.rt);
+        else if (token >= '1' && token <= '9') pressCode(this.rt, Number(token) - 1);
+      }
     }
     this.stepTimer = 0;
   }
@@ -296,6 +308,24 @@ export class App {
     this.sfx.unlock();
     if (this.menuOpen) return;
     const k = key.length === 1 ? key.toLowerCase() : key;
+
+    // Painel de código aberto: teclado controla os botões da tela.
+    if (this.rt?.terminalOpen) {
+      if (k === 'Escape') {
+        closeTerminal(this.rt);
+        this.sfx.play('ui');
+      } else if (k === 'Enter') {
+        const ok = confirmCode(this.rt);
+        this.sfx.play(ok ? 'key' : 'blocked');
+      } else if (k === 'Backspace' || k === 'c' || k === 'x') {
+        clearCode(this.rt);
+        this.sfx.play('ui');
+      } else if (k >= '1' && k <= '9') {
+        pressCode(this.rt, Number(k) - 1);
+        this.sfx.play('ui');
+      }
+      return;
+    }
 
     if (k === 'm') {
       this.save.muted = !this.save.muted;
@@ -343,6 +373,11 @@ export class App {
 
     if (k === 'Tab') {
       this.endCycle();
+      return;
+    }
+    if (k === 'e') {
+      const target = this.rt ? interact(this.rt) : null;
+      if (target) this.sfx.play('ui');
       return;
     }
     if (k === 'z') {
@@ -394,13 +429,35 @@ export class App {
   onPointer(x: number, y: number): void {
     this.sfx.unlock();
     if (this.menuOpen) return;
+
+    if (this.rt?.terminalOpen) {
+      const L = this.codeLayout();
+      if (this.inside(x, y, L.confirm)) {
+        const ok = confirmCode(this.rt);
+        this.sfx.play(ok ? 'key' : 'blocked');
+      } else if (this.inside(x, y, L.clear)) {
+        clearCode(this.rt);
+        this.sfx.play('ui');
+      } else {
+        for (const c of L.cells) {
+          if (this.inside(x, y, c)) {
+            pressCode(this.rt, c.index);
+            this.sfx.play('ui');
+            break;
+          }
+        }
+      }
+      return;
+    }
+
     if (this.screen === 'title') {
       if (y > 228 && y < 284) {
         this.startLevel(this.titleIndex);
-      } else if (y > 138 && y < 176) {
+      } else {
+        const dots = this.titleDots();
         for (let i = 0; i < LEVELS.length; i++) {
-          const dx = 430 + (i - (LEVELS.length - 1) / 2) * 26;
-          if (x > dx - 9 && x < dx + 9 && i < this.save.unlocked) this.titleIndex = i;
+          const d = dots[i];
+          if (Math.abs(x - d.x) < 8 && Math.abs(y - d.y) < 8 && i < this.save.unlocked) this.titleIndex = i;
         }
       }
       return;
@@ -425,6 +482,9 @@ export class App {
       this.endCycle();
     } else if (this.inside(x, y, HUD_UNDO)) {
       this.doUndo();
+    } else if (this.inside(x, y, HUD_E)) {
+      const target = this.rt ? interact(this.rt) : null;
+      if (target) this.sfx.play('ui');
     } else if (this.inside(x, y, HUD_ESC)) {
       this.paused = true;
       this.pauseIndex = 0;
@@ -449,6 +509,7 @@ export class App {
       this.drawTitle();
     } else {
       this.drawPlay();
+      if (this.rt?.terminalOpen) this.drawCodePanel();
       if (this.screen === 'win') this.drawWin();
       if (this.paused) this.drawPause();
     }
@@ -465,6 +526,24 @@ export class App {
     p.rect(0, VIEW_H - 10, VIEW_W, 10);
     p.rect(0, 0, 8, VIEW_H);
     p.rect(VIEW_W - 8, 0, 8, VIEW_H);
+  }
+
+  private titleDots(): { x: number; y: number }[] {
+    const perRow = 15;
+    const sx = 22;
+    const sy = 16;
+    const cx = 430;
+    const rows = Math.ceil(LEVELS.length / perRow);
+    const out: { x: number; y: number }[] = [];
+    for (let i = 0; i < LEVELS.length; i++) {
+      const row = Math.floor(i / perRow);
+      const col = i % perRow;
+      const count = Math.min(perRow, LEVELS.length - row * perRow);
+      const x = cx + (col - (count - 1) / 2) * sx;
+      const y = 142 + row * sy - ((rows - 1) * sy) / 2;
+      out.push({ x, y });
+    }
+    return out;
   }
 
   private drawTitle(): void {
@@ -496,19 +575,20 @@ export class App {
 
     const def = LEVELS[this.titleIndex];
     const unlocked = this.save.unlocked;
+    const dots = this.titleDots();
     for (let i = 0; i < LEVELS.length; i++) {
-      const dx = 430 + (i - (LEVELS.length - 1) / 2) * 26;
+      const { x: dx, y: dy } = dots[i];
       const on = i === this.titleIndex;
       const locked = i >= unlocked;
       p.noStroke();
       if (on) {
         p.fill(PALETTE.cyan);
-        p.rect(dx - 7, 150, 15, 15);
+        p.rect(dx - 6, dy - 6, 13, 13);
         p.fill(PALETTE.bgDeep);
-        p.rect(dx - 3, 154, 7, 7);
+        p.rect(dx - 3, dy - 3, 7, 7);
       } else {
         p.fill(locked ? '#243244' : PALETTE.cyanDim);
-        p.rect(dx - 4, 154, 8, 8);
+        p.rect(dx - 3, dy - 3, 7, 7);
       }
     }
 
@@ -544,7 +624,16 @@ export class App {
     p.scale(z);
     p.image(this.room!, 0, 0);
 
+    for (const clue of level.clueTiles) {
+      drawClue(p, clue.x * 16, clue.y * 16, clue.kind, clue.value, this.time);
+    }
+    for (const duct of level.ducts) {
+      const covered = rt.crates.some((c) => c.x === duct.x && c.y === duct.y);
+      drawDuct(p, duct.x * 16, duct.y * 16, !covered, this.time);
+    }
+
     const press = pressure(rt);
+    const power = colorPowered(rt);
     for (const plate of level.plates) {
       drawPlate(p, plate.x * 16, plate.y * 16, plate.color, press[plate.color], this.time);
     }
@@ -554,7 +643,19 @@ export class App {
       drawDoor(p, door.x * 16, door.y * 16, rt.doorsOpen.has(cellKey(door.x, door.y)));
     }
     for (const gate of level.gates) {
-      drawGate(p, gate.x * 16, gate.y * 16, gate.color, press[gate.color], this.time);
+      drawGate(p, gate.x * 16, gate.y * 16, gate.color, power[gate.color], this.time);
+    }
+    for (const gate of level.codeGates) {
+      drawCodeGate(p, gate.x * 16, gate.y * 16, rt.codeSolved, this.time);
+    }
+    for (const lever of level.levers) {
+      drawLever(p, lever.x * 16, lever.y * 16, lever.color, rt.leversOn.has(cellKey(lever.x, lever.y)), this.time);
+    }
+    for (const button of level.buttons) {
+      drawButton(p, button.x * 16, button.y * 16, button.color, power[button.color], this.time);
+    }
+    if (level.terminal) {
+      drawTerminal(p, level.terminal.x * 16, level.terminal.y * 16, rt.codeSolved, this.time);
     }
 
     for (const gem of level.gems) {
@@ -688,7 +789,7 @@ export class App {
     const last = this.levelIndex === LEVELS.length - 1;
     drawText(
       p,
-      perfect ? 'PERFEITO!' : last ? 'FIM DO PROTÓTIPO' : 'CICLO FECHADO',
+      perfect ? 'PERFEITO!' : last ? 'FIM DE JOGO' : 'CICLO FECHADO',
       x + w / 2 - 40,
       y + 180,
       2,
@@ -701,11 +802,96 @@ export class App {
 
     drawText(
       p,
-      last ? 'ENTER - TÍTULO' : 'ENTER - PRÓXIMA      ESC - TÍTULO',
+      last ? 'ENTER - MENU' : 'ENTER - PRÓXIMA      ESC - MENU',
       x + w / 2,
       y + h - 20,
       1,
       PALETTE.cyanDim,
+      'center',
+    );
+  }
+
+  private codeLayout() {
+    const w = 440;
+    const h = 250;
+    const x = (VIEW_W - w) / 2;
+    const y = (VIEW_H - h) / 2;
+    const cell = 34;
+    const gap = 6;
+    const cells: { x: number; y: number; w: number; h: number; index: number }[] = [];
+    for (let i = 0; i < 9; i++) {
+      const col = i % 3;
+      const row = Math.floor(i / 3);
+      cells.push({ x: x + 40 + col * (cell + gap), y: y + 74 + row * (cell + gap), w: cell, h: cell, index: i });
+    }
+    return {
+      x,
+      y,
+      w,
+      h,
+      cells,
+      confirm: { x: x + 200, y: y + 110, w: 200, h: 34 },
+      clear: { x: x + 200, y: y + 154, w: 200, h: 34 },
+    };
+  }
+
+  private drawCodePanel(): void {
+    const p = this.p;
+    const rt = this.rt!;
+    const code = rt.level.def.code;
+    if (!code) return;
+    const L = this.codeLayout();
+    p.noStroke();
+    p.fill(6, 10, 18, 210);
+    p.rect(0, 0, VIEW_W, VIEW_H);
+    drawFrame(p, L.x, L.y, L.w, L.h, true);
+
+    const type = code.type === 'roman' ? 'ROMANO' : 'DE COR';
+    drawText(p, `CODIGO ${type}`, L.x + 24, L.y + 16, 2, PALETTE.cyan, 'left');
+
+    // Slots da sequência digitada
+    const slot = 28;
+    const sgap = 8;
+    const totalW = code.sequence.length * slot + (code.sequence.length - 1) * sgap;
+    let sx = L.x + (L.w - totalW) / 2;
+    for (let i = 0; i < code.sequence.length; i++) {
+      drawFrame(p, sx, L.y + 40, slot, slot, false);
+      const val = rt.codeEntry[i];
+      if (val !== undefined) {
+        if (code.type === 'roman') drawText(p, ROMAN[val], sx + slot / 2, L.y + 48, 1, PALETTE.white, 'center');
+        else {
+          p.fill(CODE_COLORS[val]);
+          p.rect(sx + 7, L.y + 46, 14, 14);
+        }
+      }
+      sx += slot + sgap;
+    }
+
+    // Botões 1..9
+    for (const c of L.cells) {
+      drawFrame(p, c.x, c.y, c.w, c.h, false);
+      if (code.type === 'roman') {
+        drawText(p, ROMAN[c.index], c.x + c.w / 2, c.y + c.h / 2 - 5, 1, PALETTE.cyan, 'center');
+      } else {
+        p.fill(CODE_COLORS[c.index]);
+        p.rect(c.x + 7, c.y + 7, c.w - 14, c.h - 14);
+        p.fill(255, 255, 255, 60);
+        p.rect(c.x + 7, c.y + 7, c.w - 14, 3);
+      }
+    }
+
+    drawFrame(p, L.confirm.x, L.confirm.y, L.confirm.w, L.confirm.h, true);
+    drawText(p, 'CONFIRMAR', L.confirm.x + L.confirm.w / 2, L.confirm.y + 12, 2, PALETTE.emerald, 'center');
+    drawFrame(p, L.clear.x, L.clear.y, L.clear.w, L.clear.h, false);
+    drawText(p, 'LIMPAR', L.clear.x + L.clear.w / 2, L.clear.y + 12, 2, PALETTE.cyanDim, 'center');
+
+    drawText(
+      p,
+      '1-9 ESCOLHER   ENTER CONFIRMA   C LIMPA   ESC SAIR',
+      VIEW_W / 2,
+      L.y + L.h - 16,
+      1,
+      '#5C7369',
       'center',
     );
   }
@@ -721,7 +907,7 @@ export class App {
     const y = VIEW_H / 2 - h / 2;
     drawFrame(p, x, y, w, h, true);
     drawText(p, 'PAUSA', VIEW_W / 2, y + 22, 3, PALETTE.cyan, 'center');
-    const items = ['CONTINUAR', 'REINICIAR', `SOM: ${this.save.muted ? 'MUDO' : 'LIGADO'}`, 'TÍTULO'];
+    const items = ['CONTINUAR', 'REINICIAR', `SOM: ${this.save.muted ? 'MUDO' : 'LIGADO'}`, 'MENU'];
     items.forEach((label, i) => {
       const iy = y + 78 + i * 26;
       const on = i === this.pauseIndex;

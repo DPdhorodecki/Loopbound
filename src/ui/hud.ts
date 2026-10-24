@@ -9,6 +9,7 @@ export const VIEW_H = 360;
 export const HUD_TAB = { x: 10, y: 10, w: 44, h: 44 };
 export const HUD_ESC = { x: 10, y: VIEW_H - 54, w: 44, h: 44 };
 export const HUD_UNDO = { x: 10, y: VIEW_H - 106, w: 44, h: 44 };
+export const HUD_E = { x: 10, y: VIEW_H - 158, w: 44, h: 44 };
 
 export function drawFrame(p: p5, x: number, y: number, w: number, h: number, active = false): void {
   p.noStroke();
@@ -115,6 +116,15 @@ export function drawHud(p: p5, rt: Runtime, t: number, muted: boolean): void {
   drawFrame(p, HUD_ESC.x, HUD_ESC.y, HUD_ESC.w, HUD_ESC.h, false);
   drawMenuGlyph(p, HUD_ESC.x + 9, HUD_ESC.y + 9, 2, PALETTE.cyanDim);
   drawText(p, 'ESC', HUD_ESC.x + HUD_ESC.w / 2, HUD_ESC.y + HUD_ESC.h - 9, 1, PALETTE.cyanDim, 'center');
+
+  // Interagir (só nas fases com alavanca, botão ou tela de código)
+  const interactive =
+    rt.level.levers.length > 0 || rt.level.buttons.length > 0 || rt.level.terminal !== null;
+  if (interactive) {
+    drawFrame(p, HUD_E.x, HUD_E.y, HUD_E.w, HUD_E.h, false);
+    drawText(p, 'E', HUD_E.x + HUD_E.w / 2, HUD_E.y + 12, 3, PALETTE.cyan, 'center');
+    drawText(p, 'USA', HUD_E.x + HUD_E.w / 2, HUD_E.y + HUD_E.h - 9, 1, PALETTE.cyanDim, 'center');
+  }
 
   // Gemas
   drawGemIcon(p, VIEW_W - 66, 18, 2);

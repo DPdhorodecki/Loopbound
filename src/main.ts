@@ -86,17 +86,8 @@ new p5(
   container,
 );
 
-// iOS: sem beforeinstallprompt, então mostramos a instrução depois de alguns segundos.
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-const standalone = window.matchMedia('(display-mode: standalone)').matches;
-if (isIOS && !standalone) {
-  window.setTimeout(() => {
-    const hint = document.getElementById('ios-hint');
-    hint?.classList.add('visible');
-    window.setTimeout(() => hint?.classList.remove('visible'), 8000);
-  }, 6000);
-}
-
+// iOS: sem beforeinstallprompt, então o botão INSTALAR APP mostra as instruções
+// manuais (ver `initPWA`). Aqui só garantimos que o aviso possa ser dispensado.
 document.getElementById('ios-hint')?.addEventListener('click', (event) => {
   (event.currentTarget as HTMLElement).classList.remove('visible');
 });

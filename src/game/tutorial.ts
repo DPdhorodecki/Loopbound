@@ -9,9 +9,9 @@ export interface TutorialRoom {
 }
 
 /**
- * Tutorial em 4 salas: andar, empurrar, eco e chave.
- * Cada sala reaproveita o núcleo de regras (`tryMove`) e a solução é validada
- * pelo teste `tests/tutorial.test.ts`.
+ * Tutorial em 8 salas: andar, empurrar, eco, chave, alavanca, botão, duto e
+ * código. Cada sala reaproveita o núcleo de regras (`tryMove`/`interact`) e a
+ * solução é validada pelo teste `tests/tutorial.test.ts`.
  */
 export const TUTORIAL_ROOMS: TutorialRoom[] = [
   {
@@ -124,6 +124,101 @@ export const TUTORIAL_ROOMS: TutorialRoom[] = [
           'R', 'R',
         ],
       ],
+    },
+  },
+  {
+    title: 'SALA 5 - ALAVANCA',
+    lines: [
+      'ENCARE A ALAVANCA E APERTE E PARA LIGAR.',
+      'ELA FICA LIGADA E ABRE O PORTAO DA COR.',
+    ],
+    def: {
+      id: 'tuto-alavanca',
+      name: 'Alavanca',
+      subtitle: 'Ligue a alavanca com E.',
+      cycleLength: 24,
+      maxEchoes: 0,
+      par: { cycles: 1, steps: 10 },
+      map: [
+        '############',
+        '#P.V.R....E#',
+        '############',
+      ],
+      solution: [
+        ['R', 'E', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R'],
+      ],
+    },
+  },
+  {
+    title: 'SALA 6 - BOTAO',
+    lines: [
+      'O BOTAO SO FICA PRESSIONADO COM UM CAIXOTE EM CIMA.',
+      'EMPURRE O CAIXOTE PARA O BOTAO E CRUZE O PORTAO.',
+    ],
+    def: {
+      id: 'tuto-botao',
+      name: 'Botão',
+      subtitle: 'Caixote mantém o botão pressionado.',
+      cycleLength: 24,
+      maxEchoes: 0,
+      par: { cycles: 1, steps: 12 },
+      map: [
+        '#############',
+        '#P....R....E#',
+        '#.C.H.......#',
+        '#############',
+      ],
+      solution: [
+        ['D', 'R', 'R', 'U', 'R', 'R', 'R', 'R', 'R', 'R', 'R', 'R'],
+      ],
+    },
+  },
+  {
+    title: 'SALA 7 - DUTO',
+    lines: [
+      'PISE NO DUTO E VOCE E TELEPORTADO PARA O PAR.',
+      'SE UM CAIXOTE COBRIR O PAR, ELE NAO FUNCIONA.',
+    ],
+    def: {
+      id: 'tuto-duto',
+      name: 'Duto',
+      subtitle: 'O duto teleporta para o par.',
+      cycleLength: 20,
+      maxEchoes: 0,
+      par: { cycles: 1, steps: 7 },
+      map: [
+        '#############',
+        '#P.O.....E..#',
+        '#....o......#',
+        '#############',
+      ],
+      solution: [
+        ['R', 'R', 'U', 'R', 'R', 'R', 'R'],
+      ],
+    },
+  },
+  {
+    title: 'SALA 8 - CODIGO',
+    lines: [
+      'AS PISTAS NO CHAO MOSTRAM A ORDEM DO CODIGO.',
+      'APERTE E NA TELA, DIGITE 1-9, CONFIRME COM C.',
+    ],
+    def: {
+      id: 'tuto-codigo',
+      name: 'Código',
+      subtitle: 'Descubra a sequência e abra o portão.',
+      cycleLength: 30,
+      maxEchoes: 0,
+      par: { cycles: 1, steps: 10 },
+      map: [
+        '#############',
+        '#P.1.2.X.@.E#',
+        '#############',
+      ],
+      solution: [
+        ['R', 'R', 'R', 'R', 'R', 'R', 'E', '1', '2', 'C', 'R', 'R', 'R', 'R'],
+      ],
+      code: { type: 'roman', sequence: [0, 1] },
     },
   },
 ];

@@ -1,4 +1,4 @@
-import { ColorKey, Dir, TILE_FLOOR, TILE_VOID, TILE_WALL, TileId, Vec } from './types';
+import { Action, ColorKey, TILE_FLOOR, TILE_VOID, TILE_WALL, TileId, Vec } from './types';
 
 export interface Gate extends Vec {
   color: ColorKey;
@@ -6,6 +6,33 @@ export interface Gate extends Vec {
 
 export interface Plate extends Vec {
   color: ColorKey;
+}
+
+/** Alavanca: acionada com `E`; fica ligada até ser acionada de novo. */
+export interface Lever extends Vec {
+  color: ColorKey;
+}
+
+/** Botão: precisa de peso — um caixote em cima o mantém pressionado. */
+export interface Button extends Vec {
+  color: ColorKey;
+}
+
+/** Duto: pisar nele teleporta para o par (mesmo `pair`). */
+export interface Duct extends Vec {
+  pair: number;
+}
+
+/** Quadrado de código desenhado no chão (pista). */
+export interface ClueTile extends Vec {
+  kind: 'roman' | 'color';
+  value: number;
+}
+
+export interface CodeSpec {
+  type: 'roman' | 'color';
+  /** Índices 0..8, na ordem exigida. */
+  sequence: number[];
 }
 
 export interface LevelDef {
@@ -16,8 +43,15 @@ export interface LevelDef {
   maxEchoes: number;
   par: { cycles: number; steps: number };
   map: string[];
-  /** Um array de movimentos por ciclo. O último ciclo precisa terminar vencendo. */
-  solution: Dir[][];
+  /** Um array de ações por ciclo. O último ciclo precisa terminar vencendo. */
+  solution: Action[][];
+  /** Cofre de código opcional (tela `X`). */
+  code?: CodeSpec;
+  /**
+   * Caixotes posicionados fora do mapa (o caractere fica livre para outra
+   * entidade). Usado, por exemplo, para um caixote começar em cima de um duto.
+   */
+  crates?: Vec[];
 }
 
 export interface Level {
@@ -34,6 +68,12 @@ export interface Level {
   gates: Gate[];
   plates: Plate[];
   anchors: Vec[];
+  levers: Lever[];
+  buttons: Button[];
+  ducts: Duct[];
+  codeGates: Vec[];
+  terminal: Vec | null;
+  clueTiles: ClueTile[];
 }
 
 const CHAR_TILE: Record<string, TileId> = {
@@ -54,10 +94,39 @@ const CHAR_TILE: Record<string, TileId> = {
   g: TILE_FLOOR,
   '*': TILE_FLOOR,
   S: TILE_FLOOR,
+  // mecânicas novas
+  V: TILE_FLOOR,
+  W: TILE_FLOOR,
+  Z: TILE_FLOOR,
+  H: TILE_FLOOR,
+  I: TILE_FLOOR,
+  J: TILE_FLOOR,
+  O: TILE_FLOOR,
+  o: TILE_FLOOR,
+  Q: TILE_FLOOR,
+  q: TILE_FLOOR,
+  X: TILE_FLOOR,
+  '@': TILE_FLOOR,
+  c: TILE_FLOOR,
+  d: TILE_FLOOR,
+  e: TILE_FLOOR,
+  '1': TILE_FLOOR,
+  '2': TILE_FLOOR,
+  '3': TILE_FLOOR,
+  '4': TILE_FLOOR,
+  '5': TILE_FLOOR,
+  '6': TILE_FLOOR,
+  '7': TILE_FLOOR,
+  '8': TILE_FLOOR,
+  '9': TILE_FLOOR,
 };
 
 const GATE_COLOR: Record<string, ColorKey> = { R: 'red', L: 'blue', Y: 'gold' };
 const PLATE_COLOR: Record<string, ColorKey> = { r: 'red', b: 'blue', y: 'gold' };
+const LEVER_COLOR: Record<string, ColorKey> = { V: 'red', W: 'blue', Z: 'gold' };
+const BUTTON_COLOR: Record<string, ColorKey> = { H: 'red', I: 'blue', J: 'gold' };
+const DUCT_PAIR: Record<string, number> = { O: 0, o: 0, Q: 1, q: 1 };
+const COLOR_CLUE: Record<string, number> = { c: 0, d: 1, e: 2 };
 
 export class LevelError extends Error {}
 
@@ -79,9 +148,16 @@ export function parseLevel(def: LevelDef): Level {
     gates: [],
     plates: [],
     anchors: [],
+    levers: [],
+    buttons: [],
+    ducts: [],
+    codeGates: [],
+    terminal: null,
+    clueTiles: [],
   };
   let spawns = 0;
   let exits = 0;
+  let terminals = 0;
 
   def.map.forEach((row, y) => {
     if (row.length !== w) {
@@ -104,15 +180,30 @@ export function parseLevel(def: LevelDef): Level {
       else if (ch === 'K') level.key = { x, y };
       else if (ch === 'D') level.doors.push({ x, y });
       else if (ch === 'S') level.anchors.push({ x, y });
+      else if (ch === 'X') {
+        level.terminal = { x, y };
+        terminals++;
+      } else if (ch === '@') level.codeGates.push({ x, y });
+      else if (LEVER_COLOR[ch]) level.levers.push({ x, y, color: LEVER_COLOR[ch] });
+      else if (BUTTON_COLOR[ch]) level.buttons.push({ x, y, color: BUTTON_COLOR[ch] });
+      else if (ch in DUCT_PAIR) level.ducts.push({ x, y, pair: DUCT_PAIR[ch] });
+      else if (ch in COLOR_CLUE) level.clueTiles.push({ x, y, kind: 'color', value: COLOR_CLUE[ch] });
+      else if (ch >= '1' && ch <= '9') level.clueTiles.push({ x, y, kind: 'roman', value: Number(ch) });
       else if (GATE_COLOR[ch]) level.gates.push({ x, y, color: GATE_COLOR[ch] });
       else if (PLATE_COLOR[ch]) level.plates.push({ x, y, color: PLATE_COLOR[ch] });
     }
   });
 
+  if (def.crates) {
+    for (const c of def.crates) level.crates.push({ x: c.x, y: c.y });
+  }
+
   if (spawns !== 1) throw new LevelError(`${def.id}: precisa de exatamente 1 spawn, tem ${spawns}`);
   if (exits !== 1) throw new LevelError(`${def.id}: precisa de exatamente 1 saída, tem ${exits}`);
   if (def.cycleLength < 1) throw new LevelError(`${def.id}: cycleLength inválido`);
   if (def.maxEchoes < 0) throw new LevelError(`${def.id}: maxEchoes inválido`);
+  if (terminals > 1) throw new LevelError(`${def.id}: no máximo 1 tela de código, tem ${terminals}`);
+  if (level.terminal && !def.code) throw new LevelError(`${def.id}: tela de código sem \`code\` definido`);
   return level;
 }
 

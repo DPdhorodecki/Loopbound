@@ -1,8 +1,16 @@
 import { LEVELS } from '../src/game/levels';
 import { LevelDef } from '../src/game/level';
 import { parseLevel } from '../src/game/level';
-import { createRuntime, endCycle, tryMove } from '../src/game/rules';
-import { TILE_VOID, TILE_WALL } from '../src/game/types';
+import {
+  clearCode,
+  confirmCode,
+  createRuntime,
+  endCycle,
+  interact,
+  pressCode,
+  tryMove,
+} from '../src/game/rules';
+import { Action, Dir, TILE_VOID, TILE_WALL } from '../src/game/types';
 
 /**
  * Fecha as salas: replaya a solução de cada fase e transforma em parede todo
@@ -28,11 +36,28 @@ function tighten(def: LevelDef, halo = 1): string[] {
   level.crates.forEach((c) => add(c.x, c.y));
 
   const rt = createRuntime(level);
+  const apply = (token: Action) => {
+    if (token === 'E') interact(rt);
+    else if (token === 'C') confirmCode(rt);
+    else if (token === 'X') clearCode(rt);
+    else if (token >= '1' && token <= '9') pressCode(rt, Number(token) - 1);
+    else tryMove(rt, token as Dir);
+  };
+  const visit = () => {
+    add(rt.player.x, rt.player.y);
+    rt.crates.forEach((c) => add(c.x, c.y));
+    rt.level.levers.forEach((l) => add(l.x, l.y));
+    rt.level.buttons.forEach((b) => add(b.x, b.y));
+    rt.level.ducts.forEach((d) => {
+      if (!rt.crates.some((c) => c.x === d.x && c.y === d.y)) add(d.x, d.y);
+    });
+    if (rt.level.terminal) add(rt.level.terminal.x, rt.level.terminal.y);
+    rt.level.clueTiles.forEach((c) => add(c.x, c.y));
+  };
   def.solution.forEach((moves, index) => {
-    moves.forEach((dir) => {
-      tryMove(rt, dir);
-      add(rt.player.x, rt.player.y);
-      rt.crates.forEach((c) => add(c.x, c.y));
+    moves.forEach((token) => {
+      apply(token);
+      visit();
     });
     if (index < def.solution.length - 1) endCycle(rt, 'tab');
   });

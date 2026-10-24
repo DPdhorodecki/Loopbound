@@ -13,8 +13,9 @@ Ecos não empurram caixotes nem pegam gemas. Mas eles **têm peso**: seguram pla
 | Etapa | Estado |
 |---|---|
 | Design (GDD) | ✅ concluído |
-| Tutorial jogável (4 salas) | ✅ |
-| Campanha de 10 fases | ✅ jogável no navegador |
+| Tutorial jogável (8 salas) | ✅ |
+| Campanha de 30 fases | ✅ jogável no navegador |
+| Mecânicas: alavanca, botão, duto e porta de código | ✅ |
 | Labirintos e puzzles elaborados | ✅ |
 | Login + banco PostgreSQL + histórico | ✅ |
 | Menu em abas (estilo CEPK Rush) | ✅ |
@@ -23,10 +24,14 @@ Ecos não empurram caixotes nem pegam gemas. Mas eles **têm peso**: seguram pla
 
 ## O que tem no jogo
 
-- **Tutorial de 4 salas** ensinando andar, empurrar, eco e chave — aparece no primeiro acesso e pode ser revisto pelo menu.
-- **10 fases** com dificuldade crescente, todas com paredes, corredores e salas (nenhuma fase é um campo aberto).
+- **Tutorial de 8 salas** ensinando andar, empurrar, eco, chave, alavanca, botão, duto e código — aparece no primeiro acesso e pode ser revisto pelo menu.
+- **30 fases** com dificuldade crescente, todas com paredes, corredores e salas (nenhuma fase é um campo aberto).
 - **Puzzles elaborados:** caixotes em cadeia, placas e portões coloridos, chave e porta, vazio, gema e o uso combinado de vários ecos.
-- **Ciclo** de 8–28 passos, encerrado com `TAB`, morte ou esgotamento do orçamento — e transformado em eco.
+- **Alavanca (`E`):** liga e fica ligada (persiste entre ciclos); aperte `E` de novo para desligar.
+- **Botão (`E`):** só fica pressionado com peso — um caixote em cima o mantém ligado.
+- **Duto:** pisar teleporta para o par; fica inativo se um caixote cobrir o par.
+- **Porta de código:** leia as pistas no chão (números romanos ou cores), abra a tela (`E`) e digite a senha no painel (`1`–`9`, `C` confirma, `X` limpa).
+- **Ciclo** de 8–30 passos, encerrado com `TAB`, morte ou esgotamento do orçamento — e transformado em eco.
 - **Ecos** (até 3 por fase) que repetem a trilha gravada e seguram placas.
 - **Contas:** login/cadastro, progresso, recordes e histórico de partidas no **PostgreSQL**.
 - **Menu em abas:** JOGAR, FASES, HISTÓRICO e PERFIL, com avatar, recordes e estatísticas.
@@ -43,6 +48,8 @@ O protagonista é o **Kennedito**, um cachorro batedor de boné verde, capa e es
 | Ação | Teclado | Toque |
 |---|---|---|
 | Mover | WASD / setas | swipe |
+| Interagir (alavanca, botão, tela) | `E` | botão `E` |
+| Painel de código | `1`–`9`, `C` confirma, `X`/`Backspace` limpa | toque nos botões |
 | Encerrar ciclo | `TAB` | botão do ciclo |
 | Desfazer | `Z` | — |
 | Reiniciar fase | `R` | — |
@@ -56,7 +63,7 @@ O protagonista é o **Kennedito**, um cachorro batedor de boné verde, capa e es
 - **Vite** + **vite-plugin-pwa** (Workbox) para build e offline.
 - **UI em HTML/CSS** (login e menu em abas) por cima do canvas.
 - **Node + Express + `pg` + Zod** no backend, com **PostgreSQL** (login, progresso e histórico).
-- **Vitest**: 32 testes, incluindo o replay das soluções do tutorial e das 10 fases.
+- **Vitest**: 80 testes, incluindo o replay das soluções do tutorial e das 30 fases.
 - Sprites em mapas de caracteres, fonte bitmap 3×5 própria, áudio sintetizado — **zero assets binários** (só os PNGs de ícone gerados no build).
 
 ## Contas, banco e API
@@ -89,7 +96,7 @@ npm run db:up        # sobe o PostgreSQL local (docker compose)
 cp .env.example .env # ajuste DATABASE_URL se precisar
 npm run server       # API em http://localhost:3001
 npm run dev          # jogo em http://localhost:5173/ (com proxy /api)
-npm test             # regras + replay do tutorial e das 10 fases
+npm test             # regras + replay do tutorial e das 30 fases
 npm run build        # tsc + vite build (gera dist/ e o service worker)
 npm run preview      # serve o build em http://localhost:4173/
 npm run tighten      # regenera os mapas fechados das fases
@@ -117,7 +124,7 @@ src/ui/                  HUD (640×360) e casca DOM (login + menu em abas)
 src/app.ts               máquina de estados, input, tutorial, telas
 src/sketch.ts            instância p5 e escala inteira do canvas
 src/main.ts              bootstrap, listeners, PWA
-tests/                   32 testes (regras, tutorial e soluções das fases)
+tests/                   80 testes (regras, tutorial e soluções das fases)
 scripts/                 gerador de ícones, preview do sprite e fechamento dos mapas
 ```
 
@@ -137,17 +144,17 @@ scripts/                 gerador de ícones, preview do sprite e fechamento dos 
 | Arte | Pixel art 16×16, Kennedito 16×24, paleta restrita, sem assets binários |
 | Idioma | PT-BR |
 | Classificação | Livre |
-| Duração | 20–35 min no protótipo (7 fases + clear perfeito) |
+| Duração | 60–120 min para zerar as 30 fases + clear perfeito |
 
 ---
 
 ## 0. Estado do jogo
 
-O jogo cobre o fluxo completo com **tutorial + 10 fases**:
+O jogo cobre o fluxo completo com **tutorial + 30 fases**:
 
 | Fase | Nome | Ensina |
 |---|---|---|
-| TUT | Tutorial (4 salas) | andar, empurrar, eco, chave |
+| TUT | Tutorial (8 salas) | andar, empurrar, eco, chave, alavanca, botão, duto, código |
 | 1 | Primeiros Passos | andar e chegar ao núcleo |
 | 2 | Peso Morto | caixote em placa segura o portão |
 | 3 | Primeiro Eco | o eco segura a placa por você |
@@ -158,8 +165,28 @@ O jogo cobre o fluxo completo com **tutorial + 10 fases**:
 | 8 | Pavio Curto | ciclo de 8 passos e rota cirúrgica |
 | 9 | Caminhos Cruzados | caixote e eco em rotas diferentes |
 | 10 | Última Luz | três portões, dois ecos e um caixote |
+| 11 | A Alavanca | alavanca ligada com `E` abre o portão |
+| 12 | Dois Interruptores | uma alavanca por cor |
+| 13 | Alavanca e Peso | alavanca num lado, caixote no outro |
+| 14 | O Botão | botão só fica pressionado com peso |
+| 15 | Dois Botões | um caixote para cada botão |
+| 16 | Alavanca e Botão | alavanca e caixote em rotas separadas |
+| 17 | O Duto | pisar teleporta para o par |
+| 18 | Duto Coberto | caixote no par desliga o duto |
+| 19 | Dutos em Série | um duto leva ao outro |
+| 20 | Código Romano | leia as pistas e digite a sequência |
+| 21 | Código de Cor | a ordem das cores é a senha |
+| 22 | Código e Peso | caixote na placa e senha na tela |
+| 23 | Alavanca e Eco | alavanca fica ligada; o eco segura a placa |
+| 24 | Botão e Eco | eco na placa, caixote no botão |
+| 25 | Duto e Alavanca | o duto leva até a alavanca |
+| 26 | Duto e Botão | o duto leva até o caixote |
+| 27 | Código e Alavanca | resolve a tela e liga a alavanca |
+| 28 | Código e Duto | a senha abre o portão; o duto, o caminho |
+| 29 | Três Mecanismos | caixote, alavanca e senha |
+| 30 | Última Prova | eco, caixote, botão e senha juntos |
 
-Implementado: tutorial em 4 salas, ciclo com orçamento e encerramento por `TAB`/morte, gravação e replay de ecos, caixotes, placas e portões coloridos, chave/porta, gemas, vazio, undo por passo, reinício, pausa, tela de vitória com recorde, **login e progresso no PostgreSQL**, menu em abas com histórico, áudio sintetizado, toque/swipe, PWA offline e canvas virtual 640×360 com zoom 2×.
+Implementado: tutorial em 8 salas, ciclo com orçamento e encerramento por `TAB`/morte, gravação e replay de ecos, caixotes, placas e portões coloridos, chave/porta, gemas, vazio, **alavanca, botão, duto e porta de código**, undo por passo, reinício, pausa, tela de vitória com recorde, **login e progresso no PostgreSQL**, menu em abas com histórico, áudio sintetizado, toque/swipe, PWA offline e canvas virtual 640×360 com zoom 2×.
 
 Todos os mapas passam por `scripts/tighten.ts`, que reaproveita a solução gravada para tapar com parede todo piso que nenhum ciclo pisa — por isso nenhuma fase é um campo aberto e todas continuam com solução verificada no CI.
 
@@ -268,8 +295,17 @@ Se o eco reexecutasse o input, ele colidiria com caixotes em posições diferent
 | Bloco dourado pesado | `G` | Só desliza com placa dourada ativa | Sim* | 1 |
 | Placa vermelha | `r` | Porta vermelha abre enquanto pressionada | Não | 0 |
 | Placa azul | `b` | Porta azul abre enquanto pressionada | Não | 0 |
-| Porta vermelha | `R` | Bloqueia até placa vermelha | Não | — |
-| Porta azul | `L` | Bloqueia até placa azul | Não | — |
+| Placa dourada | `y` | Porta dourada abre enquanto pressionada | Não | 0 |
+| Porta vermelha | `R` | Bloqueia até a cor vermelha ser energizada | Não | — |
+| Porta azul | `L` | Bloqueia até a cor azul ser energizada | Não | — |
+| Porta dourada | `Y` | Bloqueia até a cor dourada ser energizada | Não | — |
+| Alavanca | `V`/`W`/`Z` | `E` alterna; ligada **persiste entre ciclos** | Não | 0 |
+| Botão | `H`/`I`/`J` | `E` pressiona; só fica ligado com caixote em cima | Não | 0 |
+| Duto | `O`/`o`, `Q`/`q` | Pisar teleporta para o par; inativo se o par estiver coberto | Não | 0 |
+| Tela de código | `X` | `E` abre o painel da senha | Não | 0 |
+| Porta de código | `@` | Abre quando a senha da tela é confirmada | Não | — |
+| Pista romana | `1`–`9` | Marca no chão a ordem da senha (números romanos) | Não | 0 |
+| Pista de cor | `c`/`d`/`e` | Marca no chão a ordem da senha (cores) | Não | 0 |
 | Âncora | `*` | Alterna uma vez e **persiste entre ciclos** | Não | 0 |
 | Gema | `g` | Coletável persistente (3 por fase) | Não | 0 |
 | Chave | `K` | Consumível, persistente | Não | 0 |
@@ -301,21 +337,21 @@ Se o eco reexecutasse o input, ele colidiria com caixotes em posições diferent
 
 ---
 
-## 6. Curva de aprendizado — 7 fases
+## 6. Curva de aprendizado — 30 fases
 
-Cada fase ensina **um** conceito e o recombina. Nenhuma delas exige mais ciclos do que `maxEchoes + 1`.
+Cada fase ensina **um** conceito e o recombina. Nenhuma delas exige mais ciclos do que `maxEchoes + 1`. A tabela completa está na seção 0; abaixo, a curva núcleo:
 
 | # | Nome | Ensina | Ciclo | Ecos | Par (ciclos/passos) |
 |---|---|---|---|---|---|
-| 1 | Primeiros Passos | Andar, ler a sala, sair | 12 | 0 | 1 / 8 |
+| 1 | Primeiros Passos | Andar, ler a sala, sair | 16 | 0 | 1 / 12 |
 | 2 | Peso Morto | Empurrar caixote em placa | 24 | 0 | 1 / 20 |
 | 3 | Primeiro Eco | Terminar ciclo de propósito; eco segura placa | 16 | 1 | 2 / 19 |
 | 4 | O Vão | Dois ecos, duas portas, vazio | 20 | 2 | 3 / 25 |
 | 5 | A Estrela do Batedor | Chave, porta e eco sincronizado | 16 | 2 | 2 / 19 |
-| 6 | Peso Extra | Caixote e eco segurando placas ao mesmo tempo | 24 | 1 | 2 / 26 |
-| 7 | Três Portões | Três ecos, três cores, quatro ciclos | 24 | 3 | 4 / 34 |
+| 6 | Peso Extra | Caixote e eco segurando placas ao mesmo tempo | 20 | 1 | 2 / 26 |
+| 7 | Três Portões | Três ecos, três cores, quatro ciclos | 19 | 3 | 4 / 34 |
 
-Depois do protótipo, o plano de conteúdo segue com: **8 Short Fuse** (ciclo de 8 passos, rota cirúrgica), **9 Crossed Paths** (ecos como obstáculo) e **10 Last Light** (tudo junto).
+As fases 11–30 introduzem, em grupos, **alavanca**, **botão**, **duto** e **porta de código**, e depois recombinam tudo com os ecos:
 
 ### Exemplo de layout — fase 3 (Primeiro Eco)
 
@@ -510,7 +546,7 @@ loopbound/
 │  │  ├─ types.ts             # tiles, direções, cores
 │  │  ├─ level.ts             # parse + validação do mapa
 │  │  ├─ rules.ts             # passo canônico, ecos, pressão, undo
-│  │  ├─ levels.ts            # 7 fases + soluções gravadas
+│  │  ├─ levels.ts            # 30 fases + soluções gravadas
 │  │  └─ save.ts              # progresso em localStorage
 │  ├─ render/
 │  │  ├─ palette.ts
@@ -522,7 +558,7 @@ loopbound/
 │  ├─ ui/hud.ts               # HUD 640×360, botões TAB/ESC, medidor de ciclo
 │  └─ audio/sfx.ts            # sons sintetizados em WebAudio
 ├─ scripts/                   # gerador de ícones e preview do sprite
-└─ tests/game.test.ts         # 22 testes: regras + replay das 7 soluções
+└─ tests/game.test.ts         # 80 testes: regras + replay das 30 soluções + tutorial
 ```
 
 ### Ordem de desenho
@@ -571,7 +607,7 @@ loopbound/
 
 ### Critérios de aceite do produto
 
-- [x] 10 fases completas e vencíveis (conteúdo final).
+- [x] 30 fases completas e vencíveis (conteúdo final).
 - [x] 60 fps em notebook modesto e em celular médio.
 - [x] Progresso salvo no PostgreSQL (com cache em `localStorage`).
 - [x] Deploy no Render (Static Site + Web Service) com banco no Neon.
@@ -590,8 +626,9 @@ loopbound/
 | **M3 — Alma** | Ciclos, gravação e replay de ecos, undo | Fase 3 jogável |
 | **M4 — Conteúdo** | Fases 3–7, HUD, menus, áudio, save, PWA | Protótipo completo (7 fases) |
 | **M5 — Polimento** | Fases 6–10, FX, acessibilidade, mobile, deploy | Link público, 60 fps, sem bugs |
+| **M6 — Expansão** | 30 fases, tutorial de 8 salas, alavanca/botão/duto/código | Campanha completa e publicada |
 
-Protótipo (M1–M4) concluído: 7 fases, fluxo completo, PWA offline. M5 concluído: 10 fases, tutorial, login com PostgreSQL e publicação no Render.
+Protótipo (M1–M4) concluído: 7 fases, fluxo completo, PWA offline. M5 concluído: 10 fases, tutorial, login com PostgreSQL e publicação no Render. M6 concluído: 30 fases, tutorial de 8 salas e as mecânicas de alavanca, botão, duto e porta de código.
 
 ---
 
@@ -605,7 +642,7 @@ Protótipo (M1–M4) concluído: 7 fases, fluxo completo, PWA offline. M5 conclu
 | Pixel art gerada em código ficar fraca | Médio | Atlas com mapas de caracteres revisáveis + preview de sprites em página de debug |
 | Escala fracionária borrar a arte | Médio | Escala inteira obrigatória + letterbox |
 | Áudio irritar em sessões longas | Baixo | Mute com `M`, volume 25%, lembrado entre sessões |
-| Escopo de conteúdo crescer | Médio | 10 fases fixas; ideias novas vão para `IDEAS.md` |
+| Escopo de conteúdo crescer | Médio | 30 fases fixas; ideias novas vão para `IDEAS.md` |
 
 ---
 

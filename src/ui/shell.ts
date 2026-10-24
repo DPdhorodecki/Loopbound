@@ -326,7 +326,7 @@ export class Shell {
       ),
       h('p', {
         class: 'lb-note',
-        text: `${TUTORIAL_ROOMS.length} salas de tutorial ensinam andar, empurrar, eco e chave.`,
+        text: `${TUTORIAL_ROOMS.length} salas de tutorial ensinam andar, empurrar, eco, chave, alavanca, botão, duto e código.`,
       }),
     );
     return box;
