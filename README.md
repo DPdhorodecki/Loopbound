@@ -26,12 +26,13 @@ Ecos não empurram caixotes nem pegam gemas. Mas eles **têm peso**: seguram pla
 
 - **Tutorial de 8 salas** ensinando andar, empurrar, eco, chave, alavanca, botão, duto e código — aparece no primeiro acesso e pode ser revisto pelo menu.
 - **30 fases** com dificuldade crescente, **100% fechadas** por corredores e paredes: não existe atalho — resolver o puzzle (portão/senha) é sempre obrigatório. Cada ciclo tem orçamento mínimo (folga zero).
+- **Fases 13–30 redesenhadas:** mapas maiores (até três salas ligadas por portões), **pelo menos 3 mecânicas por fase** e seis fases com senha (quatro delas de cor), recombinando caixote, placa, alavanca, botão, duto, vazio e código.
 - **Puzzles elaborados:** caixotes em cadeia, placas e portões coloridos, chave e porta, vazio, gema e o uso combinado de vários ecos.
 - **Alavanca (`E`):** liga e fica ligada (persiste entre ciclos); aperte `E` de novo para desligar.
 - **Botão (`E`):** só fica pressionado com peso — um caixote em cima o mantém ligado.
 - **Duto:** pisar teleporta para o par; fica inativo se um caixote cobrir o par.
-- **Porta de código:** leia as pistas no chão (números romanos ou cores), abra a tela (`E`) e digite a senha no painel (`1`–`9`, `C` confirma, `X` limpa).
-- **Ciclo** curto (orçamento mínimo para a solução: 8–25 passos), encerrado com `TAB`, morte ou esgotamento do orçamento — e transformado em eco.
+- **Porta de código:** a senha é **sorteada no início da fase** (nunca é sempre a mesma) e escrita como **pistas no chão** — números romanos (`1`–`9`) ou cores (`c`/`d`/`e`) —, com um índice de ordem sobre cada pista. Leia o chão, abra a tela (`E`) e digite a senha no painel (`1`–`9`, `C` confirma, `X` limpa).
+- **Ciclo** curto (orçamento mínimo para a solução: 8–39 passos), encerrado com `TAB`, morte ou esgotamento do orçamento — e transformado em eco.
 - **Ecos** (até 3 por fase) que repetem a trilha gravada e seguram placas.
 - **Contas:** login/cadastro, progresso, recordes e histórico de partidas no **PostgreSQL**.
 - **Menu em abas:** JOGAR, FASES, HISTÓRICO e PERFIL, com avatar, recordes e estatísticas.
@@ -63,7 +64,7 @@ O protagonista é o **Kennedito**, um cachorro batedor de boné verde, capa e es
 - **Vite** + **vite-plugin-pwa** (Workbox) para build e offline.
 - **UI em HTML/CSS** (login e menu em abas) por cima do canvas.
 - **Node + Express + `pg` + Zod** no backend, com **PostgreSQL** (login, progresso e histórico).
-- **Vitest**: 148 testes — regras, invariantes de design (nenhuma fase tem caminho livre; nenhuma solução estoura o ciclo) e replays.
+- **Vitest**: 172 testes — regras, invariantes de design (nenhuma fase tem caminho livre; nenhuma solução estoura o ciclo), senha sorteada por fase, diversidade das fases e replays.
 - Sprites em mapas de caracteres, fonte bitmap 3×5 própria, áudio sintetizado — **zero assets binários** (só os PNGs de ícone gerados no build).
 
 ## Contas, banco e API
@@ -100,6 +101,7 @@ npm test             # regras + invariantes + replay do tutorial e das 30 fases
 npm run build        # tsc + vite build (gera dist/ e o service worker)
 npm run preview      # serve o build em http://localhost:4173/
 npm run tighten      # regenera os mapas fechados das fases (halo 0)
+npx vite-node scripts/rebuild-levels.ts  # resolve e regrava as fases 13–30 (solver BFS)
 npm run audit        # audita as fases: caminho livre, fim de ciclo prematuro, folga
 npm run icons        # regenera os ícones do PWA
 npm run sprite       # gera um PNG de preview do Kennedito
@@ -125,7 +127,7 @@ src/ui/                  HUD (640×360) e casca DOM (login + menu em abas)
 src/app.ts               máquina de estados, input, tutorial, telas
 src/sketch.ts            instância p5 e escala inteira do canvas
 src/main.ts              bootstrap, listeners, PWA
-tests/                   148 testes (regras, invariantes e soluções das fases)
+tests/                   172 testes (regras, invariantes e soluções das fases)
 scripts/                 gerador de ícones, preview do sprite e fechamento dos mapas
 ```
 
@@ -168,28 +170,28 @@ O jogo cobre o fluxo completo com **tutorial + 30 fases**:
 | 10 | Última Luz | três portões, dois ecos e um caixote |
 | 11 | A Alavanca | alavanca ligada com `E` abre o portão |
 | 12 | Dois Interruptores | uma alavanca por cor |
-| 13 | Alavanca e Peso | alavanca num lado, caixote no outro |
-| 14 | O Botão | botão só fica pressionado com peso |
+| 13 | Circuito Duplo | alavanca abre o portão; caixote na placa |
+| 14 | Prelo | botão só cede com peso em cima |
 | 15 | Dois Botões | um caixote para cada botão |
 | 16 | Alavanca e Botão | alavanca e caixote em rotas separadas |
-| 17 | O Duto | pisar teleporta para o par |
+| 17 | Conduto | o duto cruza a sala; caixote abre a passagem |
 | 18 | Duto Coberto | caixote no par desliga o duto |
 | 19 | Dutos em Série | um duto leva ao outro |
-| 20 | Código Romano | leia as pistas e digite a sequência |
+| 20 | Código Romano | leia as pistas no chão e digite a senha |
 | 21 | Código de Cor | a ordem das cores é a senha |
 | 22 | Código e Peso | caixote na placa e senha na tela |
-| 23 | Alavanca e Eco | alavanca fica ligada; o eco segura a placa |
-| 24 | Botão e Eco | eco na placa, caixote no botão |
-| 25 | Duto e Alavanca | o duto leva até a alavanca |
-| 26 | Duto e Botão | o duto leva até o caixote |
-| 27 | Código e Alavanca | resolve a tela e liga a alavanca |
-| 28 | Código e Duto | a senha abre o portão; o duto, o caminho |
-| 29 | Três Mecanismos | caixote, alavanca e senha |
-| 30 | Última Prova | eco, caixote, botão e senha juntos |
+| 23 | Código e Alavanca | a senha abre o portão; a alavanca, o da saída |
+| 24 | Código e Duto | senha, duto e alavanca até a saída |
+| 25 | Cores e Botões | senha de cor e botão que precisa de peso |
+| 26 | Senha e Vão | senha, vazio e alavanca |
+| 27 | Três Mecanismos | caixote, alavanca e senha |
+| 28 | Quatro Mecanismos | duto, botão, senha e alavanca numa travessia |
+| 29 | Labirinto Final | duas alavancas, um caixote e um duto |
+| 30 | Última Prova | senha, duto, alavanca, botão e peso — tudo junto |
 
-Implementado: tutorial em 8 salas, ciclo com orçamento e encerramento por `TAB`/morte, gravação e replay de ecos, caixotes, placas e portões coloridos, chave/porta, gemas, vazio, **alavanca, botão, duto e porta de código**, undo por passo, reinício, pausa, tela de vitória com recorde, **login e progresso no PostgreSQL**, menu em abas com histórico, áudio sintetizado, toque/swipe, PWA offline e canvas virtual 640×360 com zoom 2×.
+Implementado: tutorial em 8 salas, ciclo com orçamento e encerramento por `TAB`/morte, gravação e replay de ecos, caixotes, placas e portões coloridos, chave/porta, gemas, vazio, **alavanca, botão, duto e porta de código com senha sorteada por fase (pistas no chão)**, undo por passo, reinício, pausa, tela de vitória com recorde, **login e progresso no PostgreSQL**, menu em abas com histórico, áudio sintetizado, toque/swipe, PWA offline e canvas virtual 640×360 com zoom 2×.
 
-Todos os mapas passam por `scripts/tighten.ts`, que reaproveita a solução gravada para tapar com parede todo piso que nenhum ciclo pisa — por isso nenhuma fase é um campo aberto e todas continuam com solução verificada no CI.
+Os mapas das fases 1–12 passam por `scripts/tighten.ts`, que reaproveita a solução gravada para tapar com parede todo piso que nenhum ciclo pisa. As fases 13–30 foram geradas por `scripts/rebuild-levels.ts`, que resolve cada mapa com um **solver BFS** (`scripts/solver.ts`) antes de gravar o bloco em `src/game/levels.ts` — assim cada solução entregue já nasce verificada. Em ambos os casos nenhuma fase é um campo aberto e todas continuam com solução replayada no CI.
 
 ---
 
@@ -352,7 +354,7 @@ Cada fase ensina **um** conceito e o recombina. Nenhuma delas exige mais ciclos 
 | 6 | Peso Extra | Caixote e eco segurando placas ao mesmo tempo | 21 | 1 | 2 / 26 |
 | 7 | Três Portões | Três ecos, três cores, quatro ciclos | 20 | 3 | 4 / 34 |
 
-As fases 11–30 introduzem, em grupos, **alavanca**, **botão**, **duto** e **porta de código**, e depois recombinam tudo com os ecos:
+As fases 11–30 introduzem, em grupos, **alavanca**, **botão**, **duto** e **porta de código**. A partir da 13, cada fase combina **pelo menos três mecânicas** em mapas de duas ou três salas ligadas por portões — sem eco (`maxEchoes: 0`): o desafio passa a ser ler a sala inteira e encadear as ações dentro do orçamento de um único ciclo.
 
 ### Exemplo de layout — fase 3 (Primeiro Eco)
 
@@ -559,7 +561,7 @@ loopbound/
 │  ├─ ui/hud.ts               # HUD 640×360, botões TAB/ESC, medidor de ciclo
 │  └─ audio/sfx.ts            # sons sintetizados em WebAudio
 ├─ scripts/                   # gerador de ícones e preview do sprite
-└─ tests/game.test.ts         # 148 testes: regras + invariantes + replay das 30 soluções + tutorial
+└─ tests/game.test.ts         # 172 testes: regras + invariantes + replay das 30 soluções + tutorial
 ```
 
 ### Ordem de desenho
@@ -597,6 +599,8 @@ loopbound/
 - **Regras**: empurrar em cadeia, bloqueio por parede/vazio/porta, peso de eco em placa, coleta persistente, morte, vitória.
 - **Ecos**: replay com trilha mais curta que o ciclo (estaciona na última posição até o fim do ciclo e recomeça no ciclo seguinte), sobreposição, dissolução do mais antigo.
 - **Fases**: formato válido, exatamente 1 spawn e 1 saída, solução gravada vence, nenhuma fase exige mais que `maxEchoes + 1` ciclos, **nenhuma fase tem caminho livre** (a mecânica é obrigatória) e nenhuma solução estoura o ciclo antes da hora.
+- **Senha por fase**: a sequência é sorteada no load, não é trivial (nunca um símbolo só nem 1-2-3/3-2-1), duas cargas sorteiam senhas diferentes e as pistas do chão coincidem com a senha exigida. Nas soluções gravadas o token `?` pressiona **o próximo símbolo correto**, então o replay vence qualquer senha sorteada.
+- **Diversidade**: as fases 13–30 têm pelo menos 3 mecânicas distintas, altura de mapa ≥ 5 linhas e a 15 e a 16 são diferentes entre si.
 
 ### Critérios de aceite por fase
 

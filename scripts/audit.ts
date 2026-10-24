@@ -8,6 +8,7 @@ import {
   endCycle,
   interact,
   pressCode,
+  pressNext,
   tryMove,
 } from '../src/game/rules';
 import { Action, Dir, TILE_VOID, TILE_WALL } from '../src/game/types';
@@ -19,6 +20,7 @@ function applyAction(rt: ReturnType<typeof createRuntime>, token: Action) {
   if (token === 'E') interact(rt);
   else if (token === 'C') confirmCode(rt);
   else if (token === 'X') clearCode(rt);
+  else if (token === '?') pressNext(rt);
   else pressCode(rt, Number(token) - 1);
   return null;
 }

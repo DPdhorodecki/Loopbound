@@ -8,6 +8,7 @@ import {
   endCycle,
   interact,
   pressCode,
+  pressNext,
   tryMove,
 } from '../src/game/rules';
 import { Action, Dir, TILE_VOID, TILE_WALL } from '../src/game/types';
@@ -44,6 +45,7 @@ function tighten(def: LevelDef, halo = Number(process.argv[2] ?? 0)): string[] {
     if (token === 'E') interact(rt);
     else if (token === 'C') confirmCode(rt);
     else if (token === 'X') clearCode(rt);
+    else if (token === '?') pressNext(rt);
     else if (token >= '1' && token <= '9') pressCode(rt, Number(token) - 1);
     else tryMove(rt, token as Dir);
   };

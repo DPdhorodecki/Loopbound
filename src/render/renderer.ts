@@ -367,8 +367,16 @@ export function drawTerminal(p: p5, x: number, y: number, solved: boolean, t: nu
   p.rect(x + 2, y + 12, 12, 2);
 }
 
-/** Quadrado de pista no chão (romano ou cor). */
-export function drawClue(p: p5, x: number, y: number, kind: 'roman' | 'color', value: number, t: number): void {
+/** Quadrado de pista no chão (romano ou cor), com o índice de ordem da senha. */
+export function drawClue(
+  p: p5,
+  x: number,
+  y: number,
+  kind: 'roman' | 'color',
+  value: number,
+  t: number,
+  order = 0,
+): void {
   p.noStroke();
   if (kind === 'roman') {
     p.fill('#1B2733');
@@ -376,7 +384,7 @@ export function drawClue(p: p5, x: number, y: number, kind: 'roman' | 'color', v
     p.fill(PALETTE.stoneHi);
     p.rect(x + 2, y + 2, 12, 1);
     p.rect(x + 2, y + 13, 12, 1);
-    drawText(p, ROMAN[value - 1] ?? String(value), x + 8, y + 6, 1, PALETTE.cyan, 'center');
+    drawText(p, ROMAN[value] ?? String(value), x + 8, y + 6, 1, PALETTE.cyan, 'center');
   } else {
     const col = CODE_COLORS[value] ?? PALETTE.cyan;
     p.fill('#1B2733');
@@ -385,5 +393,10 @@ export function drawClue(p: p5, x: number, y: number, kind: 'roman' | 'color', v
     p.rect(x + 4, y + 4, 8, 8);
     p.fill(255, 255, 255, 60 + Math.sin(t * 3) * 30);
     p.rect(x + 4, y + 4, 8, 2);
+  }
+  if (order > 0) {
+    p.fill('#0A0F16');
+    p.rect(x + 10, y + 10, 5, 5);
+    drawText(p, String(order), x + 12.5, y + 11, 1, PALETTE.gold, 'center');
   }
 }

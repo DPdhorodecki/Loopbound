@@ -10,6 +10,7 @@ import {
   endCycle,
   interact,
   pressCode,
+  pressNext,
   pressure,
   tryMove,
   undo,
@@ -24,6 +25,7 @@ function applyAction(rt: ReturnType<typeof createRuntime>, token: Action) {
   if (token === 'E') interact(rt);
   else if (token === 'C') confirmCode(rt);
   else if (token === 'X') clearCode(rt);
+  else if (token === '?') pressNext(rt);
   else pressCode(rt, Number(token) - 1);
   return null;
 }
@@ -265,7 +267,7 @@ describe('mecânicas novas', () => {
     const level = parseLevel({
       ...LEVELS[0],
       id: 'teste-codigo',
-      map: ['########', '#P.X..E#', '########'],
+      map: ['##############', '#P.X..E......#', '#.1.2.3......#', '##############'],
       maxEchoes: 0,
       solution: [],
       code: { type: 'roman', sequence: [2, 0, 1] },
@@ -312,3 +314,84 @@ describe('invariantes do tutorial', () => {
     });
   }
 });
+
+/** Gerador determinístico para testar a senha sorteada. */
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Conta as categorias de mecânica presentes numa fase. */
+function mechanicCount(level: ReturnType<typeof parseLevel>): number {
+  const set = new Set<string>();
+  if (level.levers.length) set.add('lever');
+  if (level.buttons.length) set.add('button');
+  if (level.ducts.length) set.add('duct');
+  if (level.code) set.add('code');
+  if (level.plates.length || level.gates.length) set.add('peso/cor');
+  if (level.crates.length) set.add('crate');
+  if (level.doors.length || level.key) set.add('chave/porta');
+  if (level.gems.length) set.add('gem');
+  if (level.tiles.some((t) => t === TILE_VOID)) set.add('void');
+  if (level.def.maxEchoes > 0) set.add('echo');
+  return set.size;
+}
+
+describe('sistema de senha gerado por fase', () => {
+  const codeLevels = LEVELS.filter((l) => l.code);
+
+  it('há várias fases com senha e mais de uma de cor', () => {
+    expect(codeLevels.length).toBeGreaterThanOrEqual(6);
+    expect(codeLevels.filter((l) => l.code!.type === 'color').length).toBeGreaterThanOrEqual(4);
+  });
+
+  for (const def of codeLevels) {
+    it(`${def.id}: sorteia senha não trivial e escreve nas pistas do chão`, () => {
+      const level = parseLevel(def, mulberry32(12345));
+      expect(level.code).not.toBeNull();
+      const seq = level.code!.sequence;
+      // Uma pista de chão para cada símbolo, na ordem de leitura.
+      expect(level.clueTiles).toHaveLength(seq.length);
+      expect(level.clueTiles.every((c) => c.kind === def.code!.type)).toBe(true);
+      // A pista mostra exatamente o símbolo exigido (é a senha no chão).
+      level.clueTiles.forEach((clue, i) => expect(clue.value).toBe(seq[i]));
+      // Nunca trivial: um único símbolo, ou 0,1,2…/2,1,0…
+      expect(new Set(seq).size).toBeGreaterThanOrEqual(2);
+      const asc = seq.every((v, i) => i === 0 || v === seq[i - 1] + 1);
+      const desc = seq.every((v, i) => i === 0 || v === seq[i - 1] - 1);
+      expect(asc || desc).toBe(false);
+    });
+
+    it(`${def.id}: duas cargas sorteiam senhas diferentes (não é fixa)`, () => {
+      const a = parseLevel(def, mulberry32(1)).code!.sequence.join(',');
+      const b = parseLevel(def, mulberry32(999)).code!.sequence.join(',');
+      expect(a).not.toBe(b);
+    });
+  }
+});
+
+describe('diversidade das fases', () => {
+  it('as fases 13–30 têm pelo menos 3 mecânicas', () => {
+    for (let i = 12; i < LEVELS.length; i++) {
+      const level = parseLevel(LEVELS[i], mulberry32(i));
+      expect(mechanicCount(level), `${LEVELS[i].id} tem poucas mecânicas`).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it('as fases 15 e 16 são diferentes', () => {
+    expect(LEVELS[14].map.join('|')).not.toBe(LEVELS[15].map.join('|'));
+  });
+
+  it('os mapas têm pelo menos 3 linhas de altura útil (não são um corredor único)', () => {
+    for (let i = 12; i < LEVELS.length; i++) {
+      expect(LEVELS[i].map.length, `${LEVELS[i].id} é baixo demais`).toBeGreaterThanOrEqual(5);
+    }
+  });
+});
+

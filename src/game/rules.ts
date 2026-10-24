@@ -350,7 +350,7 @@ export function interact(rt: Runtime): InteractTarget | null {
 // ----------------------------------------------------------------- código
 
 export function pressCode(rt: Runtime, index: number): boolean {
-  const code = rt.level.def.code;
+  const code = rt.level.code;
   if (!rt.terminalOpen || !code) return false;
   if (rt.codeEntry.length >= code.sequence.length) return false;
   if (index < 0 || index > 8) return false;
@@ -358,12 +358,19 @@ export function pressCode(rt: Runtime, index: number): boolean {
   return true;
 }
 
+/** Pressiona o próximo símbolo correto da senha (base do token de solução `?`). */
+export function pressNext(rt: Runtime): boolean {
+  const code = rt.level.code;
+  if (!code) return false;
+  return pressCode(rt, code.sequence[rt.codeEntry.length]);
+}
+
 export function clearCode(rt: Runtime): void {
   rt.codeEntry = [];
 }
 
 export function confirmCode(rt: Runtime): boolean {
-  const code = rt.level.def.code;
+  const code = rt.level.code;
   if (!rt.terminalOpen || !code) return false;
   const ok =
     rt.codeEntry.length === code.sequence.length &&

@@ -624,9 +624,9 @@ export class App {
     p.scale(z);
     p.image(this.room!, 0, 0);
 
-    for (const clue of level.clueTiles) {
-      drawClue(p, clue.x * 16, clue.y * 16, clue.kind, clue.value, this.time);
-    }
+    level.clueTiles.forEach((clue, i) => {
+      drawClue(p, clue.x * 16, clue.y * 16, clue.kind, clue.value, this.time, level.code ? i + 1 : 0);
+    });
     for (const duct of level.ducts) {
       const covered = rt.crates.some((c) => c.x === duct.x && c.y === duct.y);
       drawDuct(p, duct.x * 16, duct.y * 16, !covered, this.time);
@@ -838,7 +838,7 @@ export class App {
   private drawCodePanel(): void {
     const p = this.p;
     const rt = this.rt!;
-    const code = rt.level.def.code;
+    const code = rt.level.code;
     if (!code) return;
     const L = this.codeLayout();
     p.noStroke();

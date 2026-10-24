@@ -3,13 +3,16 @@ export type Dir = 'U' | 'D' | 'L' | 'R';
 /**
  * Tokens que formam a solução de uma fase (replayada nos testes).
  * Além dos movimentos, há a interação (`E`), as teclas do painel de código
- * (`1`..`9` selecionam, `C` confirma, `X` limpa).
+ * (`1`..`9` selecionam, `C` confirma, `X` limpa) e `?`, que pressiona o
+ * próximo símbolo correto da senha sorteada (a solução fica independente da
+ * senha gerada no início da fase).
  */
 export type Action =
   | Dir
   | 'E'
   | 'C'
   | 'X'
+  | '?'
   | '1'
   | '2'
   | '3'
