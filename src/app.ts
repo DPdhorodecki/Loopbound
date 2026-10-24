@@ -113,7 +113,12 @@ export class App {
     this.level = parseLevel(def);
     this.rt = createRuntime(this.level);
     this.room = bakeRoom(this.p, this.level);
-    this.zoom = 2;
+    // Zoom inteiro que faz a sala caber na tela (com margem para o HUD).
+    // Fases largas usam zoom 1: a saída nunca fica fora da tela.
+    const availW = VIEW_W - 80;
+    const availH = VIEW_H - 24;
+    const fit = Math.min(availW / (this.level.w * 16), availH / (this.level.h * 16));
+    this.zoom = clamp(Math.floor(fit), 1, 2);
     this.ox = Math.max(64, Math.round((VIEW_W - this.level.w * 16 * this.zoom) / 2));
     this.oy = Math.round((VIEW_H - this.level.h * 16 * this.zoom) / 2);
     this.screen = 'play';
@@ -510,7 +515,7 @@ export class App {
     } else {
       this.drawPlay();
       if (this.rt?.terminalOpen) this.drawCodePanel();
-      if (this.screen === 'win') this.drawWin();
+      if (this.screen === 'win' && !this.menuOpen) this.drawWin();
       if (this.paused) this.drawPause();
     }
     if (this.toast) {

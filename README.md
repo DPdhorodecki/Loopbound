@@ -38,7 +38,7 @@ Ecos não empurram caixotes nem pegam gemas. Mas eles **têm peso**: seguram pla
 - **Menu em abas:** JOGAR, FASES, HISTÓRICO e PERFIL, com avatar, recordes e estatísticas.
 - **Mobile:** toque para mover (swipe) e botões de ciclo/pausa na tela.
 - **Áudio** 100% sintetizado em WebAudio (tecla `M` para mudo).
-- **PWA:** instalável, funciona offline, ícones e service worker gerados no build.
+- **PWA:** instalável pelo navegador, funciona offline, ícones e service worker gerados no build (sem botão de instalação dentro do jogo).
 
 ## Kennedito
 
@@ -64,7 +64,7 @@ O protagonista é o **Kennedito**, um cachorro batedor de boné verde, capa e es
 - **Vite** + **vite-plugin-pwa** (Workbox) para build e offline.
 - **UI em HTML/CSS** (login e menu em abas) por cima do canvas.
 - **Node + Express + `pg` + Zod** no backend, com **PostgreSQL** (login, progresso e histórico).
-- **Vitest**: 172 testes — regras, invariantes de design (nenhuma fase tem caminho livre; nenhuma solução estoura o ciclo), senha sorteada por fase, diversidade das fases e replays.
+- **Vitest**: 202 testes — regras, invariantes de design (nenhuma fase tem caminho livre; nenhuma solução estoura o ciclo), senha sorteada por fase, diversidade das fases, layout das salas e replays.
 - Sprites em mapas de caracteres, fonte bitmap 3×5 própria, áudio sintetizado — **zero assets binários** (só os PNGs de ícone gerados no build).
 
 ## Contas, banco e API
@@ -127,7 +127,7 @@ src/ui/                  HUD (640×360) e casca DOM (login + menu em abas)
 src/app.ts               máquina de estados, input, tutorial, telas
 src/sketch.ts            instância p5 e escala inteira do canvas
 src/main.ts              bootstrap, listeners, PWA
-tests/                   172 testes (regras, invariantes e soluções das fases)
+tests/                   202 testes (regras, invariantes e soluções das fases)
 scripts/                 gerador de ícones, preview do sprite e fechamento dos mapas
 ```
 
@@ -561,7 +561,7 @@ loopbound/
 │  ├─ ui/hud.ts               # HUD 640×360, botões TAB/ESC, medidor de ciclo
 │  └─ audio/sfx.ts            # sons sintetizados em WebAudio
 ├─ scripts/                   # gerador de ícones e preview do sprite
-└─ tests/game.test.ts         # 172 testes: regras + invariantes + replay das 30 soluções + tutorial
+└─ tests/game.test.ts         # 202 testes: regras + invariantes + replay das 30 soluções + tutorial
 ```
 
 ### Ordem de desenho

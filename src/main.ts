@@ -85,9 +85,3 @@ new p5(
   }),
   container,
 );
-
-// iOS: sem beforeinstallprompt, então o botão INSTALAR APP mostra as instruções
-// manuais (ver `initPWA`). Aqui só garantimos que o aviso possa ser dispensado.
-document.getElementById('ios-hint')?.addEventListener('click', (event) => {
-  (event.currentTarget as HTMLElement).classList.remove('visible');
-});

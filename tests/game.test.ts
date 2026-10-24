@@ -395,3 +395,20 @@ describe('diversidade das fases', () => {
   });
 });
 
+describe('layout das salas', () => {
+  // O app reduz o zoom inteiro (mínimo 1) para a sala caber na tela vista
+  // (640×360), com margem para o HUD à esquerda. Se a sala passar de 640 px
+  // mesmo no zoom 1, a saída some para fora da tela e a fase fica injogável.
+  const VIEW_W = 640;
+  const VIEW_H = 360;
+  const HUD_LEFT = 64;
+
+  for (const def of LEVELS) {
+    it(`${def.id}: a sala cabe na tela no zoom mínimo`, () => {
+      const level = parseLevel(def, mulberry32(0));
+      expect(level.w * 16, `${def.id} é larga demais`).toBeLessThanOrEqual(VIEW_W - HUD_LEFT);
+      expect(level.h * 16, `${def.id} é alta demais`).toBeLessThanOrEqual(VIEW_H - 24);
+    });
+  }
+});
+

@@ -41,6 +41,7 @@ export class Shell {
   private root: HTMLDivElement;
   private authEl: HTMLDivElement;
   private menuEl: HTMLDivElement;
+  private winEl: HTMLDivElement;
   private me: api.Me | null = null;
   private offline = false;
   private tab: Tab = 'jogar';
@@ -53,7 +54,8 @@ export class Shell {
     this.root = h('div', { class: 'lb-root' });
     this.authEl = h('div', { class: 'lb-screen lb-auth' });
     this.menuEl = h('div', { class: 'lb-screen lb-menu hidden' });
-    this.root.append(this.authEl, this.menuEl);
+    this.winEl = h('div', { class: 'lb-screen lb-win hidden' });
+    this.root.append(this.authEl, this.menuEl, this.winEl);
     document.body.append(this.root);
 
     app.onWin = (result) => this.handleWin(result);
@@ -128,11 +130,72 @@ export class Shell {
     this.app.menuOpen = false;
     this.authEl.classList.add('hidden');
     this.menuEl.classList.add('hidden');
+    this.winEl.classList.add('hidden');
     this.gameEl.classList.add('playing');
   }
 
   private handleWin(result: WinResult): void {
     void this.syncWin(result);
+    // No modo debug (?level=) o `.lb-root` é removido: aí o cartão do canvas
+    // assume a tela de vitória.
+    if (this.root.isConnected) this.openWin(result);
+  }
+
+  private openWin(result: WinResult): void {
+    this.app.menuOpen = true;
+    this.authEl.classList.add('hidden');
+    this.menuEl.classList.add('hidden');
+    this.winEl.classList.remove('hidden');
+    const card = this.winCard(result);
+    this.winEl.replaceChildren(card);
+    (card.querySelector('.lb-btn-big') as HTMLButtonElement | null)?.focus();
+  }
+
+  private winCard(result: WinResult): HTMLElement {
+    const last = this.app.levelIndex >= LEVELS.length - 1;
+    const best = this.app.save.best[result.levelId];
+
+    const stats = h(
+      'dl',
+      { class: 'lb-win-stats' },
+      h('dt', { text: 'PASSOS' }),
+      h('dd', { text: `${result.steps}` }),
+      h('dt', { text: 'CICLOS' }),
+      h('dd', { text: `${result.cycles}` }),
+      h('dt', { text: 'GEMAS' }),
+      h('dd', { text: `${result.gems}/${result.totalGems}` }),
+      h('dt', { text: 'RECORDE' }),
+      h('dd', { text: `${best ? best.steps : result.steps}` }),
+    );
+
+    return h(
+      'div',
+      { class: 'lb-card lb-win-card' },
+      h('p', { class: 'lb-kicker', text: last ? 'FIM DE JOGO' : 'FASE CONCLUÍDA' }),
+      h('h1', { class: 'lb-level-name', text: `${this.app.levelIndex + 1}. ${result.levelName.toUpperCase()}` }),
+      stats,
+      h(
+        'div',
+        { class: 'lb-actions' },
+        h('button', {
+          class: 'lb-btn lb-btn-big',
+          text: last ? 'VOLTAR AO MENU' : 'PRÓXIMA FASE',
+          onclick: () => {
+            this.winEl.classList.add('hidden');
+            this.enterPlay();
+            this.app.nextLevel();
+          },
+        }),
+        h('button', {
+          class: 'lb-btn lb-btn-ghost',
+          text: 'MENU',
+          onclick: () => {
+            this.winEl.classList.add('hidden');
+            this.app.backToTitle();
+          },
+        }),
+      ),
+    );
   }
 
   private async syncWin(result: WinResult): Promise<void> {
