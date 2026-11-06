@@ -5,6 +5,7 @@ import { persistSave } from '../game/save';
 import { CODE_COLORS, ROMAN } from '../game/types';
 import { ENDING, PROLOGUE, SECTORS, StorySlide, sectorForLevel, speakerName } from '../game/story';
 import { portraitDataUrl } from '../render/portraits';
+import { comicArt } from '../render/comic';
 import * as api from '../net/api';
 
 type Tab = 'jogar' | 'fases' | 'historia' | 'historico' | 'perfil';
@@ -506,12 +507,25 @@ export class Shell {
 
     const card = h(
       'div',
-      { class: `lb-card lb-story-card speaker-${slide.speaker}` },
-      h('p', { class: 'lb-kicker', text: 'TRANSMISSÃO DA INSTALAÇÃO' }),
+      { class: `lb-card lb-story-card speaker-${slide.speaker}${slide.art ? ' has-comic' : ''}` },
+      h('p', { class: 'lb-kicker', text: slide.art ? 'ARQUIVO DA FUGA — QUADRINHO' : 'TRANSMISSÃO DA INSTALAÇÃO' }),
+      slide.art
+        ? h(
+            'figure',
+            { class: 'lb-comic' },
+            h('img', {
+              class: 'lb-comic-art',
+              src: comicArt(slide.art),
+              alt: `${name}: ${slide.text}`,
+            }),
+          )
+        : null,
       h(
         'div',
         { class: 'lb-story-body' },
-        h('img', { class: 'lb-portrait', src: portrait, alt: name }),
+        slide.art
+          ? null
+          : h('img', { class: 'lb-portrait', src: portrait, alt: name }),
         h(
           'div',
           { class: 'lb-story-text' },
@@ -865,6 +879,26 @@ export class Shell {
         }),
       ),
     );
+
+    const comicSlides = [...PROLOGUE, ...ENDING].filter((s) => s.art);
+    if (comicSlides.length) {
+      const gallery = h('div', { class: 'lb-comic-gallery' });
+      for (const slide of comicSlides) {
+        gallery.append(
+          h(
+            'button',
+            {
+              class: 'lb-comic-thumb',
+              type: 'button',
+              onclick: () => this.showStory([slide], () => this.openMenu()),
+            },
+            h('img', { src: comicArt(slide.art!), alt: slide.text }),
+            h('span', { text: slide.text.slice(0, 64) + (slide.text.length > 64 ? '…' : '') }),
+          ),
+        );
+      }
+      wrap.append(h('p', { class: 'lb-kicker lb-kicker-sub', text: 'QUADRINHOS' }), gallery);
+    }
 
     const list = h('div', { class: 'lb-sectors' });
     for (const sector of SECTORS) {

@@ -133,6 +133,59 @@ function decorateVoidEdge(g: p5.Graphics, theme: SectorTheme, level: Level, x: n
   }
 }
 
+/** Desenha enfeites temáticos no piso livre da sala. Never overlaps mechanics. */
+function decorateRoom(
+  g: p5.Graphics,
+  theme: SectorTheme,
+  level: Level,
+  x: number,
+  y: number,
+  r: number,
+): void {
+  const px = x * TILE;
+  const py = y * TILE;
+  const decors = level.decor.filter((d) => d.x === x && d.y === y);
+  if (decors.length === 0) return;
+
+  for (const decor of decors) {
+    if (decor.kind === 'cell') {
+      // grades de cela alienígena
+      g.fill(theme.wallShadow);
+      g.rect(px + 4, py + 3, 2, 10);
+      g.rect(px + 10, py + 3, 2, 10);
+      g.fill(theme.accent);
+      g.rect(px + 5, py + 4, 6, 1);
+      g.rect(px + 5, py + 11, 6, 1);
+    } else if (decor.kind === 'pod') {
+      // cápsula/ninho alienígena
+      g.fill('#141C19');
+      g.ellipse(px + 8, py + 8, 8, 6);
+      g.fill(theme.accentDim);
+      g.rect(px + 6, py + 6, 4, 1);
+    } else if (decor.kind === 'console') {
+      // painel/monitor na parede do chão
+      g.fill(theme.floorLo);
+      g.rect(px + 2, py + 5, 12, 6);
+      g.fill(theme.accent);
+      g.rect(px + 3, py + 6, 2, 2);
+      g.rect(px + 11, py + 6, 2, 2);
+      g.fill('#141C19');
+      g.rect(px + 5, py + 5, 6, 6);
+    } else if (decor.kind === 'vine') {
+      // raízes/vines crescendo no piso
+      g.fill(theme.floorLo);
+      g.rect(px + 3 + (r % 6), py + 2 + (r % 8), 2, 1);
+      g.rect(px + 7 + (r % 6), py + 10 + (r % 3), 1, 3);
+    } else if (decor.kind === 'capsule') {
+      // cápsula de pouso/estase
+      g.fill(theme.accentDim);
+      g.rect(px + 5, py + 4, 6, 8);
+      g.fill(theme.accent);
+      g.rect(px + 6, py + 5, 4, 1);
+    }
+  }
+}
+
 export function bakeRoom(p: p5, level: Level, sector = 1): p5.Graphics {
   const theme = themeFor(sector);
   const g = p.createGraphics(level.w * TILE, level.h * TILE);
@@ -192,6 +245,7 @@ export function bakeRoom(p: p5, level: Level, sector = 1): p5.Graphics {
           g.rect(px + 5 + (r % 5), py + 9 + (r % 3), 1, 1);
         }
         decorateFloor(g, theme, x, y, r);
+        decorateRoom(g, theme, level, x, y, r);
       }
     }
   }

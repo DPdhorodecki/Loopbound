@@ -4,8 +4,11 @@ import { App } from './app';
 import { createSketch } from './sketch';
 import { Shell } from './ui/shell';
 import { initPWA } from './pwa';
+import { preloadPortraits } from './render/portraits';
 import { VIEW_H, VIEW_W } from './ui/hud';
 import { Dir } from './game/types';
+
+void preloadPortraits();
 
 const container = document.getElementById('game') as HTMLElement;
 

@@ -1,10 +1,24 @@
 export type Speaker = 'marcinho' | 'chuchuty' | 'kennedyto' | 'system';
 
+/** Arte de um painel da HQ (desenhada em `src/render/comic.ts`). */
+export type ComicPanelId =
+  | 'school'
+  | 'abduction'
+  | 'lab'
+  | 'cell'
+  | 'radio'
+  | 'escape'
+  | 'capsule'
+  | 'landing'
+  | 'signal';
+
 export interface StorySlide {
   speaker: Speaker;
   /** Nome curto mostrado na caixa de diálogo. */
   name: string;
   text: string;
+  /** Quando presente, a cena aparece como painel de HQ acima da fala. */
+  art?: ComicPanelId;
 }
 
 export interface Sector {
@@ -31,31 +45,36 @@ export const CHUCHUTY_NOME = 'ALIEN CHUCHUTY';
 export const KEN_NOME = 'KENNEDYTO';
 export const SYSTEM_NOME = 'SISTEMA';
 
-/** Prólogo mostrado no primeiro acesso, antes do tutorial. */
+/** Prólogo em HQ: do colégio ao despertar na cela. */
 export const PROLOGUE: StorySlide[] = [
   {
     speaker: 'system',
     name: SYSTEM_NOME,
-    text: 'COLÉGIO ESTADUAL PRESIDENTE KENNEDY. 23H47. UMA NOITE APARENTEMENTE NORMAL.',
+    art: 'school',
+    text: 'COLÉGIO ESTADUAL PRESIDENTE KENNEDY. 23H47. O GUARDIÃO DO PÁTIO FAZ A RONDA DE SEMPRE — ATÉ QUE UMA SOMBRA TAPA AS ESTRELAS.',
   },
   {
     speaker: 'kennedyto',
     name: KEN_NOME,
-    text: 'AU! AU! ...ALGO GRANDE PASSOU POR CIMA DO GINÁSIO. E NÃO É O VIGIA.',
+    art: 'abduction',
+    text: 'AU! AU! ...O TELHADO DO GINÁSIO ABRIU. UMA LUZ VERDE ME PEGOU PELAS PATAS. EU NÃO CONSIGO ME MEXER!',
   },
   {
     speaker: 'chuchuty',
     name: CHUCHUTY_NOME,
-    text: 'ENFIM, O CACHORRO-GUARDIÃO. VOCÊ É A CHAVE QUE EU PROCURAVA. A INSTALAÇÃO VAI ADORAR VOCÊ.',
+    art: 'lab',
+    text: 'ENFIM, O CACHORRO-GUARDIÃO. VOCÊ É A CHAVE QUE EU PROCURAVA. A INSTALAÇÃO VAI ADORAR VOCÊ — E O NÚCLEO TAMBÉM.',
   },
   {
     speaker: 'kennedyto',
     name: KEN_NOME,
-    text: 'AUUU... ONDE EU ESTOU? ESTE LUGAR É FRIO, METÁLICO E CHEIRA A EXPERIMENTO ALIENÍGENA.',
+    art: 'cell',
+    text: 'AUUU... ONDE EU ESTOU? ESTE LUGAR É FRIO, METÁLICO E CHEIRA A EXPERIMENTO ALIENÍGENA. TEM UM CAMPO ESTRANHO PULSANDO NO CHÃO.',
   },
   {
     speaker: 'marcinho',
     name: MARCI_NOME,
+    art: 'radio',
     text: 'KENNEDYTO, ESTÁ ME OUVINDO? AQUI É O GENERAL MARCINHO! LOCALIZAMOS VOCÊ. A INSTALAÇÃO TEM UM CAMPO DE LOOP: CADA TENTATIVA DEIXA UM ECO. ECOS TÊM PESO. USE ISSO PARA ESCAPAR.',
   },
 ];
@@ -222,6 +241,7 @@ export const ENDING: StorySlide[] = [
   {
     speaker: 'system',
     name: SYSTEM_NOME,
+    art: 'capsule',
     text: 'A CÁPSULA ESCAPA SEGUNDOS ANTES DO FECHAMENTO DAS PORTAS DO HANGAR. A INSTALAÇÃO FICA PARA TRÁS, PERDIDA ENTRE AS ESTRELAS.',
   },
   {
@@ -232,6 +252,7 @@ export const ENDING: StorySlide[] = [
   {
     speaker: 'marcinho',
     name: MARCI_NOME,
+    art: 'landing',
     text: 'MISSÃO CUMPRIDA! EU SABIA QUE VOCÊ CONSEGUIRIA, KENNEDYTO!',
   },
   {
@@ -242,6 +263,7 @@ export const ENDING: StorySlide[] = [
   {
     speaker: 'chuchuty',
     name: CHUCHUTY_NOME,
+    art: 'signal',
     text: 'CHUCHUTY AINDA ESTÁ VIVO... TRANSMISSÃO INTERROMPIDA. FIM... OU SERÁ QUE NÃO?',
   },
 ];

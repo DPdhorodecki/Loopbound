@@ -813,3 +813,82 @@ canvas {
 }
 
 
+
+/* ------------------------------------------------------------- quadrinhos */
+
+.lb-story-card.has-comic {
+  width: min(780px, 97vw);
+}
+
+.lb-comic {
+  margin: 10px 0 14px;
+  padding: 4px;
+  background: #050a10;
+  border: 2px solid rgba(53, 230, 242, 0.45);
+  box-shadow: 0 0 26px rgba(53, 230, 242, 0.14);
+}
+
+.lb-comic-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 46vh;
+  object-fit: contain;
+  image-rendering: pixelated;
+  background: #04070b;
+}
+
+.has-comic .lb-story-body {
+  margin-top: 4px;
+}
+
+.has-comic .lb-line {
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.lb-kicker-sub {
+  margin-top: 14px;
+}
+
+.lb-comic-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.lb-comic-thumb {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px;
+  text-align: left;
+  font: inherit;
+  color: #8fb3a6;
+  background: #050a10;
+  border: 2px solid #243244;
+  cursor: pointer;
+}
+
+.lb-comic-thumb:hover,
+.lb-comic-thumb:focus-visible {
+  border-color: var(--cyan);
+  color: #dce9e2;
+  outline: none;
+}
+
+.lb-comic-thumb img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  image-rendering: pixelated;
+  background: #04070b;
+}
+
+.lb-comic-thumb span {
+  font-size: 9px;
+  line-height: 1.4;
+  letter-spacing: 0.5px;
+}

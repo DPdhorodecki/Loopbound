@@ -708,8 +708,8 @@ export class App {
     drawText(p, 'INSTALAÇÃO ALIENÍGENA', 430, 118, 1, PALETTE.gold, 'center');
 
     // Retratos dos personagens na tela-título (pixel art desenhada em código).
-    drawPortrait(p.drawingContext, 'marcinho', 360, 8, 2);
-    drawPortrait(p.drawingContext, 'chuchuty', 596, 8, 2);
+    drawPortrait(p.drawingContext, 'marcinho', 322, 6, 3);
+    drawPortrait(p.drawingContext, 'chuchuty', 594, 6, 3);
 
     const def = LEVELS[this.titleIndex];
     const unlocked = this.save.unlocked;

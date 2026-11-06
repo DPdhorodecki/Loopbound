@@ -30,6 +30,12 @@ export interface ClueTile extends Vec {
   value: number;
 }
 
+/** Enfeite temático: puramente visual, nunca bloqueia nem ativa nada. */
+export type DecorKind = 'cell' | 'pod' | 'console' | 'vine' | 'capsule';
+export interface Decor extends Vec {
+  kind: DecorKind;
+}
+
 /** Código resolvido para uma fase carregada (a resposta que a tela espera). */
 export interface ResolvedCode {
   type: 'roman' | 'color';
@@ -84,6 +90,8 @@ export interface Level {
   codeGates: Vec[];
   terminal: Vec | null;
   clueTiles: ClueTile[];
+  /** Enfeites temáticos posicionados no mapa. */
+  decor: Decor[];
   /** Código resolvido (senha já sorteada) ou `null` se a fase não tem senha. */
   code: ResolvedCode | null;
 }
@@ -121,6 +129,11 @@ const CHAR_TILE: Record<string, TileId> = {
   c: TILE_FLOOR,
   d: TILE_FLOOR,
   e: TILE_FLOOR,
+  '!': TILE_FLOOR,
+  '%': TILE_FLOOR,
+  ':': TILE_FLOOR,
+  ';': TILE_FLOOR,
+  '=': TILE_FLOOR,
   '1': TILE_FLOOR,
   '2': TILE_FLOOR,
   '3': TILE_FLOOR,
@@ -139,6 +152,14 @@ const BUTTON_COLOR: Record<string, ColorKey> = { H: 'red', I: 'blue', J: 'gold' 
 const DUCT_PAIR: Record<string, number> = { O: 0, o: 0, Q: 1, q: 1 };
 /** Caracteres que marcam uma pista de cor no chão (o valor é sobrescrito). */
 const COLOR_CLUE: Record<string, number> = { c: 0, d: 0, e: 0 };
+/** Enfeites temáticos (piso livre, sem colisão e sem circuito). */
+const DECOR_KIND: Record<string, DecorKind> = {
+  '!': 'cell',
+  '%': 'pod',
+  ':': 'console',
+  ';': 'vine',
+  '=': 'capsule',
+};
 
 export class LevelError extends Error {}
 
@@ -189,6 +210,7 @@ export function parseLevel(def: LevelDef, rng: () => number = Math.random): Leve
     codeGates: [],
     terminal: null,
     clueTiles: [],
+    decor: [],
     code: null,
   };
   let spawns = 0;
@@ -226,6 +248,7 @@ export function parseLevel(def: LevelDef, rng: () => number = Math.random): Leve
       else if (ch >= '1' && ch <= '9') level.clueTiles.push({ x, y, kind: 'roman', value: Number(ch) - 1 });
       else if (GATE_COLOR[ch]) level.gates.push({ x, y, color: GATE_COLOR[ch] });
       else if (PLATE_COLOR[ch]) level.plates.push({ x, y, color: PLATE_COLOR[ch] });
+      else if (DECOR_KIND[ch]) level.decor.push({ x, y, kind: DECOR_KIND[ch] });
     }
   });
 
