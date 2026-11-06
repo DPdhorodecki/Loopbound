@@ -38,10 +38,10 @@ export default defineConfig(({ mode }) => {
         ],
         manifest: {
           id: BASE,
-          name: 'Loopbound',
-          short_name: 'Loopbound',
+          name: 'LoopBound — Kennedyto: A Fuga da Instalação Alienígena',
+          short_name: 'LoopBound',
           description:
-            'Puzzle em grade onde cada tentativa sua deixa um eco que repete o seu caminho.',
+            'Kennedyto foi sequestrado pelo Alien Chuchuty. Em cada fase, o campo de loop transforma sua tentativa em um eco.',
           start_url: BASE,
           scope: BASE,
           display: 'standalone',

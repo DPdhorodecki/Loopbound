@@ -7,6 +7,7 @@ export const VIEW_W = 640;
 export const VIEW_H = 360;
 
 export const HUD_TAB = { x: 10, y: 10, w: 44, h: 44 };
+export const HUD_HINT = { x: 58, y: 10, w: 44, h: 44 };
 export const HUD_ESC = { x: 10, y: VIEW_H - 54, w: 44, h: 44 };
 export const HUD_UNDO = { x: 10, y: VIEW_H - 106, w: 44, h: 44 };
 export const HUD_E = { x: 10, y: VIEW_H - 158, w: 44, h: 44 };
@@ -99,13 +100,30 @@ function drawEchoPip(p: p5, x: number, y: number, on: boolean, s = 1): void {
   p.rect(x, y + 3 * s, 3 * s, 3 * s);
 }
 
-export function drawHud(p: p5, rt: Runtime, t: number, muted: boolean): void {
+export function drawHud(
+  p: p5,
+  rt: Runtime,
+  t: number,
+  muted: boolean,
+  opts: { hintStage?: number; sector?: string } = {},
+): void {
   const pressed = pressure(rt);
 
   // TAB
   drawFrame(p, HUD_TAB.x, HUD_TAB.y, HUD_TAB.w, HUD_TAB.h, rt.beat > 0);
   drawLoopGlyph(p, HUD_TAB.x + 9, HUD_TAB.y + 5, 3, rt.beat > 0 ? PALETTE.cyan : PALETTE.cyanDim);
   drawText(p, 'TAB', HUD_TAB.x + HUD_TAB.w / 2, HUD_TAB.y + HUD_TAB.h - 9, 1, PALETTE.cyan, 'center');
+
+  // Dica (General Marcinho)
+  const hintStage = opts.hintStage ?? 0;
+  drawFrame(p, HUD_HINT.x, HUD_HINT.y, HUD_HINT.w, HUD_HINT.h, hintStage > 0);
+  drawText(p, '?', HUD_HINT.x + HUD_HINT.w / 2, HUD_HINT.y + 10, 3, hintStage > 0 ? PALETTE.gold : PALETTE.cyanDim, 'center');
+  drawText(p, 'H', HUD_HINT.x + HUD_HINT.w / 2, HUD_HINT.y + HUD_HINT.h - 9, 1, PALETTE.cyan, 'center');
+
+  // Setor atual
+  if (opts.sector) {
+    drawText(p, opts.sector, VIEW_W / 2, 12, 1, '#8FB3A6', 'center');
+  }
 
   // Desfazer
   drawFrame(p, HUD_UNDO.x, HUD_UNDO.y, HUD_UNDO.w, HUD_UNDO.h, rt.beat > 0);

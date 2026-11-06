@@ -37,7 +37,6 @@ export interface Runtime {
   hasKey: boolean;
   keyTaken: boolean;
   doorsOpen: Set<string>;
-  anchorsOn: Set<string>;
   leversOn: Set<string>;
   /** Botões que o jogador ligou com `E` enquanto estava em cima. */
   playerPress: Set<string>;
@@ -83,7 +82,6 @@ export function createRuntime(level: Level): Runtime {
     hasKey: false,
     keyTaken: false,
     doorsOpen: new Set<string>(),
-    anchorsOn: new Set<string>(),
     leversOn: new Set<string>(),
     playerPress: new Set<string>(),
     codeEntry: [],

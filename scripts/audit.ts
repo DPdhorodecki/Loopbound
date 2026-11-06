@@ -92,6 +92,19 @@ function freePath(def: LevelDef): boolean {
   return false;
 }
 
+/**
+ * Fases intencionalmente sem mecânica no caminho: elas ensinam a andar.
+ * Mesma lista usada pelos testes em `tests/game.test.ts`.
+ */
+const FREE_PATH_OK = new Set(['primeiros-passos', 'tuto-andar']);
+
+/**
+ * Fases de ensino que são um corredor reto de propósito: isolar uma mecânica
+ * nova (válvula, dois circuitos, ciclo curto) é mais didático em linha reta.
+ * As salas do tutorial também são lineares por definição.
+ */
+const STRAIGHT_OK = new Set(['pavio-curto', 'a-alavanca', 'dois-interruptores']);
+
 function dirChanges(def: LevelDef): number {
   const flat: Dir[] = [];
   for (const cycle of def.solution) for (const t of cycle) if (MOVES.includes(t as Dir)) flat.push(t as Dir);
@@ -110,9 +123,10 @@ function report(name: string, def: LevelDef) {
   if (r.prematureEnd.length) flags.push(`FIM PREMATURO ciclos ${[...new Set(r.prematureEnd)].join(',')}`);
   if (r.deaths) flags.push(`MORTES ${r.deaths}`);
   if (r.blocked.length) flags.push(`BLOQUEIOS ${r.blocked.slice(0, 3).join(' | ')}`);
-  if (free) flags.push('CAMINHO LIVRE');
+  if (free && !FREE_PATH_OK.has(def.id)) flags.push('CAMINHO LIVRE');
   const dc = dirChanges(def);
-  if (dc <= 2 && !free) flags.push(`CORREDOR RETO(${dc})`);
+  const straightAllowed = STRAIGHT_OK.has(def.id) || def.id.startsWith('tuto-');
+  if (dc <= 2 && !free && !straightAllowed) flags.push(`CORREDOR RETO(${dc})`);
   const status = flags.length ? 'XX ' + flags.join('; ') : 'ok';
   const steps = def.solution.reduce((n, c) => n + c.filter((t) => MOVES.includes(t as Dir)).length, 0);
   const slack = def.cycleLength - maxCycle;

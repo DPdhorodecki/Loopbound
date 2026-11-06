@@ -12,6 +12,14 @@ export interface SaveData {
   best: Record<string, LevelBest>;
   muted: boolean;
   tutorialDone: boolean;
+  /** Prólogo já assistido. */
+  storySeen: boolean;
+  /** Setores cuja introdução já foi vista. */
+  sectorsSeen: number[];
+  /** Setores cujo encerramento já foi visto. */
+  sectorsOutroSeen: number[];
+  /** Cena final já assistida. */
+  endingSeen: boolean;
 }
 
 const KEY = 'loopbound.save.v1';
@@ -23,6 +31,10 @@ const DEFAULT: SaveData = {
   best: {},
   muted: false,
   tutorialDone: false,
+  storySeen: false,
+  sectorsSeen: [],
+  sectorsOutroSeen: [],
+  endingSeen: false,
 };
 
 export function loadSave(): SaveData {
@@ -37,6 +49,14 @@ export function loadSave(): SaveData {
       best: parsed.best ?? {},
       muted: Boolean(parsed.muted),
       tutorialDone: Boolean(parsed.tutorialDone),
+      storySeen: Boolean(parsed.storySeen),
+      sectorsSeen: Array.isArray(parsed.sectorsSeen)
+        ? parsed.sectorsSeen.filter((n): n is number => Number.isInteger(n))
+        : [],
+      sectorsOutroSeen: Array.isArray(parsed.sectorsOutroSeen)
+        ? parsed.sectorsOutroSeen.filter((n): n is number => Number.isInteger(n))
+        : [],
+      endingSeen: Boolean(parsed.endingSeen),
     };
   } catch {
     return { ...DEFAULT, best: {} };

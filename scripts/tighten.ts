@@ -36,7 +36,6 @@ function tighten(def: LevelDef, halo = Number(process.argv[2] ?? 0)): string[] {
   level.plates.forEach((p) => add(p.x, p.y));
   level.gates.forEach((g) => add(g.x, g.y));
   level.doors.forEach((d) => add(d.x, d.y));
-  level.anchors.forEach((a) => add(a.x, a.y));
   if (level.key) add(level.key.x, level.key.y);
   level.crates.forEach((c) => add(c.x, c.y));
 

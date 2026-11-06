@@ -1,10 +1,12 @@
-# Loopbound
+# LoopBound — Kennedyto: A Fuga da Instalação Alienígena
 
-> *A sala se lembra de você. É o único jeito de sair.*
+> *A instalação se lembra de você. É o único jeito de sair.*
 
-**Loopbound** é um jogo de puzzle em grade para navegador, em pixel art. Cada tentativa dura poucos passos. Quando o ciclo acaba, a sala se reorganiza — mas o seu trajeto fica para trás como um **eco**: um fantasma que repete exatamente o que você fez.
+**LoopBound** é um jogo de puzzle em grade para navegador, em pixel art. O batedor **Kennedyto** foi sequestrado pelo **Alien Chuchuty** e precisa atravessar cinco setores de uma instalação alienígena até a cápsula de fuga. Cada tentativa dura poucos passos. Quando o ciclo acaba, o **campo de loop** se reorganiza — mas o seu trajeto fica para trás como um **eco**: um fantasma que repete exatamente o que você fez.
 
-Ecos não empurram caixotes nem pegam gemas. Mas eles **têm peso**: seguram placas de pressão e mantêm portas abertas. Quase toda fase só é resolvida quando você deixa de tentar ser rápido e começa a montar uma equipe de você mesmo.
+Ecos não empurram contêineres nem pegam gemas. Mas eles **têm peso**: seguram placas de pressão e mantêm portas abertas. Quase toda fase só é resolvida quando você deixa de tentar ser rápido e começa a montar uma equipe de você mesmo.
+
+A fuga é narrada pelo rádio: o **General Marcinho** dá o briefing e dicas graduais, enquanto o **Chuchuty** interrompe a frequência com ameaças. Nenhuma dica entrega a senha.
 
 **Jogue:** https://loopbound-web.onrender.com
 
@@ -14,7 +16,9 @@ Ecos não empurram caixotes nem pegam gemas. Mas eles **têm peso**: seguram pla
 |---|---|
 | Design (GDD) | ✅ concluído |
 | Tutorial jogável (8 salas) | ✅ |
-| Campanha de 30 fases | ✅ jogável no navegador |
+| Campanha de 30 fases em 5 setores | ✅ jogável no navegador |
+| História: prólogo, setores, final e pós-créditos | ✅ |
+| Rádio com General Marcinho + Chuchuty | ✅ |
 | Mecânicas: alavanca, botão, duto e porta de código | ✅ |
 | Labirintos e puzzles elaborados | ✅ |
 | Login + banco PostgreSQL + histórico | ✅ |
@@ -25,8 +29,10 @@ Ecos não empurram caixotes nem pegam gemas. Mas eles **têm peso**: seguram pla
 ## O que tem no jogo
 
 - **Tutorial de 8 salas** ensinando andar, empurrar, eco, chave, alavanca, botão, duto e código — aparece no primeiro acesso e pode ser revisto pelo menu.
-- **30 fases** com dificuldade crescente, **100% fechadas** por corredores e paredes: não existe atalho — resolver o puzzle (portão/senha) é sempre obrigatório. Cada ciclo tem orçamento mínimo (folga zero), com uma folga extra na fase 28.
-- **Fases 13–30 redesenhadas:** mapas maiores (até três salas ligadas por portões), **pelo menos 3 mecânicas por fase** e seis fases com senha (quatro delas de cor), recombinando caixote, placa, alavanca, botão, duto, vazio e código.
+- **Campanha de 30 fases em 5 setores** (Cela, Laboratório, Indústria, Comando e Hangar), com paleta e decoração próprias, **100% fechadas** por corredores e paredes: não existe atalho — resolver o puzzle (portão/senha) é sempre obrigatório. Cada ciclo tem orçamento mínimo (folga zero), com uma folga extra na fase 28.
+- **História completa:** prólogo, introdução e encerramento de cada setor, revelação do **Núcleo do Conhecimento** após a fase 24, fuga final, pouso na Terra e cena pós-créditos.
+- **Rádio:** o General Marcinho dá briefing, dica 1 e dica 2 (nunca a senha); o Chuchuty invade a frequência com avisos. A tecla `H` (ou o botão do HUD) pede a próxima dica; após tempo parado, ela aparece sozinha.
+- **Fases 13–30 redesenhadas:** mapas maiores (até três salas ligadas por portões), **pelo menos 3 mecânicas por fase** e seis fases com senha (quatro delas de cor), recombinando contêiner, placa, alavanca, botão, duto, vazio e código.
 - **Puzzles elaborados:** caixotes em cadeia, placas e portões coloridos, chave e porta, vazio, gema e o uso combinado de vários ecos.
 - **Alavanca (`E`):** liga e fica ligada (persiste entre ciclos); aperte `E` de novo para desligar.
 - **Botão (`E`):** só fica pressionado com peso — um caixote em cima o mantém ligado.
@@ -35,14 +41,16 @@ Ecos não empurram caixotes nem pegam gemas. Mas eles **têm peso**: seguram pla
 - **Ciclo** curto (orçamento mínimo para a solução: 8–39 passos), encerrado com `TAB`, morte ou esgotamento do orçamento — e transformado em eco.
 - **Ecos** (até 3 por fase) que repetem a trilha gravada e seguram placas.
 - **Contas:** login/cadastro, progresso, recordes e histórico de partidas no **PostgreSQL**.
-- **Menu em abas:** JOGAR, FASES, HISTÓRICO e PERFIL, com avatar, recordes e estatísticas.
+- **Menu em abas:** JOGAR, FASES, HISTÓRIA, HISTÓRICO e PERFIL, com avatar, recordes, estatísticas e revisão das cenas.
 - **Mobile:** toque para mover (swipe) e botões de ciclo/pausa na tela.
 - **Áudio** 100% sintetizado em WebAudio (tecla `M` para mudo).
 - **PWA:** instalável pelo navegador, funciona offline, ícones e service worker gerados no build (sem botão de instalação dentro do jogo).
 
-## Kennedito
+## Kennedyto
 
-O protagonista é o **Kennedito**, um cachorro batedor de boné verde, capa e estrela dourada — sprite 16×24 desenhado em código, sem assets binários. O emblema **CEPK** aparece no boné, na tela-título, no ícone do app e no cartão de vitória.
+O protagonista é o **Kennedyto**, um cachorro batedor de boné verde, capa e estrela dourada — sprite 16×24 desenhado em código, sem assets binários. O emblema **CEPK** aparece no boné, na tela-título, no ícone do app e no cartão de vitória.
+
+Os retratos do **General Marcinho**, do **Alien Chuchuty**, do Kennedyto e do sistema também são pixel art desenhada em código (`src/render/portraits.ts`), sem nenhum asset externo.
 
 ## Controles
 
@@ -50,6 +58,7 @@ O protagonista é o **Kennedito**, um cachorro batedor de boné verde, capa e es
 |---|---|---|
 | Mover | WASD / setas | swipe |
 | Interagir (alavanca, botão, tela) | `E` | botão `E` |
+| Dica do General Marcinho | `H` | botão `?` |
 | Painel de código | `1`–`9`, `C` confirma, `X`/`Backspace` limpa | toque nos botões |
 | Encerrar ciclo | `TAB` | botão do ciclo |
 | Desfazer | `Z` | — |
@@ -64,7 +73,7 @@ O protagonista é o **Kennedito**, um cachorro batedor de boné verde, capa e es
 - **Vite** + **vite-plugin-pwa** (Workbox) para build e offline.
 - **UI em HTML/CSS** (login e menu em abas) por cima do canvas.
 - **Node + Express + `pg` + Zod** no backend, com **PostgreSQL** (login, progresso e histórico).
-- **Vitest**: 202 testes — regras, invariantes de design (nenhuma fase tem caminho livre; nenhuma solução estoura o ciclo), senha sorteada por fase, diversidade das fases, layout das salas e replays.
+- **Vitest**: 242 testes — regras, invariantes de design (nenhuma fase tem caminho livre; nenhuma solução estoura o ciclo), senha sorteada por fase, diversidade das fases, layout das salas, narrativa/história, escalada de dicas, auditoria de mecânicas (nenhuma órfã ou decorativa) e replays.
 - Sprites em mapas de caracteres, fonte bitmap 3×5 própria, áudio sintetizado — **zero assets binários** (só os PNGs de ícone gerados no build).
 
 ## Contas, banco e API
@@ -97,14 +106,14 @@ npm run db:up        # sobe o PostgreSQL local (docker compose)
 cp .env.example .env # ajuste DATABASE_URL se precisar
 npm run server       # API em http://localhost:3001
 npm run dev          # jogo em http://localhost:5173/ (com proxy /api)
-npm test             # regras + invariantes + replay do tutorial e das 30 fases
+npm test             # regras + invariantes + narrativa + replay das 30 fases
 npm run build        # tsc + vite build (gera dist/ e o service worker)
 npm run preview      # serve o build em http://localhost:4173/
 npm run tighten      # regenera os mapas fechados das fases (halo 0)
 npx vite-node scripts/rebuild-levels.ts  # resolve e regrava as fases 13–30 (solver BFS)
-npm run audit        # audita as fases: caminho livre, fim de ciclo prematuro, folga
+npm run audit        # audita design (caminho livre, ciclo prematuro, folga) e mecânicas órfãs/não usadas
 npm run icons        # regenera os ícones do PWA
-npm run sprite       # gera um PNG de preview do Kennedito
+npm run sprite       # gera um PNG de preview do Kennedyto
 ```
 
 Em produção o deploy é feito no Render a partir do `render.yaml`: o frontend é
@@ -120,31 +129,32 @@ README.md                apresentação + GDD completo (regras, arte, fases, arq
 render.yaml              Blueprint do Render (Static Site + Web Service)
 server/                  API Express + PostgreSQL (auth, progresso, histórico)
 docker-compose.yml       PostgreSQL de desenvolvimento
-src/game/                regras canônicas, fases, tutorial, save (TypeScript puro)
+src/game/                regras canônicas, fases, tutorial, história, dicas, análise, save
 src/net/api.ts           cliente da API e sessão
-src/render/              paleta, Kennedito, atlas, sala, entidades, fonte
-src/ui/                  HUD (640×360) e casca DOM (login + menu em abas)
-src/app.ts               máquina de estados, input, tutorial, telas
+src/render/              paleta, Kennedyto, retratos, temas, sala, fundo espacial, entidades, fonte
+src/ui/                  HUD (640×360), rádio e casca DOM (login + menu em abas)
+src/app.ts               máquina de estados, input, tutorial, telas, rádio/dicas
 src/sketch.ts            instância p5 e escala inteira do canvas
 src/main.ts              bootstrap, listeners, PWA
-tests/                   202 testes (regras, invariantes e soluções das fases)
+tests/                   242 testes (regras, invariantes, narrativa e soluções das fases)
 scripts/                 gerador de ícones, preview do sprite e fechamento dos mapas
 ```
 
 ---
 
-# Loopbound — Game Design Document
+# LoopBound — Kennedyto: A Fuga da Instalação Alienígena
 
-> *A sala se lembra de você. É o único jeito de sair.*
+> *A instalação se lembra de você. É o único jeito de sair.*
 
 | Campo | Valor |
 |---|---|
-| Título | **Loopbound** |
+| Título | **LoopBound** |
+| Subtítulo | **Kennedyto — A Fuga da Instalação Alienígena** |
 | Gênero | Puzzle em grade / quebra-cabeça de lógica com mecânica de eco |
 | Perspectiva | Top-down 3/4, câmera fixa por sala |
 | Plataforma | Navegador (desktop e mobile) — PWA instalável e offline |
 | Engine | p5.js (render e loop) + TypeScript puro (regras) |
-| Arte | Pixel art 16×16, Kennedito 16×24, paleta restrita, sem assets binários |
+| Arte | Pixel art 16×16, Kennedyto 16×24, retratos em código, paleta restrita, sem assets binários |
 | Idioma | PT-BR |
 | Classificação | Livre |
 | Duração | 60–120 min para zerar as 30 fases + clear perfeito |
@@ -158,36 +168,36 @@ O jogo cobre o fluxo completo com **tutorial + 30 fases**:
 | Fase | Nome | Ensina |
 |---|---|---|
 | TUT | Tutorial (8 salas) | andar, empurrar, eco, chave, alavanca, botão, duto, código |
-| 1 | Primeiros Passos | andar e chegar ao núcleo |
-| 2 | Peso Morto | caixote em placa segura o portão |
+| 1 | O Despertar | andar e encontrar a escotilha da cela |
+| 2 | Peso Morto | contêiner em placa segura o portão |
 | 3 | Primeiro Eco | o eco segura a placa por você |
 | 4 | O Vão | dois ecos, dois portões, vazio |
-| 5 | A Estrela do Batedor | chave, porta e eco sincronizado |
-| 6 | Peso Extra | caixote e eco segurando placas ao mesmo tempo |
-| 7 | Três Portões | três ecos, três cores, quatro ciclos |
+| 5 | Cartão de Acesso | chave, porta e eco sincronizado |
+| 6 | Peso Extra | contêiner e eco segurando placas ao mesmo tempo |
+| 7 | Três Barreiras | três ecos, três cores, quatro ciclos |
 | 8 | Pavio Curto | ciclo de 8 passos e rota cirúrgica |
-| 9 | Caminhos Cruzados | caixote e eco em rotas diferentes |
-| 10 | Última Luz | três portões, dois ecos e um caixote |
-| 11 | A Alavanca | alavanca ligada com `E` abre o portão |
-| 12 | Dois Interruptores | uma alavanca por cor |
-| 13 | Circuito Duplo | alavanca abre o portão; caixote na placa |
+| 9 | Caminhos Cruzados | contêiner e eco em rotas diferentes |
+| 10 | Última Luz | três portões, dois ecos e um contêiner |
+| 11 | A Válvula | válvula ligada com `E` abre o portão |
+| 12 | Dois Circuitos | uma válvula por cor |
+| 13 | Circuito Duplo | válvula abre o portão; contêiner na placa |
 | 14 | Prelo | botão só cede com peso em cima |
-| 15 | Dois Botões | um caixote para cada botão |
-| 16 | Alavanca e Botão | alavanca e caixote em rotas separadas |
-| 17 | Conduto | o duto cruza a sala; caixote abre a passagem |
-| 18 | Duto Coberto | caixote no par desliga o duto |
+| 15 | Dois Botões | um contêiner para cada botão |
+| 16 | Válvula e Prensa | válvula e contêiner em rotas separadas |
+| 17 | Conduto | o duto cruza a sala; contêiner abre a passagem |
+| 18 | Duto Coberto | a rota até a válvula é o desafio |
 | 19 | Dutos em Série | um duto leva ao outro |
-| 20 | Código Romano | leia as pistas no chão e digite a senha |
-| 21 | Código de Cor | a ordem das cores é a senha |
-| 22 | Código e Peso | caixote na placa e senha na tela |
-| 23 | Código e Alavanca | a senha abre o portão; a alavanca, o da saída |
-| 24 | Código e Duto | senha, duto e alavanca até a saída |
-| 25 | Cores e Botões | senha de cor e botão que precisa de peso |
-| 26 | Senha e Vão | senha, vazio e alavanca |
-| 27 | Três Mecanismos | caixote, alavanca e senha |
-| 28 | Quatro Mecanismos | duto, botão, senha e alavanca numa travessia |
-| 29 | Labirinto Final | duas alavancas, um caixote e um duto |
-| 30 | Última Prova | senha, duto, alavanca, botão e peso — tudo junto |
+| 20 | Arquivo Romano | leia as pistas no chão e digite a senha |
+| 21 | Arquivo de Cor | a ordem das cores é a senha |
+| 22 | Arquivo e Peso | contêiner na placa e senha na tela |
+| 23 | Arquivo e Válvula | a senha abre o portão; a válvula, o da saída |
+| 24 | Arquivo e Duto | senha, duto e válvula até a saída |
+| 25 | Consoles de Cor | senha de cor e a prensa do hangar |
+| 26 | Senha e Vácuo | senha, vazio e válvula |
+| 27 | Protocolo de Lançamento | contêiner, válvula e senha |
+| 28 | Quatro Sistemas | duto, botão, senha e válvula numa travessia |
+| 29 | Labirinto de Lançamento | duas válvulas, um contêiner e um duto |
+| 30 | A Grande Fuga | senha, duto, válvula, botão e peso — tudo junto |
 
 Implementado: tutorial em 8 salas, ciclo com orçamento e encerramento por `TAB`/morte, gravação e replay de ecos, caixotes, placas e portões coloridos, chave/porta, gemas, vazio, **alavanca, botão, duto e porta de código com senha sorteada por fase (pistas no chão)**, undo por passo, reinício, pausa, tela de vitória com recorde, **login e progresso no PostgreSQL**, menu em abas com histórico, áudio sintetizado, toque/swipe, PWA offline e canvas virtual 640×360 com zoom 2×.
 
@@ -553,7 +563,7 @@ loopbound/
 │  │  └─ save.ts              # progresso em localStorage
 │  ├─ render/
 │  │  ├─ palette.ts
-│  │  ├─ kennedito.ts         # sprite 16×24 em mapas de caracteres
+│  │  ├─ kennedito.ts         # sprite do Kennedyto (16×24 em mapas de caracteres)
 │  │  ├─ atlas.ts             # bake offscreen + tints
 │  │  ├─ room.ts              # bake do piso/parede/vazio
 │  │  ├─ renderer.ts          # caixote, placa, portão, gema, chave, porta, saída

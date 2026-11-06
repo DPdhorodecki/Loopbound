@@ -1,5 +1,5 @@
 /**
- * Kennedito, o batedor — desenhado por código em uma grade de 16×24.
+ * Kennedyto, o batedor — desenhado por código em uma grade de 16×24.
  * Formas primitivas + contorno automático mantêm o sprite consistente
  * entre os quadros de animação.
  */

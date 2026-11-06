@@ -78,7 +78,6 @@ export interface Level {
   doors: Vec[];
   gates: Gate[];
   plates: Plate[];
-  anchors: Vec[];
   levers: Lever[];
   buttons: Button[];
   ducts: Duct[];
@@ -106,7 +105,6 @@ const CHAR_TILE: Record<string, TileId> = {
   y: TILE_FLOOR,
   g: TILE_FLOOR,
   '*': TILE_FLOOR,
-  S: TILE_FLOOR,
   // mecânicas novas
   V: TILE_FLOOR,
   W: TILE_FLOOR,
@@ -185,7 +183,6 @@ export function parseLevel(def: LevelDef, rng: () => number = Math.random): Leve
     doors: [],
     gates: [],
     plates: [],
-    anchors: [],
     levers: [],
     buttons: [],
     ducts: [],
@@ -218,7 +215,6 @@ export function parseLevel(def: LevelDef, rng: () => number = Math.random): Leve
       else if (ch === 'g') level.gems.push({ x, y });
       else if (ch === 'K') level.key = { x, y };
       else if (ch === 'D') level.doors.push({ x, y });
-      else if (ch === 'S') level.anchors.push({ x, y });
       else if (ch === 'X') {
         level.terminal = { x, y };
         terminals++;

@@ -5,11 +5,17 @@ import { Level, LevelDef, parseLevel } from './game/level';
 import { Runtime, clearCode, closeTerminal, colorPowered, confirmCode, createRuntime, endCycle, echoPoses, interact, pressCode, pressure, tryMove, undo } from './game/rules';
 import { LevelBest, persistSave, loadSave } from './game/save';
 import { CODE_COLORS, Dir, Pose, ROMAN, Vec, cellKey } from './game/types';
+import { HintMessage, HintSystem } from './game/hints';
+import { sectorForLevel } from './game/story';
 import { Sfx } from './audio/sfx';
 import { Atlas, buildAtlas } from './render/atlas';
 import { drawText, textWidth } from './render/font';
 import { CHAR_COLORS, PALETTE } from './render/palette';
 import { bakeRoom } from './render/room';
+import { drawSpaceBackdrop } from './render/background';
+import { drawPortrait } from './render/portraits';
+import { themeFor } from './render/themes';
+import { drawRadioPanel } from './ui/radio';
 import {
   COLOR_RAMP,
   drawButton,
@@ -28,7 +34,7 @@ import {
   drawShadow,
   drawTerminal,
 } from './render/renderer';
-import { HUD_E, HUD_ESC, HUD_TAB, HUD_UNDO, VIEW_H, VIEW_W, drawFrame, drawHud } from './ui/hud';
+import { HUD_E, HUD_ESC, HUD_HINT, HUD_TAB, HUD_UNDO, VIEW_H, VIEW_W, drawFrame, drawHud } from './ui/hud';
 
 export type Screen = 'title' | 'play' | 'win';
 
@@ -40,6 +46,8 @@ export interface WinResult {
   gems: number;
   totalGems: number;
   won: boolean;
+  solvedLine?: string;
+  sectorName?: string;
 }
 
 const STEP_DUR = 90;
@@ -89,6 +97,14 @@ export class App {
   toast = '';
   hintTimer = 0;
 
+  /** Rádio do General Marcinho / Chuchuty. */
+  readonly hints = new HintSystem();
+  radioMessage: HintMessage | null = null;
+  radioTimer = 0;
+  sector = 1;
+  levelTime = 0;
+  private chuchutyShown = false;
+
   constructor(p: p5) {
     this.p = p;
     this.atlas = buildAtlas(p, CHAR_COLORS);
@@ -115,7 +131,8 @@ export class App {
   private load(def: LevelDef): void {
     this.level = parseLevel(def);
     this.rt = createRuntime(this.level);
-    this.room = bakeRoom(this.p, this.level);
+    this.sector = this.inTutorial ? 1 : sectorForLevel(this.levelIndex).id;
+    this.room = bakeRoom(this.p, this.level, this.sector);
     // Zoom inteiro que faz a sala caber na tela (com margem para o HUD).
     // Fases largas usam zoom 1: a saída nunca fica fora da tela.
     const availW = VIEW_W - 80;
@@ -133,8 +150,33 @@ export class App {
     this.prevCrates = this.rt.crates.map((c) => ({ ...c }));
     this.flash = 0;
     this.hintTimer = this.inTutorial ? 0 : 5;
+    this.levelTime = 0;
+    this.chuchutyShown = false;
+    if (this.inTutorial) {
+      this.radioMessage = null;
+      this.radioTimer = 0;
+    } else {
+      this.showRadio(this.hints.begin(def.id));
+    }
     this.sfx.unlock();
     this.sfx.play('ui');
+  }
+
+  /** Mostra uma transmissão no painel de rádio por alguns segundos. */
+  private showRadio(message: HintMessage | null, seconds = 9): void {
+    if (!message) return;
+    this.radioMessage = message;
+    this.radioTimer = seconds;
+  }
+
+  /** Tecla H / botão de dica. */
+  requestHint(): void {
+    if (this.inTutorial || this.screen !== 'play' || this.paused) return;
+    const message = this.hints.request();
+    if (message) {
+      this.showRadio(message, 11);
+      this.sfx.play('ui');
+    }
   }
 
   setMuted(muted: boolean): void {
@@ -182,6 +224,7 @@ export class App {
     if (!prev || best.steps < prev.steps) this.save.best[def.id] = best;
     this.save.unlocked = clamp(Math.max(this.save.unlocked, this.levelIndex + 2), 1, LEVELS.length);
     persistSave(this.save);
+    const solved = this.hints.solvedMessage();
     this.onWin?.({
       levelId: def.id,
       levelName: def.name,
@@ -190,6 +233,8 @@ export class App {
       gems: rt.gems.size,
       totalGems: rt.level.gems.length,
       won: true,
+      solvedLine: solved.text,
+      sectorName: sectorForLevel(this.levelIndex).name,
     });
     this.screen = 'win';
     this.sfx.play('win');
@@ -209,8 +254,27 @@ export class App {
     this.pushTimer = Math.max(0, this.pushTimer - seconds);
     this.stepTimer = Math.max(0, this.stepTimer - dt);
     this.hintTimer = Math.max(0, this.hintTimer - seconds);
+    this.radioTimer = Math.max(0, this.radioTimer - seconds);
 
     if (this.screen !== 'play' || this.paused || !this.rt) return;
+
+    if (!this.inTutorial) {
+      this.levelTime += seconds;
+      const auto = this.hints.tick(seconds);
+      if (auto) this.showRadio(auto, 11);
+
+      // Chuchuty interrompe o rádio depois que o jogador já entendeu a fase.
+      if (!this.chuchutyShown && this.levelTime > 14) {
+        const alert = this.hints.chuchutyMessage();
+        if (alert) {
+          this.chuchutyShown = true;
+          this.showRadio(alert, 8);
+          this.flash = 0.4;
+          this.flashColor = PALETTE.red;
+          this.sfx.play('blocked');
+        }
+      }
+    }
 
     if (this.stepTimer <= 0 && this.queue.length > 0) {
       const dir = this.queue.shift()!;
@@ -230,6 +294,8 @@ export class App {
       this.stepTimer = 40;
       return;
     }
+
+    this.hints.notifyAction();
 
     if (res.pushed) {
       this.sfx.play('push');
@@ -264,6 +330,7 @@ export class App {
   endCycle(): void {
     const rt = this.rt;
     if (!rt || rt.status !== 'playing' || rt.beat === 0) return;
+    this.hints.notifyAction();
     endCycle(rt, 'tab');
     this.prevPlayer = null;
     this.prevCrates = rt.crates.map((c) => ({ ...c }));
@@ -387,6 +454,11 @@ export class App {
       return;
     }
 
+    if (k === 'h') {
+      this.requestHint();
+      return;
+    }
+
     if (this.screen === 'title') {
       if (k === 'ArrowLeft' || k === 'a') {
         this.titleIndex = clamp(this.titleIndex - 1, 0, this.save.unlocked - 1);
@@ -429,7 +501,10 @@ export class App {
     }
     if (k === 'e') {
       const target = this.rt ? interact(this.rt) : null;
-      if (target) this.sfx.play('ui');
+      if (target) {
+        this.hints.notifyAction();
+        this.sfx.play('ui');
+      }
       if (target === 'terminal') this.onCode?.();
       return;
     }
@@ -534,9 +609,14 @@ export class App {
       this.endCycle();
     } else if (this.inside(x, y, HUD_UNDO)) {
       this.doUndo();
+    } else if (this.inside(x, y, HUD_HINT)) {
+      this.requestHint();
     } else if (this.inside(x, y, HUD_E)) {
       const target = this.rt ? interact(this.rt) : null;
-      if (target) this.sfx.play('ui');
+      if (target) {
+        this.hints.notifyAction();
+        this.sfx.play('ui');
+      }
       if (target === 'terminal') this.onCode?.();
     } else if (this.inside(x, y, HUD_ESC)) {
       this.openPause();
@@ -557,7 +637,7 @@ export class App {
 
   draw(): void {
     const p = this.p;
-    p.background(PALETTE.bgDeep);
+    drawSpaceBackdrop(p, this.time, themeFor(this.sector).nebula);
     if (this.screen === 'title' || !this.rt) {
       this.drawTitle();
     } else {
@@ -623,8 +703,13 @@ export class App {
     p.rect(cx + 25, 320, 1, 18);
     drawText(p, 'CEPK', cx, 325, 2, PALETTE.gold, 'center');
 
-    drawText(p, 'LOOPBOUND', 430, 66, 6, PALETTE.cyan, 'center', '#0A3B44');
-    drawText(p, 'CADA TENTATIVA DEIXA UM ECO', 430, 120, 2, '#8FB3A6', 'center');
+    drawText(p, 'LOOPBOUND', 430, 62, 6, PALETTE.cyan, 'center', '#0A3B44');
+    drawText(p, 'KENNEDYTO — A FUGA DA', 430, 106, 1, PALETTE.gold, 'center');
+    drawText(p, 'INSTALAÇÃO ALIENÍGENA', 430, 118, 1, PALETTE.gold, 'center');
+
+    // Retratos dos personagens na tela-título (pixel art desenhada em código).
+    drawPortrait(p.drawingContext, 'marcinho', 360, 8, 2);
+    drawPortrait(p.drawingContext, 'chuchuty', 596, 8, 2);
 
     const def = LEVELS[this.titleIndex];
     const unlocked = this.save.unlocked;
@@ -769,7 +854,13 @@ export class App {
     if (this.screen === 'play') {
       if (this.inTutorial) this.drawTutorialHint();
       else this.drawHint(rt);
-      drawHud(p, rt, this.time, this.save.muted);
+      drawHud(p, rt, this.time, this.save.muted, {
+        hintStage: this.hints.currentStage,
+        sector: this.inTutorial ? 'TREINAMENTO' : `SETOR ${this.sector} · ${themeFor(this.sector).label}`,
+      });
+      if (!this.inTutorial && this.radioTimer > 0 && this.radioMessage) {
+        drawRadioPanel(p, this.radioMessage, this.time);
+      }
     }
   }
 

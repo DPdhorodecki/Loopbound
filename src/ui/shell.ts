@@ -3,12 +3,14 @@ import { LEVELS } from '../game/levels';
 import { TUTORIAL_ROOMS } from '../game/tutorial';
 import { persistSave } from '../game/save';
 import { CODE_COLORS, ROMAN } from '../game/types';
+import { ENDING, PROLOGUE, SECTORS, StorySlide, sectorForLevel, speakerName } from '../game/story';
+import { portraitDataUrl } from '../render/portraits';
 import * as api from '../net/api';
 
-type Tab = 'jogar' | 'fases' | 'historico' | 'perfil';
+type Tab = 'jogar' | 'fases' | 'historia' | 'historico' | 'perfil';
 
 const AVATARS = [
-  { id: 'kennedito', label: 'KENNEDITO', glyph: '🐕' },
+  { id: 'kennedito', label: 'KENNEDYTO', glyph: '🐕' },
   { id: 'batedor', label: 'BATEDOR', glyph: '🧭' },
   { id: 'eco', label: 'ECO', glyph: '👻' },
   { id: 'estrela', label: 'ESTRELA', glyph: '⭐' },
@@ -45,10 +47,14 @@ export class Shell {
   private winEl: HTMLDivElement;
   private pauseEl: HTMLDivElement;
   private codeEl: HTMLDivElement;
+  private storyEl: HTMLDivElement;
   private me: api.Me | null = null;
   private offline = false;
   private tab: Tab = 'jogar';
   private busy = false;
+  private storySlides: StorySlide[] = [];
+  private storyIndex = 0;
+  private storyDone: (() => void) | null = null;
 
   constructor(
     private readonly app: App,
@@ -60,7 +66,8 @@ export class Shell {
     this.winEl = h('div', { class: 'lb-screen lb-win hidden' });
     this.pauseEl = h('div', { class: 'lb-screen lb-pause hidden' });
     this.codeEl = h('div', { class: 'lb-screen lb-code hidden' });
-    this.root.append(this.authEl, this.menuEl, this.winEl, this.pauseEl, this.codeEl);
+    this.storyEl = h('div', { class: 'lb-screen lb-story hidden' });
+    this.root.append(this.authEl, this.menuEl, this.winEl, this.pauseEl, this.codeEl, this.storyEl);
     document.body.append(this.root);
 
     app.onWin = (result) => this.handleWin(result);
@@ -99,6 +106,18 @@ export class Shell {
   }
 
   private afterAuth(): void {
+    if (!this.app.save.storySeen) {
+      this.showStory(PROLOGUE, () => {
+        this.app.save.storySeen = true;
+        persistSave(this.app.save);
+        this.afterStoryBoot();
+      });
+      return;
+    }
+    this.afterStoryBoot();
+  }
+
+  private afterStoryBoot(): void {
     if (!this.app.save.tutorialDone) this.startTutorial();
     else this.openMenu();
   }
@@ -125,10 +144,30 @@ export class Shell {
     this.menuEl.classList.remove('hidden');
     this.pauseEl.classList.add('hidden');
     this.codeEl.classList.add('hidden');
+    this.storyEl.classList.add('hidden');
     this.renderMenu();
   }
 
+  /**
+   * Inicia uma fase, mostrando primeiro a introdução do setor quando for a
+   * primeira visita. Assim a campanha tem começo, meio e fim narrativos.
+   */
   private startLevel(index: number): void {
+    const sector = sectorForLevel(index);
+    if (index === sector.range[0] && !this.app.save.sectorsSeen.includes(sector.id)) {
+      this.showStory(sector.intro, () => {
+        if (!this.app.save.sectorsSeen.includes(sector.id)) {
+          this.app.save.sectorsSeen.push(sector.id);
+          persistSave(this.app.save);
+        }
+        this.reallyStartLevel(index);
+      });
+      return;
+    }
+    this.reallyStartLevel(index);
+  }
+
+  private reallyStartLevel(index: number): void {
     this.enterPlay();
     this.app.startLevel(index);
   }
@@ -145,6 +184,7 @@ export class Shell {
     this.winEl.classList.add('hidden');
     this.pauseEl.classList.add('hidden');
     this.codeEl.classList.add('hidden');
+    this.storyEl.classList.add('hidden');
     this.gameEl.classList.add('playing');
   }
 
@@ -152,7 +192,28 @@ export class Shell {
     void this.syncWin(result);
     // No modo debug (?level=) o `.lb-root` é removido: aí o cartão do canvas
     // assume a tela de vitória.
-    if (this.root.isConnected) this.openWin(result);
+    if (!this.root.isConnected) return;
+
+    const sector = sectorForLevel(this.app.levelIndex);
+    const isSectorEnd = this.app.levelIndex === sector.range[1];
+    const afterScenes = () => {
+      const last = this.app.levelIndex >= LEVELS.length - 1;
+      if (last && !this.app.save.endingSeen) {
+        this.app.save.endingSeen = true;
+        persistSave(this.app.save);
+        this.showStory(ENDING, () => this.openWin(result));
+        return;
+      }
+      this.openWin(result);
+    };
+
+    if (isSectorEnd && !this.app.save.sectorsOutroSeen.includes(sector.id)) {
+      this.app.save.sectorsOutroSeen.push(sector.id);
+      persistSave(this.app.save);
+      this.showStory(sector.outro, afterScenes);
+      return;
+    }
+    afterScenes();
   }
 
   private openWin(result: WinResult): void {
@@ -162,6 +223,7 @@ export class Shell {
     this.winEl.classList.remove('hidden');
     this.pauseEl.classList.add('hidden');
     this.codeEl.classList.add('hidden');
+    this.storyEl.classList.add('hidden');
     const card = this.winCard(result);
     this.winEl.replaceChildren(card);
     (card.querySelector('.lb-btn-big') as HTMLButtonElement | null)?.focus();
@@ -189,6 +251,15 @@ export class Shell {
       { class: 'lb-card lb-win-card' },
       h('p', { class: 'lb-kicker', text: last ? 'FIM DE JOGO' : 'FASE CONCLUÍDA' }),
       h('h1', { class: 'lb-level-name', text: `${this.app.levelIndex + 1}. ${result.levelName.toUpperCase()}` }),
+      result.sectorName ? h('p', { class: 'lb-sector-tag', text: result.sectorName }) : null,
+      result.solvedLine
+        ? h(
+            'div',
+            { class: 'lb-radio-solved' },
+            h('span', { class: 'lb-radio-dot' }),
+            h('p', { text: `GENERAL MARCINHO: ${result.solvedLine}` }),
+          )
+        : null,
       stats,
       h(
         'div',
@@ -198,8 +269,11 @@ export class Shell {
           text: last ? 'VOLTAR AO MENU' : 'PRÓXIMA FASE',
           onclick: () => {
             this.winEl.classList.add('hidden');
-            this.enterPlay();
-            this.app.nextLevel();
+            if (last) {
+              this.app.backToTitle();
+            } else {
+              this.startLevel(this.app.levelIndex + 1);
+            }
           },
         }),
         h('button', {
@@ -227,6 +301,7 @@ export class Shell {
     this.menuEl.classList.add('hidden');
     this.winEl.classList.add('hidden');
     this.codeEl.classList.add('hidden');
+    this.storyEl.classList.add('hidden');
     this.pauseEl.classList.remove('hidden');
     this.renderPause();
   }
@@ -302,6 +377,7 @@ export class Shell {
     this.menuEl.classList.add('hidden');
     this.winEl.classList.add('hidden');
     this.pauseEl.classList.add('hidden');
+    this.storyEl.classList.add('hidden');
     this.codeEl.classList.remove('hidden');
     this.renderCode();
   }
@@ -398,6 +474,94 @@ export class Shell {
     return span;
   }
 
+  // ---------------------------------------------------------------- história
+
+  private showStory(slides: StorySlide[], onDone: () => void): void {
+    if (slides.length === 0) {
+      onDone();
+      return;
+    }
+    this.storySlides = slides;
+    this.storyIndex = 0;
+    this.storyDone = onDone;
+    this.app.menuOpen = true;
+    this.storyEl.classList.remove('hidden');
+    this.renderStory();
+  }
+
+  private renderStory(): void {
+    const slide = this.storySlides[this.storyIndex];
+    if (!slide) {
+      this.closeStory();
+      return;
+    }
+    const last = this.storyIndex >= this.storySlides.length - 1;
+    const name = speakerName(slide.speaker);
+    const portrait = portraitDataUrl(slide.speaker, 6);
+
+    const dots = h('div', { class: 'lb-story-dots' });
+    this.storySlides.forEach((_, i) => {
+      dots.append(h('span', { class: `lb-story-dot${i === this.storyIndex ? ' active' : ''}` }));
+    });
+
+    const card = h(
+      'div',
+      { class: `lb-card lb-story-card speaker-${slide.speaker}` },
+      h('p', { class: 'lb-kicker', text: 'TRANSMISSÃO DA INSTALAÇÃO' }),
+      h(
+        'div',
+        { class: 'lb-story-body' },
+        h('img', { class: 'lb-portrait', src: portrait, alt: name }),
+        h(
+          'div',
+          { class: 'lb-story-text' },
+          h('strong', { class: 'lb-speaker', text: name }),
+          h('p', { class: 'lb-line', text: slide.text }),
+        ),
+      ),
+      dots,
+      h(
+        'div',
+        { class: 'lb-actions lb-story-actions' },
+        h('button', {
+          class: 'lb-btn lb-btn-big',
+          text: last ? 'CONTINUAR' : 'PRÓXIMA',
+          onclick: () => this.storyNext(),
+        }),
+        h('button', {
+          class: 'lb-btn lb-btn-ghost',
+          text: 'PULAR CENA',
+          onclick: () => this.skipStory(),
+        }),
+      ),
+      h('p', { class: 'lb-note', text: 'ENTER / ESPAÇO AVANÇA · ESC PULA' }),
+    );
+    this.storyEl.replaceChildren(card);
+    (card.querySelector('.lb-btn-big') as HTMLButtonElement | null)?.focus();
+  }
+
+  private storyNext(): void {
+    if (this.storyIndex < this.storySlides.length - 1) {
+      this.storyIndex++;
+      this.renderStory();
+      return;
+    }
+    this.closeStory();
+  }
+
+  private skipStory(): void {
+    this.storyIndex = this.storySlides.length - 1;
+    this.closeStory();
+  }
+
+  private closeStory(): void {
+    this.storyEl.classList.add('hidden');
+    const done = this.storyDone;
+    this.storyDone = null;
+    this.storySlides = [];
+    if (done) done();
+  }
+
   // ---------------------------------------------------------------- teclado dos overlays
 
   private overlayKey(event: KeyboardEvent): void {
@@ -405,15 +569,22 @@ export class Shell {
     if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
     const codeOpen = !this.codeEl.classList.contains('hidden');
     const pauseOpen = !this.pauseEl.classList.contains('hidden');
-    if (!codeOpen && !pauseOpen) return;
+    const storyOpen = !this.storyEl.classList.contains('hidden');
+    if (!codeOpen && !pauseOpen && !storyOpen) return;
     // A casca DOM assume o teclado: impede que o listener do `main.ts`
     // processe o mesmo evento do canvas (senão o Esc reabriria a pausa).
     event.stopImmediatePropagation();
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Tab'].includes(event.key)) {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Tab', 'Enter'].includes(event.key)) {
       event.preventDefault();
     }
-    if (codeOpen) this.codeKey(event);
+    if (storyOpen) this.storyKey(event);
+    else if (codeOpen) this.codeKey(event);
     else this.pauseKey(event);
+  }
+
+  private storyKey(event: KeyboardEvent): void {
+    if (event.key === 'Escape') this.skipStory();
+    else if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowRight') this.storyNext();
   }
 
   private codeKey(event: KeyboardEvent): void {
@@ -529,10 +700,10 @@ export class Shell {
       'div',
       { class: 'lb-card' },
       h('h1', { class: 'lb-logo', text: 'LOOPBOUND' }),
-      h('p', { class: 'lb-tag', text: 'CADA TENTATIVA DEIXA UM ECO' }),
+      h('p', { class: 'lb-subtitle', text: 'KENNEDYTO — A FUGA DA INSTALAÇÃO ALIENÍGENA' }),
       h('p', {
         class: 'lb-intro',
-        text: 'Entre para salvar o seu progresso no banco. O Kennedito guarda os seus recordes.',
+        text: 'Entre para salvar o seu progresso. O General Marcinho está na frequência de emergência — e o Chuchuty está ouvindo.',
       }),
       form,
       error,
@@ -556,6 +727,7 @@ export class Shell {
     const tabs: { id: Tab; label: string }[] = [
       { id: 'jogar', label: 'JOGAR' },
       { id: 'fases', label: 'FASES' },
+      { id: 'historia', label: 'HISTÓRIA' },
       { id: 'historico', label: 'HISTÓRICO' },
       { id: 'perfil', label: 'PERFIL' },
     ];
@@ -595,6 +767,7 @@ export class Shell {
     const panel = h('section', { class: 'lb-panel' });
     if (this.tab === 'jogar') panel.append(this.panelPlay());
     else if (this.tab === 'fases') panel.append(this.panelLevels());
+    else if (this.tab === 'historia') panel.append(this.panelStory());
     else if (this.tab === 'historico') panel.append(this.panelHistory());
     else panel.append(this.panelProfile());
 
@@ -667,6 +840,80 @@ export class Shell {
       );
     });
     return grid;
+  }
+
+  private panelStory(): HTMLElement {
+    const wrap = h('div', { class: 'lb-story-menu' });
+    wrap.append(
+      h('p', { class: 'lb-kicker', text: 'ARQUIVO DA FUGA' }),
+      h('p', {
+        class: 'lb-desc',
+        text: 'A instalação alienígena registrou cada setor. Reveja as transmissões do General Marcinho e os avisos do Chuchuty.',
+      }),
+      h(
+        'div',
+        { class: 'lb-story-menu-actions' },
+        h('button', {
+          class: 'lb-btn lb-btn-ghost',
+          text: 'REVER PRÓLOGO',
+          onclick: () => this.showStory(PROLOGUE, () => this.openMenu()),
+        }),
+        h('button', {
+          class: 'lb-btn lb-btn-ghost',
+          text: 'REVER FINAL',
+          onclick: () => this.showStory(ENDING, () => this.openMenu()),
+        }),
+      ),
+    );
+
+    const list = h('div', { class: 'lb-sectors' });
+    for (const sector of SECTORS) {
+      const intro = this.app.save.sectorsSeen.includes(sector.id);
+      const outro = this.app.save.sectorsOutroSeen.includes(sector.id);
+      const first = LEVELS[sector.range[0]];
+      const final = LEVELS[sector.range[1]];
+      list.append(
+        h(
+          'article',
+          { class: 'lb-sector' },
+          h(
+            'header',
+            { class: 'lb-sector-head' },
+            h('span', { class: 'lb-sector-badge', text: `S${sector.id}` }),
+            h(
+              'div',
+              {},
+              h('strong', { text: sector.name }),
+              h('span', { text: sector.subtitle }),
+            ),
+            h('span', {
+              class: `lb-sector-status${intro && outro ? ' done' : ''}`,
+              text: intro && outro ? 'COMPLETO' : intro ? 'EM ANDAMENTO' : 'BLOQUEADO',
+            }),
+          ),
+          h('p', {
+            class: 'lb-sector-range',
+            text: `${first.name.toUpperCase()} → ${final.name.toUpperCase()}`,
+          }),
+          h(
+            'div',
+            { class: 'lb-sector-actions' },
+            h('button', {
+              class: 'lb-btn lb-btn-ghost',
+              text: 'VER INTRODUÇÃO',
+              onclick: () => this.showStory(sector.intro, () => this.openMenu()),
+            }),
+            h('button', {
+              class: 'lb-btn lb-btn-ghost',
+              text: 'VER ENCERRAMENTO',
+              onclick: () => this.showStory(sector.outro, () => this.openMenu()),
+            }),
+          ),
+        ),
+      );
+    }
+    wrap.append(list);
+    return wrap;
   }
 
   private panelHistory(): HTMLElement {
