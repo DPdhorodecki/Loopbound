@@ -20,6 +20,7 @@ A fuga é narrada pelo rádio: o **General Marcinho** dá o briefing e dicas gra
 | História: prólogo, setores, final e pós-créditos | ✅ |
 | Rádio com General Marcinho + Chuchuty | ✅ |
 | Mecânicas: alavanca, botão, duto e porta de código | ✅ |
+| Fluxograma completo do jogo | ✅ (`public/fluxograma-jogo.svg`) |
 | Labirintos e puzzles elaborados | ✅ |
 | Login + banco PostgreSQL + histórico | ✅ |
 | Menu em abas (estilo CEPK Rush) | ✅ |
@@ -126,6 +127,7 @@ Hooks de debug: `?level=3&moves=DDDR|DDRRRR` (o `|` encerra o ciclo) e `&pause=1
 
 ```
 README.md                apresentação + GDD completo (regras, arte, fases, arquitetura)
+public/fluxograma-jogo.svg  fluxograma completo do jogo (pixel art)
 render.yaml              Blueprint do Render (Static Site + Web Service)
 server/                  API Express + PostgreSQL (auth, progresso, histórico)
 docker-compose.yml       PostgreSQL de desenvolvimento
