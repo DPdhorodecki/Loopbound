@@ -5,10 +5,12 @@ import { createSketch } from './sketch';
 import { Shell } from './ui/shell';
 import { initPWA } from './pwa';
 import { preloadPortraits } from './render/portraits';
+import { preloadComicArt } from './render/comic';
 import { VIEW_H, VIEW_W } from './ui/hud';
 import { Dir } from './game/types';
 
 void preloadPortraits();
+void preloadComicArt();
 
 const container = document.getElementById('game') as HTMLElement;
 

@@ -5,8 +5,6 @@
  * painéis da HQ (estilo 16-bit, cores purple/blue, sombras 3D).
  */
 
-import p5 from 'p5';
-
 const W = 900;
 const H = 700;
 
