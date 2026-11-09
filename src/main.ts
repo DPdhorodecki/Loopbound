@@ -83,6 +83,11 @@ new p5(
       instance.menuOpen = false;
       const moves = params.get('moves') ?? '';
       instance.debugRun(Number.parseInt(levelParam, 10), moves);
+      if (params.get('shot')) {
+        instance.shotMode = true;
+        instance.hintTimer = 0;
+        instance.radioTimer = 0;
+      }
       if (params.get('pause')) instance.debugPause();
     }
 

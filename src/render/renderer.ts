@@ -309,6 +309,109 @@ export function drawDuct(p: p5, x: number, y: number, active: boolean, t: number
   p.rect(x + 7, y + 7, 2, 2);
 }
 
+/** Bueiro (`B`): buraco alienígena. Sem tampa, brilha em vermelho e captura. */
+export function drawDrain(p: p5, x: number, y: number, covered: boolean, t: number): void {
+  p.noStroke();
+  if (covered) {
+    // tampa de metal encaixada
+    p.fill('#2A3A36');
+    p.rect(x + 1, y + 1, 14, 14);
+    p.fill('#4C6158');
+    p.rect(x + 2, y + 2, 12, 12);
+    p.fill('#6B8578');
+    for (let i = 0; i < 3; i++) {
+      p.rect(x + 4, y + 4 + i * 3, 8, 1);
+    }
+    p.fill('#93B0A2');
+    p.rect(x + 2, y + 2, 12, 1);
+    return;
+  }
+  p.fill(PALETTE.stoneShadow);
+  p.rect(x + 1, y + 1, 14, 14);
+  p.fill('#0A0F16');
+  p.rect(x + 2, y + 2, 12, 12);
+  const pulse = 0.45 + Math.sin(t * 4) * 0.25;
+  p.drawingContext.globalAlpha = pulse;
+  p.fill('#C43B31');
+  p.rect(x + 3, y + 3, 10, 10);
+  p.drawingContext.globalAlpha = 1;
+  p.fill('#12070A');
+  p.rect(x + 5, y + 5, 6, 6);
+  p.fill('#E4675C');
+  p.rect(x + 6, y + 6, 4, 1);
+  p.rect(x + 6, y + 9, 4, 1);
+  // dentes
+  p.fill('#7A2A26');
+  for (let i = 0; i < 4; i++) {
+    p.rect(x + 4 + i * 3, y + 4, 1, 2);
+    p.rect(x + 4 + i * 3, y + 10, 1, 2);
+  }
+}
+
+/** Item alçapão (`A`): tampa dobrável no chão, recolhida com `E`. */
+export function drawHatchItem(p: p5, x: number, y: number, t: number): void {
+  const bob = Math.round(Math.sin(t * 2.6) * 1.2);
+  p.noStroke();
+  p.fill('#2A3A36');
+  p.rect(x + 2, y + 4 + bob, 12, 8);
+  p.fill('#6B8578');
+  p.rect(x + 3, y + 5 + bob, 10, 6);
+  p.fill('#93B0A2');
+  p.rect(x + 3, y + 5 + bob, 10, 1);
+  p.fill('#4C6158');
+  p.rect(x + 7, y + 6 + bob, 1, 4);
+  const spark = (Math.sin(t * 3 + x) + 1) / 2;
+  if (spark > 0.62) {
+    p.fill(255, 255, 255, 170);
+    p.rect(x + 12, y + 3 + bob, 1, 1);
+    p.rect(x + 1, y + 8 + bob, 1, 1);
+  }
+}
+
+/** Entrada secreta (`S`): fechada parece uma laje; aberta, um túnel escuro. */
+export function drawSecret(p: p5, x: number, y: number, open: boolean, t: number): void {
+  p.noStroke();
+  p.fill(PALETTE.stoneEdge);
+  p.rect(x + 1, y + 1, 14, 14);
+  if (!open) {
+    p.fill(PALETTE.stoneLo);
+    p.rect(x + 2, y + 2, 12, 12);
+    p.fill(PALETTE.stoneHi);
+    p.rect(x + 3, y + 3, 10, 1);
+    p.rect(x + 3, y + 3, 1, 10);
+    p.fill('#0A0F16');
+    p.rect(x + 6, y + 6, 4, 4);
+    p.fill(PALETTE.gold);
+    p.rect(x + 7, y + 7, 2, 1);
+  } else {
+    p.fill('#0A0F16');
+    p.rect(x + 2, y + 2, 12, 12);
+    const glow = 0.35 + Math.sin(t * 3) * 0.15;
+    p.drawingContext.globalAlpha = glow;
+    p.fill(53, 230, 242);
+    p.rect(x + 3, y + 3, 10, 10);
+    p.drawingContext.globalAlpha = 1;
+    p.fill(53, 230, 242, 150);
+    p.rect(x + 4, y + 4, 8, 1);
+    p.rect(x + 4, y + 11, 8, 1);
+  }
+}
+
+/** Ponto de chegada da passagem secreta (`s`): plataforma de teleporte. */
+export function drawSecretArrival(p: p5, x: number, y: number, t: number): void {
+  p.noStroke();
+  p.fill('#123A44');
+  p.rect(x + 2, y + 2, 12, 12);
+  const glow = 0.35 + Math.sin(t * 3 + x) * 0.2;
+  p.drawingContext.globalAlpha = glow;
+  p.fill(53, 230, 242);
+  p.rect(x + 3, y + 3, 10, 10);
+  p.drawingContext.globalAlpha = 1;
+  p.fill('#9BEFF6');
+  p.rect(x + 7, y + 4, 2, 8);
+  p.rect(x + 4, y + 7, 8, 2);
+}
+
 /** Portão de código (`@`): abre quando a tela de código é resolvida. */
 export function drawCodeGate(p: p5, x: number, y: number, open: boolean, t: number): void {
   const violet = '#8B5BE0';

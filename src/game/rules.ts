@@ -1,4 +1,4 @@
-import { Level, tileAt } from './level';
+import { Level, rerollCode, tileAt } from './level';
 import {
   ColorKey,
   DIRS,
@@ -27,6 +27,10 @@ export interface Snapshot {
   codeEntry: number[];
   beat: number;
   trackLen: number;
+  hasHatch: boolean;
+  hatchTaken: boolean;
+  coveredDrains: string[];
+  openSecrets: string[];
 }
 
 export interface Runtime {
@@ -40,6 +44,14 @@ export interface Runtime {
   leversOn: Set<string>;
   /** Botões que o jogador ligou com `E` enquanto estava em cima. */
   playerPress: Set<string>;
+  /** Alçapão já recolhido (não desenha mais o item no chão). */
+  hatchTaken: boolean;
+  /** Alçapão no inventário, pronto para tampar um bueiro. */
+  hasHatch: boolean;
+  /** Bueiros tampados pelo jogador. */
+  coveredDrains: Set<string>;
+  /** Entradas de passagem secreta já abertas com `E`. */
+  openSecrets: Set<string>;
   codeEntry: number[];
   codeSolved: boolean;
   terminalOpen: boolean;
@@ -56,11 +68,13 @@ export interface Runtime {
 
 export interface MoveResult {
   moved: boolean;
-  blocked?: 'wall' | 'gate' | 'door' | 'crate' | 'void';
+  blocked?: 'wall' | 'gate' | 'door' | 'crate' | 'void' | 'secret';
   pushed?: boolean;
   died?: boolean;
+  captured?: boolean;
   won?: boolean;
   teleported?: boolean;
+  secret?: boolean;
   cycleEnded?: boolean;
   endReason?: EndReason;
   gem?: boolean;
@@ -68,7 +82,7 @@ export interface MoveResult {
   door?: boolean;
 }
 
-export type InteractTarget = 'lever' | 'button' | 'terminal';
+export type InteractTarget = 'lever' | 'button' | 'terminal' | 'hatch' | 'secret' | 'cover';
 
 const clonePose = (p: Pose): Pose => ({ x: p.x, y: p.y, facing: p.facing });
 const cloneVec = (v: Vec): Vec => ({ x: v.x, y: v.y });
@@ -84,6 +98,10 @@ export function createRuntime(level: Level): Runtime {
     doorsOpen: new Set<string>(),
     leversOn: new Set<string>(),
     playerPress: new Set<string>(),
+    hatchTaken: false,
+    hasHatch: false,
+    coveredDrains: new Set<string>(),
+    openSecrets: new Set<string>(),
     codeEntry: [],
     codeSolved: false,
     terminalOpen: false,
@@ -172,6 +190,8 @@ export function isDoorOpen(rt: Runtime, x: number, y: number): boolean {
 
 function blockedBy(rt: Runtime, x: number, y: number, forCrate = false): MoveResult['blocked'] | null {
   if (tileAt(rt.level, x, y) === TILE_WALL) return 'wall';
+  const secret = rt.level.secrets.find((s) => s.x === x && s.y === y);
+  if (secret && !rt.openSecrets.has(cellKey(x, y))) return 'secret';
   if (codeGateAt(rt, x, y) && !rt.codeSolved) return 'gate';
   const gate = gateAt(rt, x, y);
   if (gate && !gateOpenAt(rt, x, y)) return 'gate';
@@ -195,6 +215,10 @@ function pushSnapshot(rt: Runtime): void {
     codeEntry: [...rt.codeEntry],
     beat: rt.beat,
     trackLen: rt.track.length,
+    hasHatch: rt.hasHatch,
+    hatchTaken: rt.hatchTaken,
+    coveredDrains: [...rt.coveredDrains],
+    openSecrets: [...rt.openSecrets],
   });
   if (rt.history.length > 256) rt.history.shift();
 }
@@ -213,6 +237,10 @@ export function undo(rt: Runtime): boolean {
   rt.codeEntry = [...snap.codeEntry];
   rt.beat = snap.beat;
   rt.track = rt.track.slice(0, snap.trackLen);
+  rt.hasHatch = snap.hasHatch;
+  rt.hatchTaken = snap.hatchTaken;
+  rt.coveredDrains = new Set(snap.coveredDrains);
+  rt.openSecrets = new Set(snap.openSecrets);
   rt.status = 'playing';
   rt.lastEnd = null;
   return true;
@@ -225,7 +253,12 @@ export function tryMove(rt: Runtime, dir: Dir): MoveResult {
   const ny = rt.player.y + d.y;
 
   const direct = blockedBy(rt, nx, ny);
-  if (direct) return { moved: false, blocked: direct };
+  if (direct) {
+    // Mesmo sem andar, o jogador vira para a direção pressionada (necessário
+    // para encarar bueiros e passagens secretas antes de usar `E`).
+    rt.player = { ...rt.player, facing: dir };
+    return { moved: false, blocked: direct };
+  }
 
   // Cadeia de caixotes
   const chain: number[] = [];
@@ -286,8 +319,31 @@ export function tryMove(rt: Runtime, dir: Dir): MoveResult {
     }
   }
 
+  // Passagem secreta: só atravessa depois de aberta com `E`.
+  const secret = rt.level.secrets.find((s) => s.x === nx && s.y === ny);
+  if (secret && rt.openSecrets.has(cellKey(nx, ny))) {
+    const arrival = rt.level.secretArrivals[rt.level.secrets.indexOf(secret)];
+    if (arrival) {
+      rt.player = { x: arrival.x, y: arrival.y, facing: 'R' };
+      rt.track[rt.track.length - 1] = clonePose(rt.player);
+      result.teleported = true;
+      result.secret = true;
+    }
+  }
+
+  // Bueiro sem tampa: o alienígena captura e a fase inteira reinicia.
+  const here = { x: rt.player.x, y: rt.player.y };
+  const drain = rt.level.drains.find((d) => d.x === here.x && d.y === here.y);
+  if (drain && !rt.coveredDrains.has(cellKey(here.x, here.y))) {
+    result.captured = true;
+    endCycle(rt, 'capture');
+    result.cycleEnded = true;
+    result.endReason = 'capture';
+    return result;
+  }
+
   // Morte
-  if (tileAt(rt.level, nx, ny) === TILE_VOID) {
+  if (tileAt(rt.level, here.x, here.y) === TILE_VOID) {
     result.died = true;
     endCycle(rt, 'death');
     result.cycleEnded = true;
@@ -342,6 +398,42 @@ export function interact(rt: Runtime): InteractTarget | null {
     else rt.playerPress.add(key);
     return 'button';
   }
+
+  // Alçapão: recolhido com `E` quando o jogador está em cima do item.
+  if (!rt.hatchTaken && rt.level.hatch && rt.level.hatch.x === here.x && rt.level.hatch.y === here.y) {
+    rt.hatchTaken = true;
+    rt.hasHatch = true;
+    return 'hatch';
+  }
+
+  // Passagem secreta: `E` abre a entrada (aqui ou em qualquer lado).
+  const around = [
+    here,
+    { x: here.x + 1, y: here.y },
+    { x: here.x - 1, y: here.y },
+    { x: here.x, y: here.y + 1 },
+    { x: here.x, y: here.y - 1 },
+  ];
+  for (const c of around) {
+    const secret = rt.level.secrets.find((s) => s.x === c.x && s.y === c.y);
+    if (secret && !rt.openSecrets.has(cellKey(c.x, c.y))) {
+      rt.openSecrets.add(cellKey(c.x, c.y));
+      return 'secret';
+    }
+  }
+
+  // Alçapão no inventário: `E` tampa um bueiro (aqui ou em qualquer lado).
+  if (rt.hasHatch) {
+    for (const c of around) {
+      const drain = rt.level.drains.find((d) => d.x === c.x && d.y === c.y);
+      if (drain && !rt.coveredDrains.has(cellKey(c.x, c.y))) {
+        rt.coveredDrains.add(cellKey(c.x, c.y));
+        rt.hasHatch = false;
+        return 'cover';
+      }
+    }
+  }
+
   return null;
 }
 
@@ -384,8 +476,47 @@ export function closeTerminal(rt: Runtime): void {
   rt.codeEntry = [];
 }
 
+/**
+ * Reinicia a fase inteira: portas/grades fecham, alavancas desligam, a senha
+ * é sorteada de novo e todo o progresso (gemas, chave, ecos, passos) some.
+ * Usado quando o jogador morre, é capturado ou estoura o orçamento de passos.
+ */
+export function resetPhase(rt: Runtime, reason: EndReason): void {
+  rerollCode(rt.level);
+  rt.player = { ...rt.level.spawn, facing: 'D' };
+  rt.crates = rt.level.crates.map(cloneVec);
+  rt.gems = new Set<string>();
+  rt.hasKey = false;
+  rt.keyTaken = false;
+  rt.doorsOpen = new Set<string>();
+  rt.leversOn = new Set<string>();
+  rt.playerPress = new Set<string>();
+  rt.hatchTaken = false;
+  rt.hasHatch = false;
+  rt.coveredDrains = new Set<string>();
+  rt.openSecrets = new Set<string>();
+  rt.codeEntry = [];
+  rt.codeSolved = false;
+  rt.terminalOpen = false;
+  rt.echoes = [];
+  rt.beat = 0;
+  rt.cycle = 1;
+  rt.cyclesUsed = 0;
+  rt.stepsTotal = 0;
+  rt.track = [{ ...rt.level.spawn, facing: 'D' }];
+  rt.history = [];
+  rt.status = 'playing';
+  rt.lastEnd = reason;
+}
+
 export function endCycle(rt: Runtime, reason: EndReason): void {
   if (rt.status === 'won') return;
+
+  // Falha (morte, captura ou passos esgotados): a fase inteira volta ao início.
+  if (reason === 'death' || reason === 'capture' || reason === 'steps') {
+    resetPhase(rt, reason);
+    return;
+  }
 
   if (rt.track.length > 1) {
     rt.echoes.push({ track: rt.track.map(clonePose) });

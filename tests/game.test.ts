@@ -45,7 +45,9 @@ function hasFreePath(def: LevelDef): boolean {
     level.doors.some((d) => d.x === x && d.y === y) ||
     level.codeGates.some((g) => g.x === x && g.y === y) ||
     level.crates.some((c) => c.x === x && c.y === y) ||
-    level.ducts.some((d) => d.x === x && d.y === y);
+    level.ducts.some((d) => d.x === x && d.y === y) ||
+    level.drains.some((d) => d.x === x && d.y === y) ||
+    level.secrets.some((s) => s.x === x && s.y === y);
 
   const start = level.spawn;
   const seen = new Set<string>([`${start.x},${start.y}`]);
@@ -169,10 +171,11 @@ describe('regras', () => {
     expect(rt.beat).toBe(before.beat);
   });
 
-  it('vazio mata e encerra o ciclo', () => {
+  it('vazio mata e reinicia a fase inteira', () => {
     const level = parseLevel({
       ...LEVELS[0],
       id: 'teste-vazio',
+      code: undefined,
       map: ['#####', '#P~E#', '#####'],
       maxEchoes: 1,
       solution: [],
@@ -181,7 +184,8 @@ describe('regras', () => {
     rt.player = { x: 1, y: 1, facing: 'R' };
     const res = tryMove(rt, 'R');
     expect(res.died).toBe(true);
-    expect(rt.echoes).toHaveLength(1);
+    expect(rt.echoes).toHaveLength(0);
+    expect(rt.lastEnd).toBe('death');
     expect(rt.player.x).toBe(1);
     expect(rt.player.y).toBe(1);
   });
@@ -190,6 +194,7 @@ describe('regras', () => {
     const level = parseLevel({
       ...LEVELS[0],
       id: 'teste-caixote-vazio',
+      code: undefined,
       map: ['#######', '#PC~.E#', '#######'],
       solution: [],
     });
@@ -215,6 +220,7 @@ describe('mecânicas novas', () => {
     const level = parseLevel({
       ...LEVELS[0],
       id: 'teste-alavanca',
+      code: undefined,
       map: ['########', '#P.VR.E#', '########'],
       maxEchoes: 0,
       solution: [],
@@ -232,6 +238,7 @@ describe('mecânicas novas', () => {
     const level = parseLevel({
       ...LEVELS[0],
       id: 'teste-botao',
+      code: undefined,
       map: ['#########', '#P...R.E#', '#.C.....#', '#.H.....#', '#########'],
       maxEchoes: 0,
       solution: [],
@@ -251,6 +258,7 @@ describe('mecânicas novas', () => {
     const level = parseLevel({
       ...LEVELS[0],
       id: 'teste-duto',
+      code: undefined,
       map: ['########', '#P.O.###', '#...#oE#', '########'],
       maxEchoes: 0,
       solution: [],
@@ -285,6 +293,103 @@ describe('mecânicas novas', () => {
     pressCode(rt, 1);
     expect(confirmCode(rt)).toBe(true);
     expect(rt.codeSolved).toBe(true);
+  });
+
+  it('bueiro aberto captura e reinicia a fase', () => {
+    const level = parseLevel({
+      ...LEVELS[0],
+      id: 'teste-bueiro',
+      code: undefined,
+      map: ['#######', '#P.ABE#', '#######'],
+      maxEchoes: 0,
+      solution: [],
+    });
+    const rt = createRuntime(level);
+    tryMove(rt, 'R');
+    tryMove(rt, 'R'); // pisa no alçapão sem recolher
+    const res = tryMove(rt, 'R'); // pisa no bueiro aberto
+    expect(res.captured).toBe(true);
+    expect(res.cycleEnded).toBe(true);
+    expect(rt.lastEnd).toBe('capture');
+    expect(rt.player.x).toBe(1);
+    expect(rt.player.y).toBe(1);
+    expect(rt.hasHatch).toBe(false);
+  });
+
+  it('alçapão recolhido com E tampa o bueiro', () => {
+    const level = parseLevel({
+      ...LEVELS[0],
+      id: 'teste-alcapao',
+      code: undefined,
+      map: ['#######', '#P.ABE#', '#######'],
+      maxEchoes: 0,
+      solution: [],
+    });
+    const rt = createRuntime(level);
+    tryMove(rt, 'R');
+    tryMove(rt, 'R');
+    expect(interact(rt)).toBe('hatch');
+    expect(rt.hasHatch).toBe(true);
+    expect(interact(rt)).toBe('cover');
+    expect(rt.hasHatch).toBe(false);
+    const res = tryMove(rt, 'R');
+    expect(res.moved).toBe(true);
+    expect(res.captured).toBeUndefined();
+    expect(tryMove(rt, 'R').won).toBe(true);
+  });
+
+  it('passagem secreta abre com E e leva ao cofre', () => {
+    const level = parseLevel({
+      ...LEVELS[0],
+      id: 'teste-secreta',
+      code: undefined,
+      map: [
+        '################',
+        '#P.A..S........#',
+        '################',
+        '################',
+        '#...sBE........#',
+        '################',
+      ],
+      maxEchoes: 0,
+      solution: [],
+    });
+    const rt = createRuntime(level);
+    for (const dir of ['R', 'R'] as const) tryMove(rt, dir); // chega ao alçapão
+    expect(interact(rt)).toBe('hatch');
+    for (const dir of ['R'] as const) tryMove(rt, dir);
+    // anda até encostar na passagem (fechada)
+    while (rt.player.x < 5) tryMove(rt, 'R');
+    expect(tryMove(rt, 'R').blocked).toBe('secret');
+    expect(interact(rt)).toBe('secret');
+    const res = tryMove(rt, 'R');
+    expect(res.secret).toBe(true);
+    expect(rt.player.x).toBe(4);
+    expect(rt.player.y).toBe(4);
+    expect(rt.player.facing).toBe('R');
+    expect(interact(rt)).toBe('cover');
+    expect(tryMove(rt, 'R').moved).toBe(true);
+    expect(tryMove(rt, 'R').won).toBe(true);
+  });
+
+  it('passos esgotados reiniciam a fase inteira', () => {
+    const level = parseLevel({
+      ...LEVELS[0],
+      id: 'teste-passos',
+      code: undefined,
+      map: ['#######', '#P...E#', '#.....#', '#######'],
+      cycleLength: 2,
+      maxEchoes: 1,
+      solution: [],
+    });
+    const rt = createRuntime(level);
+    tryMove(rt, 'R');
+    const res = tryMove(rt, 'R');
+    expect(res.endReason).toBe('steps');
+    expect(rt.player.x).toBe(1);
+    expect(rt.player.y).toBe(1);
+    expect(rt.beat).toBe(0);
+    expect(rt.cyclesUsed).toBe(0);
   });
 });
 
@@ -340,6 +445,7 @@ function mechanicCount(level: ReturnType<typeof parseLevel>): number {
   if (level.gems.length) set.add('gem');
   if (level.tiles.some((t) => t === TILE_VOID)) set.add('void');
   if (level.def.maxEchoes > 0) set.add('echo');
+  if (level.drains.length || level.secrets.length) set.add('bueiro/secreta');
   return set.size;
 }
 

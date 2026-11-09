@@ -19,7 +19,7 @@ A fuga é narrada pelo rádio: o **General Marcinho** dá o briefing e dicas gra
 | Campanha de 30 fases em 5 setores | ✅ jogável no navegador |
 | História: prólogo, setores, final e pós-créditos | ✅ |
 | Rádio com General Marcinho + Chuchuty | ✅ |
-| Mecânicas: alavanca, botão, duto e porta de código | ✅ |
+| Mecânicas: alavanca, botão, duto, porta de código, bueiro/alçapão e passagem secreta | ✅ |
 | Fluxograma completo do jogo | ✅ (`public/fluxograma-jogo.svg`) |
 | Labirintos e puzzles elaborados | ✅ |
 | Login + banco PostgreSQL + histórico | ✅ |
@@ -30,16 +30,19 @@ A fuga é narrada pelo rádio: o **General Marcinho** dá o briefing e dicas gra
 ## O que tem no jogo
 
 - **Tutorial de 8 salas** ensinando andar, empurrar, eco, chave, alavanca, botão, duto e código — aparece no primeiro acesso e pode ser revisto pelo menu.
-- **Campanha de 30 fases em 5 setores** (Cela, Laboratório, Indústria, Comando e Hangar), com paleta e decoração próprias, **100% fechadas** por corredores e paredes: não existe atalho — resolver o puzzle (portão/senha) é sempre obrigatório. Cada ciclo tem orçamento mínimo (folga zero), com uma folga extra na fase 28.
+- **Campanha de 30 fases em 5 setores** (Cela, Laboratório, Indústria, Comando e Hangar), com paleta e decoração próprias, **100% fechadas** por corredores e paredes: não existe atalho — resolver o puzzle (portão/senha) é sempre obrigatório. Cada ciclo tem orçamento mínimo (folga zero), com uma folga extra na fase 28. As salas são grandes (até 35×17 tiles) e densamente decoradas com **células alienígenas, cápsulas, consoles e vinhas**; câmaras anexas são becos sem saída, então ampliam a instalação sem furar o puzzle.
 - **História completa:** prólogo, introdução e encerramento de cada setor, revelação do **Núcleo do Conhecimento** após a fase 24, fuga final, pouso na Terra e cena pós-créditos.
 - **Rádio:** o General Marcinho dá briefing, dica 1 e dica 2 (nunca a senha); o Chuchuty invade a frequência com avisos. A tecla `H` (ou o botão do HUD) pede a próxima dica; após tempo parado, ela aparece sozinha.
-- **Fases 13–30 redesenhadas:** mapas maiores (até três salas ligadas por portões), **pelo menos 3 mecânicas por fase** e seis fases com senha (quatro delas de cor), recombinando contêiner, placa, alavanca, botão, duto, vazio e código.
+- **Fases 13–30 redesenhadas:** mapas maiores com câmaras decoradas (até três salas ligadas por portões), **pelo menos 3 mecânicas por fase** e seis fases com senha (quatro delas de cor), recombinando contêiner, placa, alavanca, botão, duto, vazio e código.
 - **Puzzles elaborados:** caixotes em cadeia, placas e portões coloridos, chave e porta, vazio, gema e o uso combinado de vários ecos.
 - **Alavanca (`E`):** liga e fica ligada (persiste entre ciclos); aperte `E` de novo para desligar.
 - **Botão (`E`):** só fica pressionado com peso — um caixote em cima o mantém ligado.
 - **Duto:** pisar teleporta para o par; fica inativo se um caixote cobrir o par.
+- **Bueiro (`B`):** um ralo alienígena no chão. Se estiver **sem tampa**, pisa nele e o Chuchuty captura o Kennedyto — a fase inteira reinicia.
+- **Alçapão (`A`):** item recolhido com `E`. Com o alçapão no inventário, aperte `E` perto de um bueiro para tampá-lo; bueiro tampado é seguro.
+- **Passagem secreta (`S` → `s`):** a laje `S` bloqueia até ser aberta com `E`; ao entrar nela, o Kennedyto é teleportado para a plataforma `s` do outro lado.
 - **Porta de código:** a senha é **sorteada no início da fase** (nunca é sempre a mesma) e escrita como **pistas no chão** — números romanos (`1`–`9`) ou cores (`c`/`d`/`e`) —, com um índice de ordem sobre cada pista. Leia o chão, abra a tela (`E`) e digite a senha no painel (`1`–`9`, `C` confirma, `X` limpa).
-- **Ciclo** curto (orçamento mínimo para a solução: 8–39 passos), encerrado com `TAB`, morte ou esgotamento do orçamento — e transformado em eco.
+- **Ciclo** curto (orçamento mínimo para a solução: 8–39 passos). `TAB` encerra o ciclo e grava um eco; **morte, captura no bueiro ou passos esgotados reiniciam a fase inteira** (portões fechados, senha sorteada de novo, ecos e progresso zerados).
 - **Ecos** (até 3 por fase) que repetem a trilha gravada e seguram placas.
 - **Contas:** login/cadastro, progresso, recordes e histórico de partidas no **PostgreSQL**.
 - **Menu em abas:** JOGAR, FASES, HISTÓRIA, HISTÓRICO e PERFIL, com avatar, recordes, estatísticas e revisão das cenas.
@@ -58,12 +61,13 @@ Os retratos do **General Marcinho**, do **Alien Chuchuty**, do Kennedyto e do si
 | Ação | Teclado | Toque |
 |---|---|---|
 | Mover | WASD / setas | swipe |
-| Interagir (alavanca, botão, tela) | `E` | botão `E` |
+| Interagir (alavanca, botão, tela, alçapão, passagem, bueiro) | `E` | botão `E` |
 | Dica do General Marcinho | `H` | botão `?` |
 | Painel de código | `1`–`9`, `C` confirma, `X`/`Backspace` limpa | toque nos botões |
 | Encerrar ciclo | `TAB` | botão do ciclo |
 | Desfazer | `Z` | — |
 | Reiniciar fase | `R` | — |
+| Tela cheia | `F` | botão `TELA` (canto superior direito) |
 | Pausa / menu | `ESC` | botão ESC |
 | Som | `M` | item do menu |
 
@@ -74,7 +78,7 @@ Os retratos do **General Marcinho**, do **Alien Chuchuty**, do Kennedyto e do si
 - **Vite** + **vite-plugin-pwa** (Workbox) para build e offline.
 - **UI em HTML/CSS** (login e menu em abas) por cima do canvas.
 - **Node + Express + `pg` + Zod** no backend, com **PostgreSQL** (login, progresso e histórico).
-- **Vitest**: 242 testes — regras, invariantes de design (nenhuma fase tem caminho livre; nenhuma solução estoura o ciclo), senha sorteada por fase, diversidade das fases, layout das salas, narrativa/história, escalada de dicas, auditoria de mecânicas (nenhuma órfã ou decorativa) e replays.
+- **Vitest**: 248 testes — regras, invariantes de design (nenhuma fase tem caminho livre; nenhuma solução estoura o ciclo), senha sorteada por fase, diversidade das fases, layout das salas, narrativa/história, escalada de dicas, auditoria de mecânicas (nenhuma órfã ou decorativa) e replays.
 - Sprites em mapas de caracteres, fonte bitmap 3×5 própria, áudio sintetizado — **zero assets binários** (só os PNGs de ícone gerados no build).
 
 ## Contas, banco e API
@@ -112,6 +116,8 @@ npm run build        # tsc + vite build (gera dist/ e o service worker)
 npm run preview      # serve o build em http://localhost:4173/
 npm run tighten      # regenera os mapas fechados das fases (halo 0)
 npx vite-node scripts/rebuild-levels.ts  # resolve e regrava as fases 13–30 (solver BFS)
+npx vite-node scripts/enlarge-levels.ts  # amplia e decora as 30 fases (rodar uma vez)
+npx vite-node scripts/export-levels.ts   # exporta um PNG por fase para a pasta de saída
 npm run audit        # audita design (caminho livre, ciclo prematuro, folga) e mecânicas órfãs/não usadas
 npm run icons        # regenera os ícones do PWA
 npm run sprite       # gera um PNG de preview do Kennedyto
@@ -138,7 +144,7 @@ src/ui/                  HUD (640×360), rádio e casca DOM (login + menu em aba
 src/app.ts               máquina de estados, input, tutorial, telas, rádio/dicas
 src/sketch.ts            instância p5 e escala inteira do canvas
 src/main.ts              bootstrap, listeners, PWA
-tests/                   242 testes (regras, invariantes, narrativa e soluções das fases)
+tests/                   248 testes (regras, invariantes, narrativa e soluções das fases)
 scripts/                 gerador de ícones, preview do sprite e fechamento dos mapas
 ```
 
@@ -170,7 +176,7 @@ O jogo cobre o fluxo completo com **tutorial + 30 fases**:
 | Fase | Nome | Ensina |
 |---|---|---|
 | TUT | Tutorial (8 salas) | andar, empurrar, eco, chave, alavanca, botão, duto, código |
-| 1 | O Despertar | andar e encontrar a escotilha da cela |
+| 1 | O Despertar | dois labirintos, alavancas/portões, teleporte e senha nas pistas |
 | 2 | Peso Morto | contêiner em placa segura o portão |
 | 3 | Primeiro Eco | o eco segura a placa por você |
 | 4 | O Vão | dois ecos, dois portões, vazio |
@@ -201,7 +207,9 @@ O jogo cobre o fluxo completo com **tutorial + 30 fases**:
 | 29 | Labirinto de Lançamento | duas válvulas, um contêiner e um duto |
 | 30 | A Grande Fuga | senha, duto, válvula, botão e peso — tudo junto |
 
-Implementado: tutorial em 8 salas, ciclo com orçamento e encerramento por `TAB`/morte, gravação e replay de ecos, caixotes, placas e portões coloridos, chave/porta, gemas, vazio, **alavanca, botão, duto e porta de código com senha sorteada por fase (pistas no chão)**, undo por passo, reinício, pausa, tela de vitória com recorde, **login e progresso no PostgreSQL**, menu em abas com histórico, áudio sintetizado, toque/swipe, PWA offline e canvas virtual 640×360 com zoom 2×.
+Em todas as fases 2–30, o trecho final é um **cofre selado**: recolha o **alçapão** (`A`) no caminho com `E`, abra a **passagem secreta** (`S`) com `E` e, já no cofre, use o alçapão para **tampar o bueiro** (`B`) antes de alcançar a saída. O bueiro aberto captura o Kennedyto e reinicia a fase inteira.
+
+Implementado: tutorial em 8 salas, ciclo com orçamento e encerramento por `TAB`/morte, gravação e replay de ecos, caixotes, placas e portões coloridos, chave/porta, gemas, vazio, **alavanca, botão, duto e porta de código com senha sorteada por fase (pistas no chão)**, **bueiro com alçapão, passagem secreta e cofre final em todas as fases 2–30**, undo por passo, reinício, pausa, tela de vitória com recorde, **login e progresso no PostgreSQL**, menu em abas com histórico, áudio sintetizado, toque/swipe, **botão de tela cheia no HUD (ou `F`)**, PWA offline e canvas virtual 640×360 com zoom 2×.
 
 Os mapas das fases 1–12 passam por `scripts/tighten.ts`, que reaproveita a solução gravada para tapar com parede todo piso que nenhum ciclo pisa. As fases 13–30 foram geradas por `scripts/rebuild-levels.ts`, que resolve cada mapa com um **solver BFS** (`scripts/solver.ts`) antes de gravar o bloco em `src/game/levels.ts` — assim cada solução entregue já nasce verificada. Em ambos os casos nenhuma fase é um campo aberto e todas continuam com solução replayada no CI.
 
@@ -257,8 +265,8 @@ Sair de cada sala quase nunca exige ser mais rápido. Exige ser **várias pessoa
 ### Anatomia de um ciclo
 
 - Um ciclo tem `cycleLength` **passos** (movimentos válidos), fixado no **mínimo que a solução de referência exige** (folga zero): cada ciclo é uma corrida contra o tempo. A fase 28 tem folga extra (orçamento de 40 para uma solução de 31 passos).
-- O ciclo termina por: `TAB` (manual), orçamento esgotado, morte, ou vitória.
-- Ao terminar, o trajeto inteiro é congelado como **eco** e o ciclo seguinte começa do zero.
+- O ciclo termina por: `TAB` (manual), orçamento esgotado, morte, captura no bueiro, ou vitória.
+- `TAB` congela o trajeto inteiro como **eco** e reinicia o ciclo. Morte, captura ou orçamento esgotado **não geram eco**: a fase inteira reinicia (portões/grades fechados, alavancas desligadas, senha sorteada de novo, gemas, chave, alçapão, passagens, ecos e passos zerados).
 - O eco reproduz a trilha do passo 0 ao N e **estaciona na última posição** até o fim do ciclo; no ciclo seguinte, recomeça do início.
 - Se o jogador vencer, a fase acaba na hora — o eco do ciclo vencedor não chega a nascer.
 
@@ -271,11 +279,12 @@ Sair de cada sala quase nunca exige ser mais rápido. Exige ser **várias pessoa
 | R3 | Ecos não alteram o estado dos caixotes, portas ou coletáveis. Nunca. |
 | R4 | Ecos contam como peso em placas. Essa é a única interação física deles. |
 | R5 | O replay do eco usa **coordenadas gravadas**, não o log de input. Logo, é determinístico por construção. |
-| R6 | Estado persistente entre ciclos: gemas, chaves, portas abertas por chave, âncoras. |
+| R6 | Estado persistente entre ciclos: gemas, chaves, portas abertas por chave, âncoras, alavancas, código resolvido, alçapão, bueiros tampados e passagens abertas. |
 | R7 | Estado resetado por ciclo: jogador, caixotes, placas momentâneas, portas coloridas. |
 | R8 | Existe no máximo `maxEchoes` ecos ativos; o mais antigo se dissolve ao exceder. |
 | R9 | Nenhuma fase exige mais ciclos do que `maxEchoes + 1`. |
 | R10 | Toda fase entregue inclui uma solução gravada que o CI reexecuta. |
+| R11 | Morte, captura no bueiro ou passos esgotados reiniciam a fase inteira, sem criar eco nem preservar progresso. |
 
 ### Por que gravar posições e não input
 
@@ -306,8 +315,8 @@ Se o eco reexecutasse o input, ele colidiria com caixotes em posições diferent
 | Jogador (spawn) | `P` | Você | — | 1 |
 | Núcleo / saída | `E` | Vence se requisitos cumpridos | — | — |
 | Caixote | `C` | Empurrável em cadeia | Sim | 1 |
-| Bloco azul pesado | `B` | Só desliza com placa azul ativa | Sim* | 1 |
-| Bloco dourado pesado | `G` | Só desliza com placa dourada ativa | Sim* | 1 |
+| Bueiro | `B` | Sem tampa, captura quem pisa e reinicia a fase | Não | — |
+| Alçapão | `A` | Item no chão; recolhido com `E` e usado para tampar um bueiro | Não | 0 |
 | Placa vermelha | `r` | Porta vermelha abre enquanto pressionada | Não | 0 |
 | Placa azul | `b` | Porta azul abre enquanto pressionada | Não | 0 |
 | Placa dourada | `y` | Porta dourada abre enquanto pressionada | Não | 0 |
@@ -317,6 +326,7 @@ Se o eco reexecutasse o input, ele colidiria com caixotes em posições diferent
 | Alavanca | `V`/`W`/`Z` | `E` alterna; ligada **persiste entre ciclos** | Não | 0 |
 | Botão | `H`/`I`/`J` | `E` pressiona; só fica ligado com caixote em cima | Não | 0 |
 | Duto | `O`/`o`, `Q`/`q` | Pisar teleporta para o par; inativo se o par estiver coberto | Não | 0 |
+| Passagem secreta | `S` → `s` | `E` abre a laje; entrar nela teleporta para a plataforma `s` | Não | 0 |
 | Tela de código | `X` | `E` abre o painel da senha | Não | 0 |
 | Porta de código | `@` | Abre quando a senha da tela é confirmada | Não | — |
 | Pista romana | `1`–`9` | Marca no chão a ordem da senha (números romanos) | Não | 0 |
@@ -326,8 +336,6 @@ Se o eco reexecutasse o input, ele colidiria com caixotes em posições diferent
 | Chave | `K` | Consumível, persistente | Não | 0 |
 | Porta trancada | `D` | Abre com chave, permanece aberta | Não | — |
 | Espinho | `x` | Mata, mas não bloqueia | — | — |
-
-\* Blocos pesados só se movem enquanto a placa da cor correspondente estiver ativa.
 
 ### Matriz de interação
 
@@ -441,9 +449,9 @@ O jogo adota isso sem desvios. Nada de gradientes suaves, nada de antialiasing, 
 
 ### 7.4 Resolução e escala
 
-- Canvas virtual: **480×270** (30×16,875 tiles).
-- Salas ocupam até **28×15 tiles** (448×240), centralizadas com 16 px de margem.
-- Escala = `floor(min(vw/480, vh/270))`, mínimo 2; letterbox preenchido com `bg/deep`.
+- Canvas virtual: **640×360**.
+- Salas ocupam até **35×17 tiles** (560×272), centralizadas com margem.
+- Escala = `floor(min(vw/640, vh/360))`, mínimo 1; letterbox preenchido com `bg/deep`.
 - `imageSmoothingEnabled = false` em todos os contextos.
 - Zoom de UI: HUD desenhado em escala 2 sobre o canvas virtual.
 
@@ -481,7 +489,9 @@ Fiel à referência:
 
 - **TAB** (canto superior esquerdo): moldura 64×64, borda ciano de 2 px, colchetes de 6 px nos cantos, glifo circular de loop, rótulo `TAB` em fonte 5×7.
 - **ESC** (canto inferior esquerdo): mesma moldura, glifo de lista/menu.
-- **Contador de gemas** (superior direito): gema + `1/3`, mesma moldura reduzida.
+- **Contador de gemas** (superior direito, à esquerda do botão de tela cheia): gema + `1/3`, mesma moldura reduzida.
+- **Tela cheia** (canto superior direito): moldura com glifo de cantos; clique/toque alterna a tela cheia (o mesmo que a tecla `F`).
+- **Alçapão** (inferior esquerdo, nas fases com bueiro): mostra `VAZIO` ou `TAMPA` conforme o item está no inventário.
 - **Pips de ressonância** (inferior direito): um losango por eco disponível, preenchido = ativo.
 - **Medidor de ciclo**: 16 traços finos abaixo do centro, apagando um a um.
 
@@ -573,7 +583,7 @@ loopbound/
 │  ├─ ui/hud.ts               # HUD 640×360, botões TAB/ESC, medidor de ciclo
 │  └─ audio/sfx.ts            # sons sintetizados em WebAudio
 ├─ scripts/                   # gerador de ícones e preview do sprite
-└─ tests/game.test.ts         # 202 testes: regras + invariantes + replay das 30 soluções + tutorial
+└─ tests/game.test.ts         # 248 testes: regras + invariantes + replay das 30 soluções + tutorial
 ```
 
 ### Ordem de desenho

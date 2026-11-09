@@ -23,18 +23,33 @@ import {
   drawCodeGate,
   drawCrate,
   drawDoor,
+  drawDrain,
   drawDuct,
   drawExit,
   drawGate,
   drawGem,
+  drawHatchItem,
   drawKey,
   drawLever,
   drawPlate,
   drawPlayer,
+  drawSecret,
+  drawSecretArrival,
   drawShadow,
   drawTerminal,
 } from './render/renderer';
-import { HUD_E, HUD_ESC, HUD_HINT, HUD_TAB, HUD_UNDO, VIEW_H, VIEW_W, drawFrame, drawHud } from './ui/hud';
+import {
+  HUD_E,
+  HUD_ESC,
+  HUD_FULLSCREEN,
+  HUD_HINT,
+  HUD_TAB,
+  HUD_UNDO,
+  VIEW_H,
+  VIEW_W,
+  drawFrame,
+  drawHud,
+} from './ui/hud';
 
 export type Screen = 'title' | 'play' | 'win';
 
@@ -69,6 +84,8 @@ export class App {
   onCode: (() => void) | null = null;
 
   screen: Screen = 'title';
+  /** Modo captura (`?level=N&shot=1`): desenha só a sala, sem HUD/rádio/faixa. */
+  shotMode = false;
   /** Quando o menu DOM está aberto, o jogo ignora o teclado e o ponteiro. */
   menuOpen = true;
   paused = false;
@@ -300,7 +317,7 @@ export class App {
     if (res.pushed) {
       this.sfx.play('push');
       this.pushTimer = 0.18;
-    } else if (res.died) {
+    } else if (res.died || res.captured) {
       this.sfx.play('death');
       this.flash = 0.5;
       this.flashColor = '#C43B31';
@@ -512,6 +529,10 @@ export class App {
       this.doUndo();
       return;
     }
+    if (k === 'f') {
+      this.toggleFullscreen();
+      return;
+    }
     if (k === 'r') {
       this.restart();
       return;
@@ -605,7 +626,9 @@ export class App {
       return;
     }
 
-    if (this.inside(x, y, HUD_TAB)) {
+    if (this.inside(x, y, HUD_FULLSCREEN)) {
+      this.toggleFullscreen();
+    } else if (this.inside(x, y, HUD_TAB)) {
       this.endCycle();
     } else if (this.inside(x, y, HUD_UNDO)) {
       this.doUndo();
@@ -627,6 +650,20 @@ export class App {
   onSwipe(dir: Dir): void {
     if (this.menuOpen) return;
     if (this.screen === 'play' && !this.paused) this.enqueue(dir);
+  }
+
+  /** Alterna tela cheia (botão do HUD ou tecla F). */
+  toggleFullscreen(): void {
+    const doc = typeof document !== 'undefined' ? document : null;
+    if (!doc) return;
+    const el = doc.documentElement;
+    if (!doc.fullscreenElement) {
+      const request = el.requestFullscreen?.bind(el);
+      void request?.().catch(() => undefined);
+    } else {
+      void doc.exitFullscreen?.().catch(() => undefined);
+    }
+    this.sfx.play('ui');
   }
 
   private inside(x: number, y: number, r: { x: number; y: number; w: number; h: number }): boolean {
@@ -769,6 +806,18 @@ export class App {
       const covered = rt.crates.some((c) => c.x === duct.x && c.y === duct.y);
       drawDuct(p, duct.x * 16, duct.y * 16, !covered, this.time);
     }
+    for (const drain of level.drains) {
+      drawDrain(p, drain.x * 16, drain.y * 16, rt.coveredDrains.has(cellKey(drain.x, drain.y)), this.time);
+    }
+    if (level.hatch && !rt.hatchTaken) {
+      drawHatchItem(p, level.hatch.x * 16, level.hatch.y * 16, this.time);
+    }
+    for (const secret of level.secrets) {
+      drawSecret(p, secret.x * 16, secret.y * 16, rt.openSecrets.has(cellKey(secret.x, secret.y)), this.time);
+    }
+    for (const arrival of level.secretArrivals) {
+      drawSecretArrival(p, arrival.x * 16, arrival.y * 16, this.time);
+    }
 
     const press = pressure(rt);
     const power = colorPowered(rt);
@@ -851,7 +900,7 @@ export class App {
       p.drawingContext.globalAlpha = 1;
     }
 
-    if (this.screen === 'play') {
+    if (this.screen === 'play' && !this.shotMode) {
       if (this.inTutorial) this.drawTutorialHint();
       else this.drawHint(rt);
       drawHud(p, rt, this.time, this.save.muted, {

@@ -11,6 +11,8 @@ export const HUD_HINT = { x: 58, y: 10, w: 44, h: 44 };
 export const HUD_ESC = { x: 10, y: VIEW_H - 54, w: 44, h: 44 };
 export const HUD_UNDO = { x: 10, y: VIEW_H - 106, w: 44, h: 44 };
 export const HUD_E = { x: 10, y: VIEW_H - 158, w: 44, h: 44 };
+export const HUD_HATCH = { x: 58, y: VIEW_H - 158, w: 44, h: 44 };
+export const HUD_FULLSCREEN = { x: VIEW_W - 54, y: 10, w: 44, h: 44 };
 
 export function drawFrame(p: p5, x: number, y: number, w: number, h: number, active = false): void {
   p.noStroke();
@@ -80,6 +82,38 @@ function drawUndoGlyph(p: p5, x: number, y: number, s: number, color: string): v
   p.rect(x + 3 * s, y + 3 * s, 5 * s, s);
 }
 
+/** Cantos de "expandir" do botão de tela cheia. */
+function drawFullscreenGlyph(p: p5, x: number, y: number, s: number, color: string): void {
+  p.noStroke();
+  p.fill(color);
+  const L = 5 * s;
+  const T = s;
+  // quatro cantos
+  p.rect(x, y, L, T);
+  p.rect(x, y, T, L);
+  p.rect(x + 9 * s - L + T, y, L, T);
+  p.rect(x + 9 * s - T, y, T, L);
+  p.rect(x, y + 9 * s - T, L, T);
+  p.rect(x, y + 9 * s - L + T, T, L);
+  p.rect(x + 9 * s - L + T, y + 9 * s - T, L, T);
+  p.rect(x + 9 * s - T, y + 9 * s - L + T, T, L);
+}
+
+/** Tampa/alçapão do HUD: mostra se o item está no inventário. */
+function drawHatchGlyph(p: p5, x: number, y: number, s: number, color: string, filled: boolean): void {
+  p.noStroke();
+  p.fill(color);
+  p.rect(x, y + s, 9 * s, s);
+  p.rect(x + s, y + 2 * s, 7 * s, s);
+  if (filled) {
+    p.rect(x + s, y + 3 * s, 7 * s, 3 * s);
+    p.fill('#0A0F16');
+    p.rect(x + 4 * s, y + 4 * s, s, 2 * s);
+  } else {
+    p.rect(x + s, y + 3 * s, 7 * s, s);
+  }
+}
+
 function drawGemIcon(p: p5, x: number, y: number, scale = 1): void {
   p.noStroke();
   p.fill(PALETTE.emeraldDark);
@@ -135,18 +169,65 @@ export function drawHud(
   drawMenuGlyph(p, HUD_ESC.x + 9, HUD_ESC.y + 9, 2, PALETTE.cyanDim);
   drawText(p, 'ESC', HUD_ESC.x + HUD_ESC.w / 2, HUD_ESC.y + HUD_ESC.h - 9, 1, PALETTE.cyanDim, 'center');
 
-  // Interagir (só nas fases com alavanca, botão ou tela de código)
+  // Interagir (só nas fases com alavanca, botão, tela, alçapão ou passagem)
   const interactive =
-    rt.level.levers.length > 0 || rt.level.buttons.length > 0 || rt.level.terminal !== null;
+    rt.level.levers.length > 0 ||
+    rt.level.buttons.length > 0 ||
+    rt.level.terminal !== null ||
+    rt.level.hatch !== null ||
+    rt.level.secrets.length > 0 ||
+    rt.level.drains.length > 0;
   if (interactive) {
     drawFrame(p, HUD_E.x, HUD_E.y, HUD_E.w, HUD_E.h, false);
     drawText(p, 'E', HUD_E.x + HUD_E.w / 2, HUD_E.y + 12, 3, PALETTE.cyan, 'center');
     drawText(p, 'USA', HUD_E.x + HUD_E.w / 2, HUD_E.y + HUD_E.h - 9, 1, PALETTE.cyanDim, 'center');
   }
 
-  // Gemas
-  drawGemIcon(p, VIEW_W - 66, 18, 2);
-  drawText(p, `${rt.gems.size}/${rt.level.gems.length}`, VIEW_W - 46, 18, 2, PALETTE.emerald, 'left');
+  // Alçapão (só nas fases com bueiro)
+  if (rt.level.drains.length > 0) {
+    const ready = rt.hasHatch;
+    drawFrame(p, HUD_HATCH.x, HUD_HATCH.y, HUD_HATCH.w, HUD_HATCH.h, ready);
+    drawHatchGlyph(
+      p,
+      HUD_HATCH.x + 13,
+      HUD_HATCH.y + 9,
+      2,
+      ready ? PALETTE.gold : PALETTE.cyanDim,
+      ready,
+    );
+    drawText(
+      p,
+      ready ? 'TAMPA' : 'VAZIO',
+      HUD_HATCH.x + HUD_HATCH.w / 2,
+      HUD_HATCH.y + HUD_HATCH.h - 9,
+      1,
+      ready ? PALETTE.gold : PALETTE.cyanDim,
+      'center',
+    );
+  }
+
+  // Tela cheia (topo direito)
+  drawFrame(p, HUD_FULLSCREEN.x, HUD_FULLSCREEN.y, HUD_FULLSCREEN.w, HUD_FULLSCREEN.h, false);
+  drawFullscreenGlyph(
+    p,
+    HUD_FULLSCREEN.x + 13,
+    HUD_FULLSCREEN.y + 10,
+    2,
+    PALETTE.cyan,
+  );
+  drawText(
+    p,
+    'TELA',
+    HUD_FULLSCREEN.x + HUD_FULLSCREEN.w / 2,
+    HUD_FULLSCREEN.y + HUD_FULLSCREEN.h - 9,
+    1,
+    PALETTE.cyanDim,
+    'center',
+  );
+
+  // Gemas (à esquerda do botão de tela cheia)
+  drawGemIcon(p, VIEW_W - 128, 18, 2);
+  drawText(p, `${rt.gems.size}/${rt.level.gems.length}`, VIEW_W - 108, 18, 2, PALETTE.emerald, 'left');
 
   // Pips de eco
   const total = rt.level.def.maxEchoes;

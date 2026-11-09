@@ -23,6 +23,15 @@ export interface Duct extends Vec {
   pair: number;
 }
 
+/** Bueiro: fica no chão. Sem tampa, captura quem pisa; com tampa, é seguro. */
+export type Drain = Vec;
+
+/** Entrada da passagem secreta: bloqueia até ser aberta com `E`. */
+export type Secret = Vec;
+
+/** Item alçapão: recolhido com `E` e usado para tampar um bueiro. */
+export type HatchItem = Vec;
+
 /** Quadrado de código desenhado no chão (pista). */
 export interface ClueTile extends Vec {
   kind: 'roman' | 'color';
@@ -87,6 +96,14 @@ export interface Level {
   levers: Lever[];
   buttons: Button[];
   ducts: Duct[];
+  /** Bueiros (buracos) espalhados pelo mapa. */
+  drains: Drain[];
+  /** Entradas de passagem secreta (bloqueiam até serem abertas com `E`). */
+  secrets: Secret[];
+  /** Destinos das passagens secretas (na ordem das entradas). */
+  secretArrivals: Vec[];
+  /** Item alçapão, se a fase tiver um. */
+  hatch: HatchItem | null;
   codeGates: Vec[];
   terminal: Vec | null;
   clueTiles: ClueTile[];
@@ -126,6 +143,11 @@ const CHAR_TILE: Record<string, TileId> = {
   q: TILE_FLOOR,
   X: TILE_FLOOR,
   '@': TILE_FLOOR,
+  // bueiro / alçapão / passagem secreta
+  B: TILE_FLOOR,
+  A: TILE_FLOOR,
+  S: TILE_FLOOR,
+  s: TILE_FLOOR,
   c: TILE_FLOOR,
   d: TILE_FLOOR,
   e: TILE_FLOOR,
@@ -207,6 +229,10 @@ export function parseLevel(def: LevelDef, rng: () => number = Math.random): Leve
     levers: [],
     buttons: [],
     ducts: [],
+    drains: [],
+    secrets: [],
+    secretArrivals: [],
+    hatch: null,
     codeGates: [],
     terminal: null,
     clueTiles: [],
@@ -244,6 +270,10 @@ export function parseLevel(def: LevelDef, rng: () => number = Math.random): Leve
       else if (LEVER_COLOR[ch]) level.levers.push({ x, y, color: LEVER_COLOR[ch] });
       else if (BUTTON_COLOR[ch]) level.buttons.push({ x, y, color: BUTTON_COLOR[ch] });
       else if (ch in DUCT_PAIR) level.ducts.push({ x, y, pair: DUCT_PAIR[ch] });
+      else if (ch === 'B') level.drains.push({ x, y });
+      else if (ch === 'A') level.hatch = { x, y };
+      else if (ch === 'S') level.secrets.push({ x, y });
+      else if (ch === 's') level.secretArrivals.push({ x, y });
       else if (ch in COLOR_CLUE) level.clueTiles.push({ x, y, kind: 'color', value: 0 });
       else if (ch >= '1' && ch <= '9') level.clueTiles.push({ x, y, kind: 'roman', value: Number(ch) - 1 });
       else if (GATE_COLOR[ch]) level.gates.push({ x, y, color: GATE_COLOR[ch] });
@@ -287,7 +317,30 @@ export function parseLevel(def: LevelDef, rng: () => number = Math.random): Leve
   if (terminals > 1) throw new LevelError(`${def.id}: no máximo 1 tela de código, tem ${terminals}`);
   if (level.terminal && !def.code) throw new LevelError(`${def.id}: tela de código sem \`code\` definido`);
   if (def.code && !level.terminal) throw new LevelError(`${def.id}: \`code\` definido sem tela de código (\`X\`)`);
+  if (level.secrets.length !== level.secretArrivals.length) {
+    throw new LevelError(`${def.id}: passagens secretas sem destino correspondente`);
+  }
+  if (level.hatch && level.drains.length === 0) {
+    throw new LevelError(`${def.id}: alçapão sem bueiro para tampar`);
+  }
+  if (!level.hatch && level.drains.length > 0) {
+    throw new LevelError(`${def.id}: bueiro sem alçapão na fase`);
+  }
   return level;
+}
+
+/**
+ * Sorteia uma nova senha e reescreve as pistas do chão. Usado quando a fase
+ * inteira reinicia (morte, captura ou passos esgotados).
+ */
+export function rerollCode(level: Level, rng: () => number = Math.random): void {
+  const spec = level.def.code;
+  if (!spec) return;
+  const sequence = generateSequence(level.clueTiles.length, SYMBOLS[spec.type], rng);
+  level.clueTiles.forEach((clue, i) => {
+    clue.value = sequence[i];
+  });
+  level.code = { type: spec.type, sequence: [...sequence] };
 }
 
 export function tileAt(level: Level, x: number, y: number): TileId {

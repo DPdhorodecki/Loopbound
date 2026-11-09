@@ -27,8 +27,12 @@ export interface MechanicTrace {
   codes: number;
   cratesPushed: Set<number>;
   gems: Set<string>;
+  hatch: number;
+  drains: Set<string>;
+  secrets: Set<string>;
   echoes: number;
   deaths: number;
+  captures: number;
   prematureEnd: string[];
 }
 
@@ -52,8 +56,12 @@ const emptyTrace = (): MechanicTrace => ({
   codes: 0,
   cratesPushed: new Set(),
   gems: new Set(),
+  hatch: 0,
+  drains: new Set(),
+  secrets: new Set(),
   echoes: 0,
   deaths: 0,
+  captures: 0,
   prematureEnd: [],
 });
 
@@ -99,10 +107,15 @@ function applyAction(rt: Runtime, token: Action, trace: MechanicTrace, cycle: nu
       );
       if (entry) trace.ducts.add(entry.pair);
     }
+    if (res.secret) {
+      const d = { U: [0, -1], D: [0, 1], L: [-1, 0], R: [1, 0] }[token as Dir];
+      trace.secrets.add(cellKey(before.x + d[0], before.y + d[1]));
+    }
     if (res.gem) trace.gems.add(cellKey(rt.player.x, rt.player.y));
     if (res.key) trace.keys++;
     if (res.door) trace.doors.add(cellKey(rt.player.x, rt.player.y));
     if (res.died) trace.deaths++;
+    if (res.captured) trace.captures++;
     if (res.cycleEnded) trace.prematureEnd.push(`ciclo ${cycle}: ${token}`);
     const here = cellKey(rt.player.x, rt.player.y);
     const gate = rt.level.gates.find((g) => cellKey(g.x, g.y) === here);
@@ -115,6 +128,9 @@ function applyAction(rt: Runtime, token: Action, trace: MechanicTrace, cycle: nu
   if (token === 'E') {
     const leversBefore = new Set(rt.leversOn);
     const buttonsBefore = new Set(rt.playerPress);
+    const secretsBefore = new Set(rt.openSecrets);
+    const drainsBefore = new Set(rt.coveredDrains);
+    const hatchBefore = rt.hatchTaken;
     const target = interact(rt);
     if (target === 'terminal') {
       trace.terminals++;
@@ -127,6 +143,18 @@ function applyAction(rt: Runtime, token: Action, trace: MechanicTrace, cycle: nu
       for (const button of rt.level.buttons) {
         const key = cellKey(button.x, button.y);
         if (buttonsBefore.has(key) !== rt.playerPress.has(key)) trace.buttons.add(key);
+      }
+    } else if (target === 'hatch') {
+      if (!hatchBefore && rt.hatchTaken) trace.hatch++;
+    } else if (target === 'secret') {
+      for (const secret of rt.level.secrets) {
+        const key = cellKey(secret.x, secret.y);
+        if (secretsBefore.has(key) !== rt.openSecrets.has(key)) trace.secrets.add(key);
+      }
+    } else if (target === 'cover') {
+      for (const drain of rt.level.drains) {
+        const key = cellKey(drain.x, drain.y);
+        if (drainsBefore.has(key) !== rt.coveredDrains.has(key)) trace.drains.add(key);
       }
     }
     markPlates(rt, trace);
@@ -250,6 +278,13 @@ export function unusedMechanics(level: Level, trace: MechanicTrace): string[] {
   if (level.code && trace.codes < 1) unused.push('senha');
   level.crates.forEach((_, i) => {
     if (!trace.cratesPushed.has(i)) unused.push(`caixote ${i + 1}`);
+  });
+  if (level.hatch && trace.hatch < 1) unused.push('alçapão');
+  level.drains.forEach((d) => {
+    if (!trace.drains.has(cellKey(d.x, d.y))) unused.push(`bueiro ${d.x},${d.y}`);
+  });
+  level.secrets.forEach((s) => {
+    if (!trace.secrets.has(cellKey(s.x, s.y))) unused.push(`passagem secreta ${s.x},${s.y}`);
   });
   return unused;
 }

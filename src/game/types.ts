@@ -40,7 +40,7 @@ export const CODE_COLORS = [
 
 export type ColorKey = 'red' | 'blue' | 'gold';
 
-export type EndReason = 'tab' | 'steps' | 'death';
+export type EndReason = 'tab' | 'steps' | 'death' | 'capture';
 
 export interface Vec {
   x: number;

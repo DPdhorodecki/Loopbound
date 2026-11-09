@@ -18,6 +18,10 @@ interface State {
   hasKey: boolean;
   keyTaken: boolean;
   terminalOpen: boolean;
+  hasHatch: boolean;
+  hatchTaken: boolean;
+  coveredDrains: string[];
+  openSecrets: string[];
 }
 
 function toState(rt: Runtime): State {
@@ -35,6 +39,10 @@ function toState(rt: Runtime): State {
     hasKey: rt.hasKey,
     keyTaken: rt.keyTaken,
     terminalOpen: rt.terminalOpen,
+    hasHatch: rt.hasHatch,
+    hatchTaken: rt.hatchTaken,
+    coveredDrains: [...rt.coveredDrains],
+    openSecrets: [...rt.openSecrets],
   };
 }
 
@@ -51,6 +59,10 @@ function fromState(level: Level, s: State): Runtime {
   rt.hasKey = s.hasKey;
   rt.keyTaken = s.keyTaken;
   rt.terminalOpen = s.terminalOpen;
+  rt.hasHatch = s.hasHatch;
+  rt.hatchTaken = s.hatchTaken;
+  rt.coveredDrains = new Set(s.coveredDrains);
+  rt.openSecrets = new Set(s.openSecrets);
   return rt;
 }
 
@@ -60,7 +72,11 @@ function stateKey(s: State): string {
     .sort()
     .join(',')}|${s.codeSolved ? 1 : 0}|${s.codeEntry.join(',')}|${[...s.gems].sort().join(',')}|${
     s.keyTaken ? 1 : 0
-  }${s.hasKey ? 1 : 0}${s.terminalOpen ? 1 : 0}`;
+  }${s.hasKey ? 1 : 0}${s.terminalOpen ? 1 : 0}|${s.hasHatch ? 1 : 0}${s.hatchTaken ? 1 : 0}|${[
+    ...s.coveredDrains,
+  ]
+    .sort()
+    .join(',')}|${[...s.openSecrets].sort().join(',')}`;
 }
 
 export interface SolveStats {
@@ -108,7 +124,7 @@ export function solveSingleCycle(
       else if (action === 'X') clearCode(next);
       else {
         const res = tryMove(next, action as Dir);
-        if (!res.moved || res.died || res.cycleEnded) continue;
+        if (!res.moved || res.died || res.captured || res.cycleEnded) continue;
         if (res.won) won = true;
       }
       if (won) {
