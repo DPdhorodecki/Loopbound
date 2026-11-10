@@ -75,6 +75,15 @@ new p5(
       down = null;
     });
 
+    // Mouse: acende o botão do HUD que está sob o cursor.
+    canvas.addEventListener('pointermove', (event) => {
+      const v = toVirtual(canvas, event.clientX, event.clientY);
+      app?.onPointerMove(v.x, v.y);
+    });
+    canvas.addEventListener('pointerleave', () => {
+      app?.onPointerMove(-100, -100);
+    });
+
     canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 
     initPWA((message) => {

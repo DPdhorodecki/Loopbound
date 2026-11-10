@@ -333,10 +333,33 @@ describe('mecânicas novas', () => {
     tryMove(rt, 'R'); // pisa no alçapão sem recolher
     const res = tryMove(rt, 'R'); // pisa no bueiro aberto
     expect(res.captured).toBe(true);
+    expect(res.captureAt).toEqual({ x: 4, y: 1 });
     expect(res.cycleEnded).toBe(true);
     expect(rt.lastEnd).toBe('capture');
     expect(rt.player.x).toBe(1);
     expect(rt.player.y).toBe(1);
+    expect(rt.hasHatch).toBe(false);
+  });
+
+  it('o botão de alçapão só age no alçapão (recolhe ou tampa)', () => {
+    const level = parseLevel({
+      ...LEVELS[0],
+      id: 'teste-hatch-hud',
+      code: undefined,
+      map: ['#######', '#P.ABE#', '#######'],
+      maxEchoes: 0,
+      solution: [],
+    });
+    const rt = createRuntime(level);
+    // Longe do item: o botão de alçapão não faz nada.
+    expect(interact(rt, 'hatch')).toBeNull();
+    tryMove(rt, 'R');
+    tryMove(rt, 'R'); // em cima do item
+    expect(interact(rt, 'hatch')).toBe('hatch');
+    expect(rt.hasHatch).toBe(true);
+    // Com o alçapão no inventário, tapa o bueiro vizinho.
+    expect(interact(rt, 'hatch')).toBe('cover');
+    expect(rt.coveredDrains.size).toBe(1);
     expect(rt.hasHatch).toBe(false);
   });
 
@@ -536,6 +559,38 @@ describe('diversidade das fases', () => {
   it('os mapas têm pelo menos 3 linhas de altura útil (não são um corredor único)', () => {
     for (let i = 12; i < LEVELS.length; i++) {
       expect(LEVELS[i].map.length, `${LEVELS[i].id} é baixo demais`).toBeGreaterThanOrEqual(5);
+    }
+  });
+});
+
+describe('paredes decoradas (celas e cabine)', () => {
+  it('todo enfeite de parede fica sobre TILE_WALL', () => {
+    for (const def of LEVELS) {
+      const level = parseLevel(def, mulberry32(0));
+      for (const decor of level.wallDecor) {
+        expect(tileAt(level, decor.x, decor.y), `${def.id}: enfeite em ${decor.x},${decor.y}`).toBe(TILE_WALL);
+      }
+    }
+  });
+
+  it('as fases 1–5 têm celas nas paredes indicadas', () => {
+    const expected = [40, 35, 42, 51, 99];
+    expected.forEach((count, i) => {
+      const level = parseLevel(LEVELS[i], mulberry32(0));
+      const cells = level.wallDecor.filter((d) => d.kind === 'cell');
+      expect(cells.length, LEVELS[i].id).toBe(count);
+    });
+  });
+
+  it('a fase 6 tem uma única cabine de guarda 2×2', () => {
+    const level = parseLevel(LEVELS[5], mulberry32(0));
+    const guards = level.wallDecor.filter((d) => d.kind === 'guard');
+    expect(guards).toHaveLength(1);
+    const [guard] = guards;
+    for (let dy = 0; dy < 2; dy++) {
+      for (let dx = 0; dx < 2; dx++) {
+        expect(tileAt(level, guard.x + dx, guard.y + dy)).toBe(TILE_WALL);
+      }
     }
   });
 });

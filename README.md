@@ -34,11 +34,13 @@ A fuga é narrada pelo rádio: o **General Marcinho** dá o briefing e dicas gra
 - **História completa:** prólogo, introdução e encerramento de cada setor, revelação do **Núcleo do Conhecimento** após a fase 24, fuga final, pouso na Terra e cena pós-créditos.
 - **Rádio:** o General Marcinho dá briefing, dica 1 e dica 2 (nunca a senha); o Chuchuty invade a frequência com avisos. A tecla `H` (ou o botão do HUD) pede a próxima dica; após tempo parado, ela aparece sozinha.
 - **Fases 13–30 redesenhadas:** mapas maiores com câmaras decoradas (até três salas ligadas por portões), **pelo menos 3 mecânicas por fase** e seis fases com senha (quatro delas de cor), recombinando contêiner, placa, alavanca, botão, duto, vazio e código.
+- **Botões do HUD clicáveis:** ciclo (`TAB`), desfazer um passo (`Z`), dica (`H`), usar (`E`), alçapão (`TAMPA`) e menu (`ESC`) respondem tanto ao teclado quanto ao **clique do mouse** (o botão acende ao passar o cursor). O botão de alçapão recolhe a tampa ou cobre o bueiro por perto, e todo botão sem ação dá um aviso curto na tela.
+- **Paredes de cela (`|`) e cabine de guarda (`G`):** as fases 1–5 têm trechos de parede transformados em celas com grades, e a fase 6 — última do setor de celas — fecha com uma cabine de guarda alienígena. Desenho apenas: continuam bloqueando como parede.
 - **Puzzles elaborados:** caixotes em cadeia, placas e portões coloridos, chave e porta, vazio, gema e o uso combinado de vários ecos.
 - **Alavanca (`E`):** liga e fica ligada (persiste entre ciclos); aperte `E` de novo para desligar.
 - **Botão (`E`):** só fica pressionado com peso — um caixote em cima o mantém ligado.
 - **Duto:** pisar teleporta para o par; fica inativo se um caixote cobrir o par.
-- **Bueiro (`B`):** um ralo alienígena no chão. Se estiver **sem tampa**, pisa nele e o Chuchuty captura o Kennedyto — a fase inteira reinicia.
+- **Bueiro (`B`):** um ralo alienígena no chão. Se estiver **sem tampa**, pisa nele e o Chuchuty captura o Kennedyto — a fase inteira reinicia. A captura tem **animação**: a sala escurece, a tela treme de leve e a garra alienígena sai do bueiro, agarra o jogador e o puxa para dentro.
 - **Alçapão (`A`):** item recolhido com `E`. Com o alçapão no inventário, aperte `E` perto de um bueiro para tampá-lo; bueiro tampado é seguro.
 - **Passagem secreta (`S` → `s`):** a laje `S` bloqueia até ser aberta com `E`; ao entrar nela, o Kennedyto é teleportado para a plataforma `s` do outro lado.
 - **Porta de código:** a senha é **sorteada no início da fase** (nunca é sempre a mesma) e escrita como **pistas no chão** — números romanos (`1`–`9`) ou cores (`c`/`d`/`e`) —, com um índice de ordem sobre cada pista. Leia o chão, abra a tela (`E`) e digite a senha no painel (`1`–`9`, `C` confirma, `X` limpa).
@@ -78,7 +80,7 @@ Os retratos do **General Marcinho**, do **Alien Chuchuty**, do Kennedyto e do si
 - **Vite** + **vite-plugin-pwa** (Workbox) para build e offline.
 - **UI em HTML/CSS** (login e menu em abas) por cima do canvas.
 - **Node + Express + `pg` + Zod** no backend, com **PostgreSQL** (login, progresso e histórico).
-- **Vitest**: 248 testes — regras, invariantes de design (nenhuma fase tem caminho livre; nenhuma solução estoura o ciclo), senha sorteada por fase, diversidade das fases, layout das salas, narrativa/história, escalada de dicas, auditoria de mecânicas (nenhuma órfã ou decorativa) e replays.
+- **Vitest**: 254 testes — regras, invariantes de design (nenhuma fase tem caminho livre; nenhuma solução estoura o ciclo), senha sorteada por fase, diversidade das fases, layout das salas, narrativa/história, escalada de dicas, auditoria de mecânicas (nenhuma órfã ou decorativa) e replays.
 - Sprites em mapas de caracteres, fonte bitmap 3×5 própria, áudio sintetizado — **zero assets binários** (só os PNGs de ícone gerados no build).
 
 ## Contas, banco e API
@@ -311,6 +313,8 @@ Se o eco reexecutasse o input, ele colidiria com caixotes em posições diferent
 |---|---|---|---|---|
 | Piso de pedra | `.` | Caminhável | — | — |
 | Parede | `#` | Bloqueia tudo | — | — |
+| Parede com cela | `\|` | Parede decorada com grades; continua bloqueando | — | — |
+| Cabine de guarda | `G` | Parede decorada 2×2 com cabine alienígena; continua bloqueando | — | — |
 | Vazio | ` ` (espaço) | Mata quem entra | — | — |
 | Jogador (spawn) | `P` | Você | — | 1 |
 | Núcleo / saída | `E` | Vence se requisitos cumpridos | — | — |

@@ -45,6 +45,12 @@ export interface Decor extends Vec {
   kind: DecorKind;
 }
 
+/** Enfeite de parede: desenho especial, mas a colisão continua sendo parede. */
+export type WallDecorKind = 'cell' | 'guard';
+export interface WallDecor extends Vec {
+  kind: WallDecorKind;
+}
+
 /** Código resolvido para uma fase carregada (a resposta que a tela espera). */
 export interface ResolvedCode {
   type: 'roman' | 'color';
@@ -109,6 +115,8 @@ export interface Level {
   clueTiles: ClueTile[];
   /** Enfeites temáticos posicionados no mapa. */
   decor: Decor[];
+  /** Enfeites de parede (celas e cabine). Sempre sobre `TILE_WALL`. */
+  wallDecor: WallDecor[];
   /** Código resolvido (senha já sorteada) ou `null` se a fase não tem senha. */
   code: ResolvedCode | null;
 }
@@ -165,6 +173,9 @@ const CHAR_TILE: Record<string, TileId> = {
   '7': TILE_FLOOR,
   '8': TILE_FLOOR,
   '9': TILE_FLOOR,
+  // paredes decoradas (continuam bloqueando)
+  '|': TILE_WALL,
+  G: TILE_WALL,
 };
 
 const GATE_COLOR: Record<string, ColorKey> = { R: 'red', L: 'blue', Y: 'gold' };
@@ -181,6 +192,11 @@ const DECOR_KIND: Record<string, DecorKind> = {
   ':': 'console',
   ';': 'vine',
   '=': 'capsule',
+};
+/** Paredes decoradas: `|` é uma cela e `G` a âncora 2×2 da cabine de guarda. */
+const WALL_DECOR_KIND: Record<string, WallDecorKind> = {
+  '|': 'cell',
+  G: 'guard',
 };
 
 export class LevelError extends Error {}
@@ -237,6 +253,7 @@ export function parseLevel(def: LevelDef, rng: () => number = Math.random): Leve
     terminal: null,
     clueTiles: [],
     decor: [],
+    wallDecor: [],
     code: null,
   };
   let spawns = 0;
@@ -279,6 +296,7 @@ export function parseLevel(def: LevelDef, rng: () => number = Math.random): Leve
       else if (GATE_COLOR[ch]) level.gates.push({ x, y, color: GATE_COLOR[ch] });
       else if (PLATE_COLOR[ch]) level.plates.push({ x, y, color: PLATE_COLOR[ch] });
       else if (DECOR_KIND[ch]) level.decor.push({ x, y, kind: DECOR_KIND[ch] });
+      else if (WALL_DECOR_KIND[ch]) level.wallDecor.push({ x, y, kind: WALL_DECOR_KIND[ch] });
     }
   });
 
@@ -325,6 +343,17 @@ export function parseLevel(def: LevelDef, rng: () => number = Math.random): Leve
   }
   if (!level.hatch && level.drains.length > 0) {
     throw new LevelError(`${def.id}: bueiro sem alçapão na fase`);
+  }
+  for (const guard of level.wallDecor) {
+    if (guard.kind !== 'guard') continue;
+    if (guard.x + 1 >= w || guard.y + 1 >= h) {
+      throw new LevelError(`${def.id}: cabine de guarda sem espaço 2×2 em ${guard.x},${guard.y}`);
+    }
+    for (const [dx, dy] of [[1, 0], [0, 1], [1, 1]] as const) {
+      if (tileAt(level, guard.x + dx, guard.y + dy) !== TILE_WALL) {
+        throw new LevelError(`${def.id}: cabine de guarda precisa de parede 2×2 em ${guard.x},${guard.y}`);
+      }
+    }
   }
   return level;
 }

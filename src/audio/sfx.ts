@@ -10,6 +10,7 @@ type Cue =
   | 'echo'
   | 'cycle'
   | 'death'
+  | 'capture'
   | 'win'
   | 'ui';
 
@@ -107,6 +108,14 @@ export class Sfx {
       case 'death':
         this.blip(180, 0.4, 'square', 0.05, 60);
         this.noise(0.3, 0.04, 400);
+        break;
+      case 'capture':
+        this.blip(90, 0.45, 'sawtooth', 0.05, 38);
+        this.noise(0.35, 0.05, 320);
+        setTimeout(() => {
+          this.blip(240, 0.12, 'square', 0.035, 70);
+          this.noise(0.08, 0.06, 1200);
+        }, 240);
         break;
       case 'win':
         [523, 659, 784, 1046].forEach((f, i) =>

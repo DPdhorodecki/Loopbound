@@ -348,6 +348,129 @@ export function drawDrain(p: p5, x: number, y: number, covered: boolean, t: numb
   }
 }
 
+/** Animação de captura: o alien do bueiro agarra e puxa o jogador. */
+export function drawDrainCapture(
+  p: p5,
+  x: number,
+  y: number,
+  progress: number,
+  t: number,
+  img: p5.Image,
+  facing: Dir,
+): void {
+  const ease = (a: number, b: number, v: number): number => {
+    const n = Math.max(0, Math.min(1, (v - a) / (b - a)));
+    return n * n * (3 - 2 * n);
+  };
+  const cx = x + 8;
+  const cy = y + 11;
+  const grab = ease(0.08, 0.4, progress);
+  const sink = ease(0.3, 0.9, progress);
+  const fade = ease(0.62, 0.98, progress);
+  const open = 1 - ease(0.22, 0.48, progress);
+
+  p.push();
+  p.noStroke();
+
+  // Brilho vermelho saindo do buraco.
+  p.fill(196, 59, 49, 45 + 55 * (1 - progress));
+  p.ellipse(cx, cy, 18 + 10 * progress, 10 + 5 * progress);
+  p.fill(230, 90, 70, 35 * (1 - progress));
+  p.ellipse(cx, cy - 1, 10 + 18 * progress, 7 + 10 * progress);
+
+  // Anéis de captura.
+  if (progress < 0.75) {
+    const ring = progress / 0.75;
+    p.noFill();
+    p.strokeWeight(1);
+    p.stroke(244, 92, 72, 190 * (1 - ring));
+    p.circle(cx, cy, 10 + 18 * ring);
+    p.stroke(255, 176, 120, 120 * (1 - ring));
+    p.circle(cx, cy, 5 + 10 * ring);
+    p.noStroke();
+  }
+
+  // Tentáculos saindo do buraco.
+  const sway = Math.sin(t * 9) * 1.5;
+  p.fill('#123A2C');
+  p.rect(cx - 5, y + 7 + sway, 2, 6);
+  p.rect(cx + 3, y + 7 - sway, 2, 6);
+  p.fill('#2E8C68');
+  p.rect(cx - 5, y + 7 + sway, 1, 4);
+  p.rect(cx + 4, y + 7 - sway, 1, 4);
+
+  // Jogador sendo puxado para dentro.
+  if (fade < 1) {
+    const dy = 2 + sink * 9;
+    const sx = 1 - 0.18 * sink;
+    const sy = 1 - 0.62 * sink;
+    const alpha = Math.round(255 * (1 - fade));
+    p.push();
+    p.translate(cx, y + 8);
+    p.scale(sx, sy);
+    p.translate(-cx, -(y + 8));
+    drawPlayer(p, img, x, y + dy, facing, alpha, [255, 205, 195]);
+    p.pop();
+  }
+
+  // Garra alienígena: sai do buraco e fecha sobre o jogador.
+  if (grab > 0 && progress < 0.95) {
+    const gy = y + 13 - 11 * grab;
+    const spread = 1 + open * 3;
+    // pulso e antebraço saindo do buraco
+    p.fill('#071A12');
+    p.rect(cx - 3, gy + 4, 6, 9);
+    p.fill('#1E6A4E');
+    p.rect(cx - 2, gy + 4, 4, 8);
+    // palma
+    p.fill('#071A12');
+    p.rect(cx - 5, gy, 10, 5);
+    p.fill('#2E8C68');
+    p.rect(cx - 4, gy + 1, 8, 3);
+    // dedos
+    p.fill('#071A12');
+    p.rect(cx - 7 - spread, gy - 3, 2, 8);
+    p.rect(cx + 5 + spread, gy - 3, 2, 8);
+    p.rect(cx - 1, gy - 4, 2, 9);
+    p.fill('#2E8C68');
+    p.rect(cx - 6 - spread, gy - 2, 1, 6);
+    p.rect(cx + 5 + spread, gy - 2, 1, 6);
+    p.rect(cx, gy - 3, 1, 7);
+    // pontas claras
+    p.fill('#7FE0A8');
+    p.rect(cx - 6 - spread, gy - 2, 1, 2);
+    p.rect(cx + 5 + spread, gy - 2, 1, 2);
+    p.rect(cx, gy - 3, 1, 2);
+  }
+
+  // Olhos do alien no fundo do buraco.
+  if (progress > 0.22) {
+    const blink = Math.sin(t * 7) > -0.7;
+    if (blink) {
+      p.fill('#2A0A0C');
+      p.rect(cx - 5, y + 10, 4, 4);
+      p.rect(cx + 1, y + 10, 4, 4);
+      p.fill('#FF6B5E');
+      p.rect(cx - 4, y + 11, 2, 2);
+      p.rect(cx + 2, y + 11, 2, 2);
+      p.fill('#FFD9C0');
+      p.rect(cx - 4, y + 11, 1, 1);
+      p.rect(cx + 2, y + 11, 1, 1);
+    }
+  }
+
+  // Detritos.
+  if (progress < 0.7) {
+    p.fill(120, 70, 50, 150 * (1 - progress));
+    const k = progress * 6;
+    p.rect(cx - 7 - k, y + 4 - k, 1, 1);
+    p.rect(cx + 6 + k, y + 2 - k * 0.6, 1, 1);
+    p.rect(cx + 2 - k, y + 3 + k, 1, 1);
+  }
+
+  p.pop();
+}
+
 /** Item alçapão (`A`): tampa dobrável no chão, recolhida com `E`. */
 export function drawHatchItem(p: p5, x: number, y: number, t: number): void {
   const bob = Math.round(Math.sin(t * 2.6) * 1.2);

@@ -24,6 +24,7 @@ import {
   drawCrate,
   drawDoor,
   drawDrain,
+  drawDrainCapture,
   drawDuct,
   drawExit,
   drawGate,
@@ -41,6 +42,7 @@ import {
 import {
   HUD_E,
   HUD_ESC,
+  HUD_HATCH,
   HUD_HINT,
   HUD_TAB,
   HUD_UNDO,
@@ -65,8 +67,14 @@ export interface WinResult {
 }
 
 const STEP_DUR = 90;
+/** Duração da animação de captura pelo alien do bueiro (segundos). */
+const CAPTURE_DUR = 0.85;
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+const smooth01 = (a: number, b: number, v: number) => {
+  const t = clamp((v - a) / (b - a), 0, 1);
+  return t * t * (3 - 2 * t);
+};
 
 export class App {
   readonly p: p5;
@@ -107,11 +115,16 @@ export class App {
   prevPlayer: Pose | null = null;
   prevCrates: Vec[] = [];
   pushTimer = 0;
+  /** Animação de captura pelo alien do bueiro. */
+  captureAnim: { x: number; y: number; facing: Dir; t: number } | null = null;
   flash = 0;
   flashColor: string = PALETTE.cyan;
   showWinAt = 0;
   toast = '';
+  toastTimer = 0;
   hintTimer = 0;
+  /** Botão do HUD sob o mouse (para acender o quadro). */
+  hoverHud: string | null = null;
 
   /** Rádio do General Marcinho / Chuchuty. */
   readonly hints = new HintSystem();
@@ -164,6 +177,7 @@ export class App {
     this.stepTimer = 0;
     this.prevPlayer = null;
     this.prevCrates = this.rt.crates.map((c) => ({ ...c }));
+    this.captureAnim = null;
     this.flash = 0;
     this.hintTimer = this.inTutorial ? 0 : 5;
     this.levelTime = 0;
@@ -192,6 +206,9 @@ export class App {
     if (message) {
       this.showRadio(message, 11);
       this.sfx.play('ui');
+    } else {
+      this.sfx.play('blocked');
+      this.showToast('SEM MAIS DICAS NESTE MOMENTO');
     }
   }
 
@@ -206,6 +223,7 @@ export class App {
     this.menuOpen = true;
     this.paused = false;
     this.inTutorial = false;
+    this.captureAnim = null;
     this.titleIndex = Math.min(this.levelIndex, this.save.unlocked - 1);
     this.rt = null;
     this.level = null;
@@ -271,8 +289,22 @@ export class App {
     this.stepTimer = Math.max(0, this.stepTimer - dt);
     this.hintTimer = Math.max(0, this.hintTimer - seconds);
     this.radioTimer = Math.max(0, this.radioTimer - seconds);
+    if (this.toastTimer > 0) {
+      this.toastTimer = Math.max(0, this.toastTimer - seconds);
+      if (this.toastTimer === 0) this.toast = '';
+    }
 
     if (this.screen !== 'play' || this.paused || !this.rt) return;
+
+    if (this.captureAnim) {
+      this.captureAnim.t += seconds;
+      if (this.captureAnim.t >= CAPTURE_DUR) {
+        this.captureAnim = null;
+        this.flash = 0.35;
+        this.flashColor = '#C43B31';
+      }
+      return;
+    }
 
     if (!this.inTutorial) {
       this.levelTime += seconds;
@@ -316,7 +348,14 @@ export class App {
     if (res.pushed) {
       this.sfx.play('push');
       this.pushTimer = 0.18;
-    } else if (res.died || res.captured) {
+    } else if (res.captured && res.captureAt) {
+      this.captureAnim = { x: res.captureAt.x, y: res.captureAt.y, facing: dir, t: 0 };
+      this.prevPlayer = null;
+      this.queue = [];
+      this.sfx.play('capture');
+      this.flash = 0.15;
+      this.flashColor = '#C43B31';
+    } else if (res.died) {
       this.sfx.play('death');
       this.flash = 0.5;
       this.flashColor = '#C43B31';
@@ -329,7 +368,7 @@ export class App {
     if (res.door) this.sfx.play('door');
     if (pressure(rt).red || pressure(rt).blue || pressure(rt).gold) this.sfx.play('plate');
 
-    if (res.cycleEnded) {
+    if (res.cycleEnded && !res.captured) {
       this.sfx.play('cycle');
       this.sfx.play('echo');
       this.flash = 0.45;
@@ -346,6 +385,7 @@ export class App {
   endCycle(): void {
     const rt = this.rt;
     if (!rt || rt.status !== 'playing' || rt.beat === 0) return;
+    if (this.captureAnim) return;
     this.hints.notifyAction();
     endCycle(rt, 'tab');
     this.prevPlayer = null;
@@ -363,6 +403,9 @@ export class App {
       this.prevPlayer = null;
       this.prevCrates = this.rt.crates.map((c) => ({ ...c }));
       this.sfx.play('ui');
+    } else {
+      this.sfx.play('blocked');
+      this.showToast('NADA PARA DESFAZER');
     }
   }
 
@@ -443,6 +486,9 @@ export class App {
     this.sfx.unlock();
     if (this.menuOpen) return;
     const k = key.length === 1 ? key.toLowerCase() : key;
+
+    // Durante a captura, só a pausa responde.
+    if (this.captureAnim && k !== 'Escape') return;
 
     // Painel de código aberto: teclado controla os botões da tela.
     if (this.rt?.terminalOpen) {
@@ -555,6 +601,7 @@ export class App {
   }
 
   private enqueue(dir: Dir): void {
+    if (this.captureAnim) return;
     if (this.queue.length < 3) this.queue.push(dir);
   }
 
@@ -573,9 +620,57 @@ export class App {
     this.sfx.play('ui');
   }
 
+  /** Botão do HUD que está sob o ponteiro (null se nenhum). */
+  private hudAt(x: number, y: number): string | null {
+    if (this.screen !== 'play' || this.paused || this.menuOpen) return null;
+    if (this.inside(x, y, HUD_TAB)) return 'tab';
+    if (this.inside(x, y, HUD_HINT)) return 'hint';
+    if (this.inside(x, y, HUD_UNDO)) return 'undo';
+    if (this.inside(x, y, HUD_ESC)) return 'esc';
+    if (this.inside(x, y, HUD_E)) return 'e';
+    if (this.inside(x, y, HUD_HATCH)) return 'hatch';
+    return null;
+  }
+
+  /** O mouse se moveu: acende o botão do HUD que está sob o cursor. */
+  onPointerMove(x: number, y: number): void {
+    this.hoverHud = this.hudAt(x, y);
+    const canvas = typeof document !== 'undefined' ? document.querySelector('canvas') : null;
+    if (canvas) canvas.style.cursor = this.hoverHud ? 'pointer' : 'default';
+  }
+
+  /** Aviso curto na base da tela (feedback dos botões). */
+  private showToast(message: string, seconds = 2): void {
+    this.toast = message;
+    this.toastTimer = seconds;
+  }
+
+  /** Botão de alçapão do HUD: recolhe o item ou tapa o bueiro por perto. */
+  private useHatch(): void {
+    const rt = this.rt;
+    if (!rt) return;
+    const target = interact(rt, 'hatch');
+    if (target === 'hatch') {
+      this.hints.notifyAction();
+      this.sfx.play('key');
+      this.showToast('ALÇAPÃO RECOLHIDO');
+    } else if (target === 'cover') {
+      this.hints.notifyAction();
+      this.sfx.play('door');
+      this.showToast('BUEIRO TAMPADO');
+    } else if (rt.hasHatch) {
+      this.sfx.play('blocked');
+      this.showToast('NENHUM BUEIRO POR PERTO');
+    } else {
+      this.sfx.play('blocked');
+      this.showToast('SEM ALÇAPÃO NO INVENTÁRIO');
+    }
+  }
+
   onPointer(x: number, y: number): void {
     this.sfx.unlock();
     if (this.menuOpen) return;
+    if (this.captureAnim) return;
 
     if (this.rt?.terminalOpen) {
       const L = this.codeLayout();
@@ -626,7 +721,12 @@ export class App {
     }
 
     if (this.inside(x, y, HUD_TAB)) {
-      this.endCycle();
+      if (this.rt && this.rt.beat > 0) {
+        this.endCycle();
+      } else {
+        this.sfx.play('blocked');
+        this.showToast('O CICLO JÁ ESTÁ NO INÍCIO');
+      }
     } else if (this.inside(x, y, HUD_UNDO)) {
       this.doUndo();
     } else if (this.inside(x, y, HUD_HINT)) {
@@ -638,6 +738,8 @@ export class App {
         this.sfx.play('ui');
       }
       if (target === 'terminal') this.onCode?.();
+    } else if (this.inside(x, y, HUD_HATCH)) {
+      this.useHatch();
     } else if (this.inside(x, y, HUD_ESC)) {
       this.openPause();
       this.sfx.play('ui');
@@ -786,6 +888,9 @@ export class App {
     const oy = this.oy;
     const z = this.zoom;
     const k = this.stepTimer > 0 ? 1 - this.stepTimer / STEP_DUR : 1;
+    const capture = this.captureAnim;
+    const captureProgress = capture ? clamp(capture.t / CAPTURE_DUR, 0, 1) : 0;
+    const shake = capture ? Math.sin(this.time * 55) * 1.6 * (1 - captureProgress) : 0;
 
     p.noStroke();
     p.fill(0, 0, 0, 120);
@@ -794,6 +899,7 @@ export class App {
     p.push();
     p.translate(ox, oy);
     p.scale(z);
+    if (shake) p.translate(shake, shake * 0.6);
     p.image(this.room!, 0, 0);
 
     level.clueTiles.forEach((clue, i) => {
@@ -873,19 +979,28 @@ export class App {
     });
 
     // jogador
-    const target = rt.player;
-    const prev = this.prevPlayer;
-    const adjacent = prev ? Math.abs(prev.x - target.x) + Math.abs(prev.y - target.y) <= 1 : false;
-    const px = prev && adjacent ? lerp(prev.x, target.x, k) : target.x;
-    const py = prev && adjacent ? lerp(prev.y, target.y, k) : target.y;
-    const sx = Math.round(px * 16);
-    const sy = Math.round(py * 16);
-    drawShadow(p, sx + 8, sy + 15, 5, 80);
+    if (!capture) {
+      const target = rt.player;
+      const prev = this.prevPlayer;
+      const adjacent = prev ? Math.abs(prev.x - target.x) + Math.abs(prev.y - target.y) <= 1 : false;
+      const px = prev && adjacent ? lerp(prev.x, target.x, k) : target.x;
+      const py = prev && adjacent ? lerp(prev.y, target.y, k) : target.y;
+      const sx = Math.round(px * 16);
+      const sy = Math.round(py * 16);
+      drawShadow(p, sx + 8, sy + 15, 5, 80);
 
-    const moving = this.stepTimer > 0;
-    const frame = moving ? (rt.beat % 2 === 0 ? 'walk0' : 'walk1') : this.time % 1.4 < 0.7 ? 'idle0' : 'idle1';
-    const img = this.pushTimer > 0 ? this.atlas.ken.push : this.atlas.ken[frame];
-    drawPlayer(p, img, sx, sy, target.facing);
+      const moving = this.stepTimer > 0;
+      const frame = moving ? (rt.beat % 2 === 0 ? 'walk0' : 'walk1') : this.time % 1.4 < 0.7 ? 'idle0' : 'idle1';
+      const img = this.pushTimer > 0 ? this.atlas.ken.push : this.atlas.ken[frame];
+      drawPlayer(p, img, sx, sy, target.facing);
+    } else {
+      // Escurece a sala para esconder o reset instantâneo e focar o bueiro.
+      const dim = smooth01(0, 0.1, captureProgress) * (1 - smooth01(0.8, 1, captureProgress));
+      p.noStroke();
+      p.fill(4, 8, 12, 150 * dim);
+      p.rect(0, 0, level.w * 16, level.h * 16);
+      drawDrainCapture(p, capture.x * 16, capture.y * 16, captureProgress, this.time, this.atlas.ken.idle0, capture.facing);
+    }
 
     p.pop();
 
@@ -903,6 +1018,7 @@ export class App {
       drawHud(p, rt, this.time, this.save.muted, {
         hintStage: this.hints.currentStage,
         sector: this.inTutorial ? 'TREINAMENTO' : `SETOR ${this.sector} · ${themeFor(this.sector).label}`,
+        hover: this.hoverHud,
       });
       if (!this.inTutorial && this.radioTimer > 0 && this.radioMessage) {
         drawRadioPanel(p, this.radioMessage, this.time);

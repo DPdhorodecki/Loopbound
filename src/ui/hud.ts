@@ -121,19 +121,23 @@ export function drawHud(
   rt: Runtime,
   t: number,
   muted: boolean,
-  opts: { hintStage?: number; sector?: string } = {},
+  opts: { hintStage?: number; sector?: string; hover?: string | null } = {},
 ): void {
   const pressed = pressure(rt);
+  const hover = opts.hover ?? null;
+  const on = (key: string, active: boolean) => active || hover === key;
 
   // TAB
-  drawFrame(p, HUD_TAB.x, HUD_TAB.y, HUD_TAB.w, HUD_TAB.h, rt.beat > 0);
-  drawLoopGlyph(p, HUD_TAB.x + 9, HUD_TAB.y + 5, 3, rt.beat > 0 ? PALETTE.cyan : PALETTE.cyanDim);
+  const tabOn = on('tab', rt.beat > 0);
+  drawFrame(p, HUD_TAB.x, HUD_TAB.y, HUD_TAB.w, HUD_TAB.h, tabOn);
+  drawLoopGlyph(p, HUD_TAB.x + 9, HUD_TAB.y + 5, 3, tabOn ? PALETTE.cyan : PALETTE.cyanDim);
   drawText(p, 'TAB', HUD_TAB.x + HUD_TAB.w / 2, HUD_TAB.y + HUD_TAB.h - 9, 1, PALETTE.cyan, 'center');
 
   // Dica (General Marcinho)
   const hintStage = opts.hintStage ?? 0;
-  drawFrame(p, HUD_HINT.x, HUD_HINT.y, HUD_HINT.w, HUD_HINT.h, hintStage > 0);
-  drawText(p, '?', HUD_HINT.x + HUD_HINT.w / 2, HUD_HINT.y + 10, 3, hintStage > 0 ? PALETTE.gold : PALETTE.cyanDim, 'center');
+  const hintOn = on('hint', hintStage > 0);
+  drawFrame(p, HUD_HINT.x, HUD_HINT.y, HUD_HINT.w, HUD_HINT.h, hintOn);
+  drawText(p, '?', HUD_HINT.x + HUD_HINT.w / 2, HUD_HINT.y + 10, 3, hintOn ? PALETTE.gold : PALETTE.cyanDim, 'center');
   drawText(p, 'H', HUD_HINT.x + HUD_HINT.w / 2, HUD_HINT.y + HUD_HINT.h - 9, 1, PALETTE.cyan, 'center');
 
   // Setor atual
@@ -142,14 +146,16 @@ export function drawHud(
   }
 
   // Desfazer
-  drawFrame(p, HUD_UNDO.x, HUD_UNDO.y, HUD_UNDO.w, HUD_UNDO.h, rt.beat > 0);
-  drawUndoGlyph(p, HUD_UNDO.x + 10, HUD_UNDO.y + 8, 3, rt.beat > 0 ? PALETTE.cyan : PALETTE.cyanDim);
-  drawText(p, 'Z', HUD_UNDO.x + HUD_UNDO.w / 2, HUD_UNDO.y + HUD_UNDO.h - 9, 1, rt.beat > 0 ? PALETTE.cyan : PALETTE.cyanDim, 'center');
+  const undoOn = on('undo', rt.beat > 0);
+  drawFrame(p, HUD_UNDO.x, HUD_UNDO.y, HUD_UNDO.w, HUD_UNDO.h, undoOn);
+  drawUndoGlyph(p, HUD_UNDO.x + 10, HUD_UNDO.y + 8, 3, undoOn ? PALETTE.cyan : PALETTE.cyanDim);
+  drawText(p, 'Z', HUD_UNDO.x + HUD_UNDO.w / 2, HUD_UNDO.y + HUD_UNDO.h - 9, 1, undoOn ? PALETTE.cyan : PALETTE.cyanDim, 'center');
 
   // ESC
-  drawFrame(p, HUD_ESC.x, HUD_ESC.y, HUD_ESC.w, HUD_ESC.h, false);
-  drawMenuGlyph(p, HUD_ESC.x + 9, HUD_ESC.y + 9, 2, PALETTE.cyanDim);
-  drawText(p, 'ESC', HUD_ESC.x + HUD_ESC.w / 2, HUD_ESC.y + HUD_ESC.h - 9, 1, PALETTE.cyanDim, 'center');
+  const escOn = on('esc', false);
+  drawFrame(p, HUD_ESC.x, HUD_ESC.y, HUD_ESC.w, HUD_ESC.h, escOn);
+  drawMenuGlyph(p, HUD_ESC.x + 9, HUD_ESC.y + 9, 2, escOn ? PALETTE.cyan : PALETTE.cyanDim);
+  drawText(p, 'ESC', HUD_ESC.x + HUD_ESC.w / 2, HUD_ESC.y + HUD_ESC.h - 9, 1, escOn ? PALETTE.cyan : PALETTE.cyanDim, 'center');
 
   // Interagir (só nas fases com alavanca, botão, tela, alçapão ou passagem)
   const interactive =
@@ -160,15 +166,17 @@ export function drawHud(
     rt.level.secrets.length > 0 ||
     rt.level.drains.length > 0;
   if (interactive) {
-    drawFrame(p, HUD_E.x, HUD_E.y, HUD_E.w, HUD_E.h, false);
-    drawText(p, 'E', HUD_E.x + HUD_E.w / 2, HUD_E.y + 12, 3, PALETTE.cyan, 'center');
-    drawText(p, 'USA', HUD_E.x + HUD_E.w / 2, HUD_E.y + HUD_E.h - 9, 1, PALETTE.cyanDim, 'center');
+    const eOn = on('e', false);
+    drawFrame(p, HUD_E.x, HUD_E.y, HUD_E.w, HUD_E.h, eOn);
+    drawText(p, 'E', HUD_E.x + HUD_E.w / 2, HUD_E.y + 12, 3, eOn ? PALETTE.cyan : PALETTE.cyanDim, 'center');
+    drawText(p, 'USA', HUD_E.x + HUD_E.w / 2, HUD_E.y + HUD_E.h - 9, 1, eOn ? PALETTE.cyan : PALETTE.cyanDim, 'center');
   }
 
   // Alçapão (só nas fases com bueiro)
   if (rt.level.drains.length > 0) {
     const ready = rt.hasHatch;
-    drawFrame(p, HUD_HATCH.x, HUD_HATCH.y, HUD_HATCH.w, HUD_HATCH.h, ready);
+    const hatchOn = on('hatch', ready);
+    drawFrame(p, HUD_HATCH.x, HUD_HATCH.y, HUD_HATCH.w, HUD_HATCH.h, hatchOn);
     drawHatchGlyph(
       p,
       HUD_HATCH.x + 13,

@@ -115,6 +115,94 @@ function decorateWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number, 
   }
 }
 
+/** Cela embutida na parede: nicho escuro com grades. A colisão segue parede. */
+function decorateCellWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number, r: number): void {
+  const px = x * TILE;
+  const py = y * TILE;
+
+  // Nicho rebaixado.
+  g.fill(theme.wallShadow);
+  g.rect(px + 2, py + 2, 12, 12);
+  g.fill('#050A0E');
+  g.rect(px + 3, py + 3, 10, 10);
+
+  // Moldura de pedra.
+  g.fill(theme.wallCap);
+  g.rect(px + 2, py + 2, 12, 1);
+  g.rect(px + 2, py + 13, 12, 1);
+  g.rect(px + 2, py + 2, 1, 12);
+  g.rect(px + 13, py + 2, 1, 12);
+
+  // Grades verticais.
+  g.fill(theme.accentDim);
+  for (let i = 0; i < 4; i++) g.rect(px + 4 + i * 3, py + 3, 1, 10);
+
+  // Trava de energia no topo e brilho ocasional.
+  g.fill(theme.accent);
+  g.rect(px + 3, py + 3, 10, 1);
+  if (r % 4 === 0) {
+    g.rect(px + 4 + (r % 6), py + 11, 1, 1);
+  }
+}
+
+/** Cabine de guarda alienígena: janela 2×2 embutida no paredão. */
+function decorateGuardCabin(g: p5.Graphics, theme: SectorTheme, x: number, y: number): void {
+  const px = x * TILE;
+  const py = y * TILE;
+
+  // Moldura externa.
+  g.fill(theme.wallShadow);
+  g.rect(px, py, 32, 32);
+  g.fill(theme.wallCap);
+  g.rect(px + 1, py + 1, 30, 30);
+  g.fill('#0B1218');
+  g.rect(px + 2, py + 2, 28, 28);
+
+  // Visor de vidro.
+  g.fill('#10242C');
+  g.rect(px + 4, py + 5, 24, 16);
+  g.fill(theme.accentDim);
+  g.rect(px + 4, py + 5, 24, 1);
+  g.rect(px + 4, py + 20, 24, 1);
+
+  // Silhueta alienígena atrás do vidro.
+  g.fill('#24544A');
+  g.rect(px + 9, py + 16, 14, 7);
+  g.fill('#3A8C72');
+  g.rect(px + 12, py + 8, 8, 10);
+  g.rect(px + 11, py + 10, 10, 7);
+  g.rect(px + 11, py + 6, 1, 2);
+  g.rect(px + 20, py + 6, 1, 2);
+  g.fill('#050A0E');
+  g.rect(px + 13, py + 11, 2, 2);
+  g.rect(px + 17, py + 11, 2, 2);
+  g.fill('#8CFFE0');
+  g.rect(px + 13, py + 11, 1, 1);
+  g.rect(px + 17, py + 11, 1, 1);
+
+  // Luz de alerta.
+  g.fill('#3A1518');
+  g.rect(px + 13, py + 1, 6, 2);
+  g.fill('#E4675C');
+  g.rect(px + 15, py + 1, 2, 2);
+  g.fill(255, 140, 140, 90);
+  g.rect(px + 12, py, 8, 1);
+
+  // Console de guarda.
+  g.fill(theme.wallCap);
+  g.rect(px + 3, py + 23, 26, 6);
+  g.fill('#0A0F16');
+  g.rect(px + 4, py + 24, 24, 4);
+  g.fill(theme.accent);
+  g.rect(px + 6, py + 25, 4, 2);
+  g.fill('#4FE0B0');
+  g.rect(px + 12, py + 25, 2, 2);
+  g.fill('#E4675C');
+  g.rect(px + 16, py + 25, 2, 2);
+  g.fill(theme.wallCapHi);
+  g.rect(px + 22, py + 25, 4, 1);
+}
+
 /** Faixas de perigo em volta do vazio. */
 function decorateVoidEdge(g: p5.Graphics, theme: SectorTheme, level: Level, x: number, y: number): void {
   const px = x * TILE;
@@ -247,6 +335,16 @@ export function bakeRoom(p: p5, level: Level, sector = 1): p5.Graphics {
         decorateFloor(g, theme, x, y, r);
         decorateRoom(g, theme, level, x, y, r);
       }
+    }
+  }
+
+  // Enfeites de parede (celas/cabine): desenhados depois da base para não
+  // serem cobertos pelos tiles vizinhos. A colisão continua sendo parede.
+  for (const decor of level.wallDecor) {
+    if (decor.kind === 'cell') {
+      decorateCellWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
+    } else {
+      decorateGuardCabin(g, theme, decor.x, decor.y);
     }
   }
 

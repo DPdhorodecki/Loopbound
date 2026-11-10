@@ -72,6 +72,8 @@ export interface MoveResult {
   pushed?: boolean;
   died?: boolean;
   captured?: boolean;
+  /** Tile do bueiro onde a captura aconteceu (para a animação). */
+  captureAt?: Vec;
   won?: boolean;
   teleported?: boolean;
   secret?: boolean;
@@ -336,6 +338,7 @@ export function tryMove(rt: Runtime, dir: Dir): MoveResult {
   const drain = rt.level.drains.find((d) => d.x === here.x && d.y === here.y);
   if (drain && !rt.coveredDrains.has(cellKey(here.x, here.y))) {
     result.captured = true;
+    result.captureAt = { x: here.x, y: here.y };
     endCycle(rt, 'capture');
     result.cycleEnded = true;
     result.endReason = 'capture';
@@ -367,36 +370,42 @@ export function tryMove(rt: Runtime, dir: Dir): MoveResult {
   return result;
 }
 
-/** Interage com o que está sob o jogador ou à frente dele (tecla `E`). */
-export function interact(rt: Runtime): InteractTarget | null {
+/**
+ * Interage com o que está sob o jogador ou à frente dele (tecla `E`).
+ * Com `only: 'hatch'` faz só o serviço do alçapão (recolher ou tapar um
+ * bueiro), usado pelo botão de alçapão do HUD.
+ */
+export function interact(rt: Runtime, only?: 'hatch'): InteractTarget | null {
   if (rt.status !== 'playing' || rt.terminalOpen) return null;
   const here = { x: rt.player.x, y: rt.player.y };
   const d = DIRS[rt.player.facing];
   const cells = [here, { x: here.x + d.x, y: here.y + d.y }];
 
-  for (const c of cells) {
-    const t = rt.level.terminal;
-    if (t && t.x === c.x && t.y === c.y) {
-      rt.terminalOpen = true;
-      rt.codeEntry = [];
-      return 'terminal';
+  if (only !== 'hatch') {
+    for (const c of cells) {
+      const t = rt.level.terminal;
+      if (t && t.x === c.x && t.y === c.y) {
+        rt.terminalOpen = true;
+        rt.codeEntry = [];
+        return 'terminal';
+      }
     }
-  }
-  for (const c of cells) {
-    const lever = rt.level.levers.find((l) => l.x === c.x && l.y === c.y);
-    if (lever) {
-      const key = cellKey(c.x, c.y);
-      if (rt.leversOn.has(key)) rt.leversOn.delete(key);
-      else rt.leversOn.add(key);
-      return 'lever';
+    for (const c of cells) {
+      const lever = rt.level.levers.find((l) => l.x === c.x && l.y === c.y);
+      if (lever) {
+        const key = cellKey(c.x, c.y);
+        if (rt.leversOn.has(key)) rt.leversOn.delete(key);
+        else rt.leversOn.add(key);
+        return 'lever';
+      }
     }
-  }
-  const button = rt.level.buttons.find((b) => b.x === here.x && b.y === here.y);
-  if (button) {
-    const key = cellKey(here.x, here.y);
-    if (rt.playerPress.has(key)) rt.playerPress.delete(key);
-    else rt.playerPress.add(key);
-    return 'button';
+    const button = rt.level.buttons.find((b) => b.x === here.x && b.y === here.y);
+    if (button) {
+      const key = cellKey(here.x, here.y);
+      if (rt.playerPress.has(key)) rt.playerPress.delete(key);
+      else rt.playerPress.add(key);
+      return 'button';
+    }
   }
 
   // Alçapão: recolhido com `E` quando o jogador está em cima do item.
@@ -406,7 +415,6 @@ export function interact(rt: Runtime): InteractTarget | null {
     return 'hatch';
   }
 
-  // Passagem secreta: `E` abre a entrada (aqui ou em qualquer lado).
   const around = [
     here,
     { x: here.x + 1, y: here.y },
@@ -414,11 +422,15 @@ export function interact(rt: Runtime): InteractTarget | null {
     { x: here.x, y: here.y + 1 },
     { x: here.x, y: here.y - 1 },
   ];
-  for (const c of around) {
-    const secret = rt.level.secrets.find((s) => s.x === c.x && s.y === c.y);
-    if (secret && !rt.openSecrets.has(cellKey(c.x, c.y))) {
-      rt.openSecrets.add(cellKey(c.x, c.y));
-      return 'secret';
+
+  if (only !== 'hatch') {
+    // Passagem secreta: `E` abre a entrada (aqui ou em qualquer lado).
+    for (const c of around) {
+      const secret = rt.level.secrets.find((s) => s.x === c.x && s.y === c.y);
+      if (secret && !rt.openSecrets.has(cellKey(c.x, c.y))) {
+        rt.openSecrets.add(cellKey(c.x, c.y));
+        return 'secret';
+      }
     }
   }
 
