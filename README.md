@@ -30,7 +30,7 @@ A fuga é narrada pelo rádio: o **General Marcinho** dá o briefing e dicas gra
 ## O que tem no jogo
 
 - **Tutorial de 8 salas** ensinando andar, empurrar, eco, chave, alavanca, botão, duto e código — aparece no primeiro acesso e pode ser revisto pelo menu.
-- **Campanha de 30 fases em 5 setores** (Cela, Laboratório, Indústria, Comando e Hangar), com paleta e decoração próprias, **100% fechadas** por corredores e paredes: não existe atalho — resolver o puzzle (portão/senha) é sempre obrigatório. Cada ciclo tem orçamento mínimo (folga zero), com uma folga extra na fase 28. As salas são grandes (até 35×17 tiles) e densamente decoradas com **células alienígenas, cápsulas, consoles e vinhas**; câmaras anexas são becos sem saída, então ampliam a instalação sem furar o puzzle.
+- **Campanha de 30 fases em 5 setores** (Cela, Laboratório, Indústria, Comando e Hangar), com paleta e decoração próprias. Cada fase tem **desenho e percurso únicos**: os mapas não se repetem e as fases 2–30 terminam num **cofre selado anexo com formato, posição e caminho próprios**. As salas são densamente decoradas com **células alienígenas, cápsulas, consoles e vinhas** (até 35×17 tiles); os anexos são becos fechados, então ampliam a instalação sem furar o puzzle.
 - **História completa:** prólogo, introdução e encerramento de cada setor, revelação do **Núcleo do Conhecimento** após a fase 24, fuga final, pouso na Terra e cena pós-créditos.
 - **Rádio:** o General Marcinho dá briefing, dica 1 e dica 2 (nunca a senha); o Chuchuty invade a frequência com avisos. A tecla `H` (ou o botão do HUD) pede a próxima dica; após tempo parado, ela aparece sozinha.
 - **Fases 13–30 redesenhadas:** mapas maiores com câmaras decoradas (até três salas ligadas por portões), **pelo menos 3 mecânicas por fase** e seis fases com senha (quatro delas de cor), recombinando contêiner, placa, alavanca, botão, duto, vazio e código.
@@ -42,7 +42,7 @@ A fuga é narrada pelo rádio: o **General Marcinho** dá o briefing e dicas gra
 - **Alçapão (`A`):** item recolhido com `E`. Com o alçapão no inventário, aperte `E` perto de um bueiro para tampá-lo; bueiro tampado é seguro.
 - **Passagem secreta (`S` → `s`):** a laje `S` bloqueia até ser aberta com `E`; ao entrar nela, o Kennedyto é teleportado para a plataforma `s` do outro lado.
 - **Porta de código:** a senha é **sorteada no início da fase** (nunca é sempre a mesma) e escrita como **pistas no chão** — números romanos (`1`–`9`) ou cores (`c`/`d`/`e`) —, com um índice de ordem sobre cada pista. Leia o chão, abra a tela (`E`) e digite a senha no painel (`1`–`9`, `C` confirma, `X` limpa).
-- **Ciclo** curto (orçamento mínimo para a solução: 8–39 passos). `TAB` encerra o ciclo e grava um eco; **morte, captura no bueiro ou passos esgotados reiniciam a fase inteira** (portões fechados, senha sorteada de novo, ecos e progresso zerados).
+- **Ciclo** com orçamento próprio por fase (a fase 1 tem 180 passos para o percurso ampliado; as demais ficam entre 30 e 80). `TAB` encerra o ciclo e grava um eco; **morte, captura no bueiro ou passos esgotados reiniciam a fase inteira** (portões fechados, senha sorteada de novo, ecos e progresso zerados).
 - **Ecos** (até 3 por fase) que repetem a trilha gravada e seguram placas.
 - **Contas:** login/cadastro, progresso, recordes e histórico de partidas no **PostgreSQL**.
 - **Menu em abas:** JOGAR, FASES, HISTÓRIA, HISTÓRICO e PERFIL, com avatar, recordes, estatísticas e revisão das cenas.
@@ -207,11 +207,11 @@ O jogo cobre o fluxo completo com **tutorial + 30 fases**:
 | 29 | Labirinto de Lançamento | duas válvulas, um contêiner e um duto |
 | 30 | A Grande Fuga | senha, duto, válvula, botão e peso — tudo junto |
 
-Em todas as fases 2–30, o trecho final é um **cofre selado**: recolha o **alçapão** (`A`) no caminho com `E`, abra a **passagem secreta** (`S`) com `E` e, já no cofre, use o alçapão para **tampar o bueiro** (`B`) antes de alcançar a saída. O bueiro aberto captura o Kennedyto e reinicia a fase inteira.
+Em todas as fases 2–30, o trecho final é um **cofre selado exclusivo da fase**: a saída antiga vira uma **passagem secreta** (`S`), que teleporta para um anexo próprio. Lá dentro, recolha o **alçapão** (`A`) com `E`, use-o para **tampar o bueiro** (`B`) e alcance a saída. O bueiro aberto captura o Kennedyto e reinicia a fase inteira. O formato, a posição e o caminho do cofre mudam em cada fase.
 
-Implementado: tutorial em 8 salas, ciclo com orçamento e encerramento por `TAB`/morte, gravação e replay de ecos, caixotes, placas e portões coloridos, chave/porta, gemas, vazio, **alavanca, botão, duto e porta de código com senha sorteada por fase (pistas no chão)**, **bueiro com alçapão, passagem secreta e cofre final em todas as fases 2–30**, undo por passo, reinício, pausa, tela de vitória com recorde, **login e progresso no PostgreSQL**, menu em abas com histórico, áudio sintetizado, toque/swipe, **botão de tela cheia no HUD (ou `F`)**, PWA offline e canvas virtual 640×360 com zoom 2×.
+Implementado: tutorial em 8 salas, ciclo com orçamento e encerramento por `TAB`/morte, gravação e replay de ecos, caixotes, placas e portões coloridos, chave/porta, gemas, vazio, **alavanca, botão, duto e porta de código com senha sorteada por fase (pistas no chão)**, **bueiro com alçapão, passagem secreta e cofre selado único em todas as fases 2–30**, undo por passo, reinício, pausa, tela de vitória com recorde, **login e progresso no PostgreSQL**, menu em abas com histórico, áudio sintetizado, toque/swipe, **botão `TELA` fixo em DOM (ou `F`)**, PWA offline e canvas virtual 640×360 com zoom 2×.
 
-Os mapas das fases 1–12 passam por `scripts/tighten.ts`, que reaproveita a solução gravada para tapar com parede todo piso que nenhum ciclo pisa. As fases 13–30 foram geradas por `scripts/rebuild-levels.ts`, que resolve cada mapa com um **solver BFS** (`scripts/solver.ts`) antes de gravar o bloco em `src/game/levels.ts` — assim cada solução entregue já nasce verificada. Em ambos os casos nenhuma fase é um campo aberto e todas continuam com solução replayada no CI.
+As fases 2–12 usam os mapas compactos originais e preservam a solução com ecos; as fases 13–30 passam pelo **solver BFS** (`scripts/solver.ts`) depois de receberem mutações de parede. O gerador `scripts/refactor-levels.ts` monta um **cofre anexo único** para cada fase (serpentina com `s`, `A`, `B` e `E`) e grava tudo em `src/game/levels.ts`. Nenhuma fase é um campo aberto e todas continuam com solução replayada no CI.
 
 ---
 
@@ -264,7 +264,7 @@ Sair de cada sala quase nunca exige ser mais rápido. Exige ser **várias pessoa
 
 ### Anatomia de um ciclo
 
-- Um ciclo tem `cycleLength` **passos** (movimentos válidos), fixado no **mínimo que a solução de referência exige** (folga zero): cada ciclo é uma corrida contra o tempo. A fase 28 tem folga extra (orçamento de 40 para uma solução de 31 passos).
+- Um ciclo tem `cycleLength` **passos** (movimentos válidos), com orçamento próprio por fase. A fase 1 tem 180 passos para o percurso ampliado; as demais têm folga suficiente para o desvio do cofre selado. O ciclo termina por: `TAB` (manual), orçamento esgotado, morte, captura no bueiro, ou vitória.
 - O ciclo termina por: `TAB` (manual), orçamento esgotado, morte, captura no bueiro, ou vitória.
 - `TAB` congela o trajeto inteiro como **eco** e reinicia o ciclo. Morte, captura ou orçamento esgotado **não geram eco**: a fase inteira reinicia (portões/grades fechados, alavancas desligadas, senha sorteada de novo, gemas, chave, alçapão, passagens, ecos e passos zerados).
 - O eco reproduz a trilha do passo 0 ao N e **estaciona na última posição** até o fim do ciclo; no ciclo seguinte, recomeça do início.
@@ -489,8 +489,8 @@ Fiel à referência:
 
 - **TAB** (canto superior esquerdo): moldura 64×64, borda ciano de 2 px, colchetes de 6 px nos cantos, glifo circular de loop, rótulo `TAB` em fonte 5×7.
 - **ESC** (canto inferior esquerdo): mesma moldura, glifo de lista/menu.
-- **Contador de gemas** (superior direito, à esquerda do botão de tela cheia): gema + `1/3`, mesma moldura reduzida.
-- **Tela cheia** (canto superior direito): moldura com glifo de cantos; clique/toque alterna a tela cheia (o mesmo que a tecla `F`).
+- **Contador de gemas** (superior direito, à esquerda do botão `TELA`): gema + `1/3`, mesma moldura reduzida.
+- **Tela cheia:** botão `TELA` fixo em DOM no canto superior direito, visível no título, menu, jogo, pausa e vitória. Clique/toque alterna a tela cheia (o mesmo que a tecla `F`).
 - **Alçapão** (inferior esquerdo, nas fases com bueiro): mostra `VAZIO` ou `TAMPA` conforme o item está no inventário.
 - **Pips de ressonância** (inferior direito): um losango por eco disponível, preenchido = ativo.
 - **Medidor de ciclo**: 16 traços finos abaixo do centro, apagando um a um.

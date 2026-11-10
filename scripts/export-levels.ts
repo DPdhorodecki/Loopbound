@@ -184,9 +184,17 @@ for (let i = 0; i < LEVELS.length; i++) {
   await writeWithRetry(file, PNG.sync.write(img));
   ok++;
   console.log(`ok ${file} (${r.w}x${r.h}px)`);
-  rmSync(profile, { recursive: true, force: true });
+  try {
+    rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 150 });
+  } catch {
+    // O navegador pode manter o perfil bloqueado por alguns instantes no Windows.
+  }
 }
 
 stopServer();
-rmSync(work, { recursive: true, force: true });
+try {
+  rmSync(work, { recursive: true, force: true, maxRetries: 5, retryDelay: 150 });
+} catch {
+  // Pasta temporária é descartável.
+}
 console.log(`\n${ok}/${LEVELS.length} imagens geradas em ${OUT}`);

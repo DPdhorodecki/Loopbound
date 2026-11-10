@@ -12,7 +12,6 @@ export const HUD_ESC = { x: 10, y: VIEW_H - 54, w: 44, h: 44 };
 export const HUD_UNDO = { x: 10, y: VIEW_H - 106, w: 44, h: 44 };
 export const HUD_E = { x: 10, y: VIEW_H - 158, w: 44, h: 44 };
 export const HUD_HATCH = { x: 58, y: VIEW_H - 158, w: 44, h: 44 };
-export const HUD_FULLSCREEN = { x: VIEW_W - 54, y: 10, w: 44, h: 44 };
 
 export function drawFrame(p: p5, x: number, y: number, w: number, h: number, active = false): void {
   p.noStroke();
@@ -80,23 +79,6 @@ function drawUndoGlyph(p: p5, x: number, y: number, s: number, color: string): v
   p.rect(x + 3 * s, y + 6 * s, s, s);
   // haste
   p.rect(x + 3 * s, y + 3 * s, 5 * s, s);
-}
-
-/** Cantos de "expandir" do botão de tela cheia. */
-function drawFullscreenGlyph(p: p5, x: number, y: number, s: number, color: string): void {
-  p.noStroke();
-  p.fill(color);
-  const L = 5 * s;
-  const T = s;
-  // quatro cantos
-  p.rect(x, y, L, T);
-  p.rect(x, y, T, L);
-  p.rect(x + 9 * s - L + T, y, L, T);
-  p.rect(x + 9 * s - T, y, T, L);
-  p.rect(x, y + 9 * s - T, L, T);
-  p.rect(x, y + 9 * s - L + T, T, L);
-  p.rect(x + 9 * s - L + T, y + 9 * s - T, L, T);
-  p.rect(x + 9 * s - T, y + 9 * s - L + T, T, L);
 }
 
 /** Tampa/alçapão do HUD: mostra se o item está no inventário. */
@@ -206,26 +188,7 @@ export function drawHud(
     );
   }
 
-  // Tela cheia (topo direito)
-  drawFrame(p, HUD_FULLSCREEN.x, HUD_FULLSCREEN.y, HUD_FULLSCREEN.w, HUD_FULLSCREEN.h, false);
-  drawFullscreenGlyph(
-    p,
-    HUD_FULLSCREEN.x + 13,
-    HUD_FULLSCREEN.y + 10,
-    2,
-    PALETTE.cyan,
-  );
-  drawText(
-    p,
-    'TELA',
-    HUD_FULLSCREEN.x + HUD_FULLSCREEN.w / 2,
-    HUD_FULLSCREEN.y + HUD_FULLSCREEN.h - 9,
-    1,
-    PALETTE.cyanDim,
-    'center',
-  );
-
-  // Gemas (à esquerda do botão de tela cheia)
+  // Gemas (topo direito; o botão de tela cheia é um elemento DOM fixo)
   drawGemIcon(p, VIEW_W - 128, 18, 2);
   drawText(p, `${rt.gems.size}/${rt.level.gems.length}`, VIEW_W - 108, 18, 2, PALETTE.emerald, 'left');
 

@@ -75,6 +75,35 @@ canvas {
   background: rgba(53, 230, 242, 0.7);
 }
 
+#fullscreen {
+  position: fixed;
+  right: 16px;
+  top: 16px;
+  z-index: 30;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--cyan);
+  background: rgba(8, 15, 24, 0.82);
+  border: 2px solid var(--cyan);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+#fullscreen:hover,
+#fullscreen:focus-visible {
+  color: #0b1220;
+  background: var(--cyan);
+  outline: none;
+}
+
+#fullscreen:active {
+  background: rgba(53, 230, 242, 0.7);
+}
+
 #rotate {
   display: none;
   position: fixed;

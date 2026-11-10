@@ -126,35 +126,59 @@ describe('fases', () => {
 
 describe('regras', () => {
   it('empurra caixote e pressiona a placa', () => {
-    const level = parseLevel(LEVELS[1]);
+    const level = parseLevel({
+      ...LEVELS[0],
+      id: 'teste-peso',
+      code: undefined,
+      map: [
+        '#########',
+        '#P.....E#',
+        '#..Cr...#',
+        '#....R..#',
+        '#########',
+      ],
+      maxEchoes: 0,
+      solution: [],
+    });
     const rt = createRuntime(level);
     // anda até empurrar o caixote para a placa
-    for (const dir of ['D', 'R', 'R', 'D', 'D', 'L', 'D', 'R'] as const) {
+    for (const dir of ['D', 'R', 'R'] as const) {
       expect(tryMove(rt, dir).moved).toBe(true);
     }
     expect(pressure(rt).red).toBe(true);
     const gate = level.gates.find((g) => g.color === 'red')!;
-    // atravessa a porta aberta
-    for (const dir of ['U', 'U', 'R'] as const) tryMove(rt, dir);
-    expect(rt.player.x).toBe(4);
+    // contorna o caixote e atravessa o portão aberto
+    for (const dir of ['D', 'R', 'R'] as const) expect(tryMove(rt, dir).moved).toBe(true);
+    expect(rt.player.x).toBe(5);
     expect(rt.player.y).toBe(3);
-    for (const dir of ['R', 'R', 'R'] as const) expect(tryMove(rt, dir).moved).toBe(true);
-    expect(rt.player.x).toBe(7);
-    expect(rt.player.y).toBe(3);
-    expect(gate.x).toBe(7);
+    expect(gate.x).toBe(5);
+    expect(gate.y).toBe(3);
   });
 
   it('eco tem peso em placa', () => {
-    const level = parseLevel(LEVELS[2]);
+    const level = parseLevel({
+      ...LEVELS[0],
+      id: 'teste-eco-placa',
+      code: undefined,
+      map: [
+        '#######',
+        '#P.r.E#',
+        '#.....#',
+        '#######',
+      ],
+      maxEchoes: 1,
+      cycleLength: 10,
+      solution: [],
+    });
     const rt = createRuntime(level);
-    for (const dir of ['D', 'D', 'D', 'R'] as const) tryMove(rt, dir);
+    for (const dir of ['R', 'R'] as const) tryMove(rt, dir);
     expect(pressure(rt).red).toBe(true);
     endCycle(rt, 'tab');
     expect(rt.echoes).toHaveLength(1);
     // no ciclo seguinte o eco chega à placa e o jogador sai de cima dela
-    for (const dir of ['D', 'D', 'D', 'R', 'U'] as const) tryMove(rt, dir);
-    expect(rt.player.x).toBe(2);
-    expect(rt.player.y).toBe(3);
+    for (const dir of ['R', 'R', 'D'] as const) tryMove(rt, dir);
+    expect(rt.player.x).toBe(3);
+    expect(rt.player.y).toBe(2);
     expect(pressure(rt).red).toBe(true);
   });
 
@@ -492,6 +516,21 @@ describe('diversidade das fases', () => {
 
   it('as fases 15 e 16 são diferentes', () => {
     expect(LEVELS[14].map.join('|')).not.toBe(LEVELS[15].map.join('|'));
+  });
+
+  it('todas as 30 fases têm desenhos únicos', () => {
+    const signatures = LEVELS.map((l) => l.map.join('|'));
+    expect(new Set(signatures).size).toBe(LEVELS.length);
+  });
+
+  it('as fases 2–30 têm um cofre selado próprio com passagem, alçapão, bueiro e saída', () => {
+    for (let i = 1; i < LEVELS.length; i++) {
+      const level = parseLevel(LEVELS[i]);
+      expect(level.secrets, `${LEVELS[i].id} sem passagem`).toHaveLength(1);
+      expect(level.secretArrivals, `${LEVELS[i].id} sem chegada secreta`).toHaveLength(1);
+      expect(level.hatch, `${LEVELS[i].id} sem alçapão`).not.toBeNull();
+      expect(level.drains, `${LEVELS[i].id} sem bueiro`).toHaveLength(1);
+    }
   });
 
   it('os mapas têm pelo menos 3 linhas de altura útil (não são um corredor único)', () => {

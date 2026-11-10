@@ -41,7 +41,6 @@ import {
 import {
   HUD_E,
   HUD_ESC,
-  HUD_FULLSCREEN,
   HUD_HINT,
   HUD_TAB,
   HUD_UNDO,
@@ -626,9 +625,7 @@ export class App {
       return;
     }
 
-    if (this.inside(x, y, HUD_FULLSCREEN)) {
-      this.toggleFullscreen();
-    } else if (this.inside(x, y, HUD_TAB)) {
+    if (this.inside(x, y, HUD_TAB)) {
       this.endCycle();
     } else if (this.inside(x, y, HUD_UNDO)) {
       this.doUndo();
@@ -652,7 +649,7 @@ export class App {
     if (this.screen === 'play' && !this.paused) this.enqueue(dir);
   }
 
-  /** Alterna tela cheia (botão do HUD ou tecla F). */
+  /** Alterna tela cheia (botão DOM fixo ou tecla F). */
   toggleFullscreen(): void {
     const doc = typeof document !== 'undefined' ? document : null;
     if (!doc) return;

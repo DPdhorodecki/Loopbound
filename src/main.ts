@@ -13,8 +13,20 @@ void preloadPortraits();
 void preloadComicArt();
 
 const container = document.getElementById('game') as HTMLElement;
+const fullscreenBtn = document.getElementById('fullscreen') as HTMLButtonElement | null;
 
 let app: App | null = null;
+
+if (fullscreenBtn) {
+  fullscreenBtn.addEventListener('click', (event) => {
+    event.preventDefault();
+    app?.toggleFullscreen();
+  });
+  document.addEventListener('fullscreenchange', () => {
+    const active = Boolean(document.fullscreenElement);
+    fullscreenBtn.setAttribute('aria-pressed', String(active));
+  });
+}
 
 function toVirtual(canvas: HTMLCanvasElement, clientX: number, clientY: number) {
   const rect = canvas.getBoundingClientRect();
@@ -87,6 +99,7 @@ new p5(
         instance.shotMode = true;
         instance.hintTimer = 0;
         instance.radioTimer = 0;
+        if (fullscreenBtn) fullscreenBtn.hidden = true;
       }
       if (params.get('pause')) instance.debugPause();
     }
