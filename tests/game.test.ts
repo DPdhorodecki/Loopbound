@@ -603,6 +603,29 @@ describe('paredes decoradas (celas e cabine)', () => {
     });
   });
 
+  it('as fases 13–18 têm esteiras, prensas e tubulação nas paredes sobrantes', () => {
+    const expected = [
+      [33, 9, 15],
+      [21, 7, 10],
+      [54, 14, 20],
+      [21, 7, 10],
+      [51, 13, 20],
+      [21, 7, 10],
+    ];
+    expected.forEach(([belt, press, pipe], i) => {
+      const level = parseLevel(LEVELS[i + 12], mulberry32(0));
+      const counts = { belt: 0, press: 0, pipe: 0 };
+      for (const decor of level.wallDecor) {
+        if (decor.kind === 'belt') counts.belt++;
+        else if (decor.kind === 'press') counts.press++;
+        else if (decor.kind === 'pipe') counts.pipe++;
+      }
+      expect(counts.belt, LEVELS[i + 12].id).toBe(belt);
+      expect(counts.press, LEVELS[i + 12].id).toBe(press);
+      expect(counts.pipe, LEVELS[i + 12].id).toBe(pipe);
+    });
+  });
+
   it('a fase 6 tem uma única cabine de guarda 2×2', () => {
     const level = parseLevel(LEVELS[5], mulberry32(0));
     const guards = level.wallDecor.filter((d) => d.kind === 'guard');

@@ -293,6 +293,114 @@ function decorateTankWall(g: p5.Graphics, theme: SectorTheme, x: number, y: numb
   }
 }
 
+/** Esteira de fábrica: lona com travessas e roletes nas pontas da corrida. */
+function decorateBeltWall(
+  g: p5.Graphics,
+  theme: SectorTheme,
+  x: number,
+  y: number,
+  r: number,
+  openLeft: boolean,
+  openRight: boolean,
+): void {
+  const px = x * TILE;
+  const py = y * TILE;
+
+  // Lona atravessando a parede inteira.
+  g.fill(theme.wallShadow);
+  g.rect(px, py + 4, TILE, 8);
+  g.fill(theme.pipe);
+  g.rect(px, py + 5, TILE, 6);
+
+  // Travessas da esteira.
+  g.fill(theme.accentDim);
+  for (let i = 0; i < 5; i++) g.rect(px + 1 + i * 3, py + 5, 1, 6);
+
+  // Bordas.
+  g.fill(theme.wallCapHi);
+  g.rect(px, py + 4, TILE, 1);
+  g.rect(px, py + 11, TILE, 1);
+
+  // Roletes nas pontas da corrida.
+  if (openLeft) {
+    g.fill(theme.accent);
+    g.rect(px, py + 6, 2, 4);
+  }
+  if (openRight) {
+    g.fill(theme.accent);
+    g.rect(px + 14, py + 6, 2, 4);
+  }
+
+  // Peça correndo na esteira.
+  if (r % 3 === 0) {
+    g.fill(theme.accent);
+    g.rect(px + 6, py + 6, 3, 3);
+    g.fill(theme.wallCapHi);
+    g.rect(px + 6, py + 6, 3, 1);
+  }
+}
+
+/** Prensa: moldura pesada, pistão descendo e bigorna com faíscas. */
+function decoratePressWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number, r: number): void {
+  const px = x * TILE;
+  const py = y * TILE;
+
+  // Nicho rebaixado.
+  g.fill(theme.wallShadow);
+  g.rect(px + 2, py + 2, 12, 12);
+  g.fill('#120C07');
+  g.rect(px + 3, py + 3, 10, 10);
+
+  // Moldura da prensa.
+  g.fill(theme.wallCap);
+  g.rect(px + 3, py + 3, 10, 2);
+  g.rect(px + 3, py + 11, 10, 2);
+  g.rect(px + 3, py + 3, 2, 10);
+  g.rect(px + 11, py + 3, 2, 10);
+
+  // Pistão e bigorna.
+  g.fill(theme.wallCapHi);
+  g.rect(px + 7, py + 5, 2, 4);
+  g.fill(theme.accent);
+  g.rect(px + 6, py + 9, 4, 2);
+  g.fill(theme.accentDim);
+  g.rect(px + 5, py + 12, 6, 1);
+
+  // Faíscas.
+  if (r % 2 === 0) {
+    g.fill(theme.accent);
+    g.rect(px + 4, py + 10, 1, 1);
+    g.rect(px + 11, py + 11, 1, 1);
+  }
+}
+
+/** Tubulação: cano vertical com flanges e válvula. */
+function decoratePipeWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number, r: number): void {
+  const px = x * TILE;
+  const py = y * TILE;
+
+  // Sombra do cano.
+  g.fill(theme.wallShadow);
+  g.rect(px + 4, py, 8, TILE);
+
+  // Cano e brilho.
+  g.fill(theme.pipe);
+  g.rect(px + 6, py, 4, TILE);
+  g.fill(theme.wallCapHi);
+  g.rect(px + 6, py, 1, TILE);
+
+  // Flanges.
+  g.fill(theme.accentDim);
+  g.rect(px + 5, py + 4, 6, 1);
+  g.rect(px + 5, py + 11, 6, 1);
+
+  // Válvula.
+  if (r % 3 === 0) {
+    g.fill(theme.accent);
+    g.rect(px + 9, py + 7, 2, 2);
+  }
+}
+
 /** Faixas de perigo em volta do vazio. */
 function decorateVoidEdge(g: p5.Graphics, theme: SectorTheme, level: Level, x: number, y: number): void {
   const px = x * TILE;
@@ -428,8 +536,13 @@ export function bakeRoom(p: p5, level: Level, sector = 1): p5.Graphics {
     }
   }
 
-  // Enfeites de parede (celas/cabine): desenhados depois da base para não
-  // serem cobertos pelos tiles vizinhos. A colisão continua sendo parede.
+  // Enfeites de parede (celas/cabine/laboratório/fábrica): desenhados depois da
+  // base para não serem cobertos pelos tiles vizinhos. A colisão continua
+  // sendo parede.
+  const belts = new Set<string>();
+  for (const decor of level.wallDecor) {
+    if (decor.kind === 'belt') belts.add(`${decor.x},${decor.y}`);
+  }
   for (const decor of level.wallDecor) {
     if (decor.kind === 'cell') {
       decorateCellWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
@@ -437,6 +550,20 @@ export function bakeRoom(p: p5, level: Level, sector = 1): p5.Graphics {
       decorateLabWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
     } else if (decor.kind === 'tank') {
       decorateTankWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
+    } else if (decor.kind === 'belt') {
+      decorateBeltWall(
+        g,
+        theme,
+        decor.x,
+        decor.y,
+        hash(decor.x, decor.y),
+        belts.has(`${decor.x - 1},${decor.y}`),
+        belts.has(`${decor.x + 1},${decor.y}`),
+      );
+    } else if (decor.kind === 'press') {
+      decoratePressWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
+    } else if (decor.kind === 'pipe') {
+      decoratePipeWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
     } else {
       decorateGuardCabin(g, theme, decor.x, decor.y);
     }
