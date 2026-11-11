@@ -12,6 +12,7 @@
     "sprite": "vite-node scripts/preview.ts",
     "tighten": "vite-node scripts/tighten.ts",
     "audit": "vite-node scripts/audit.ts && vite-node scripts/mechanics-audit.ts",
+    "fluxograma": "vite-node scripts/fluxograma.ts",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "server": "tsx watch server/index.ts",

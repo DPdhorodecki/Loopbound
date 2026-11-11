@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1000" viewBox="0 0 1500 1000">
   <defs>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
       <feGaussianBlur in="SourceAlpha" stdDeviation="6" />
@@ -12,212 +12,222 @@
       </feMerge>
     </filter>
     <style>
-      .bg { fill: #ffffff; }
-      .grid { stroke: #e8e8e8; stroke-width: 1; }
+      .bg { fill: #FFFFFF; }
+      .grid { stroke: #E8E8E8; stroke-width: 1; }
       .box { fill: #5B5F97; stroke: #3A3F70; stroke-width: 2; filter: url(#shadow); }
-      .box-text { fill: #ffffff; font-family: 'Courier New', monospace; font-weight: bold; font-size: 18px; text-anchor: middle; }
-      .arrow { stroke: #000000; stroke-width: 5; fill: #000000; stroke-linecap: round; stroke-linejoin: round; }
+      .box-text { fill: #FFFFFF; font-family: 'Courier New', monospace; font-weight: bold; font-size: 17px; text-anchor: middle; }
+      .box-text.small { font-size: 15px; }
+      .arrow { stroke: #000000; stroke-width: 5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .arrow-head { fill: #000000; stroke: none; }
       .banner { fill: #3A3F70; }
-      .banner-text { fill: #ffffff; font-family: 'Courier New', monospace; font-weight: bold; font-size: 16px; text-anchor: middle; dominant-baseline: middle; }
+      .banner-text { fill: #FFFFFF; font-family: 'Courier New', monospace; font-weight: bold; font-size: 16px; text-anchor: middle; dominant-baseline: middle; }
       .title { fill: #3A3F70; font-family: 'Courier New', monospace; font-weight: bold; font-size: 24px; text-anchor: middle; }
-      .diamond { fill: #5B5F97; stroke: #3A3F70; stroke-width: 2; filter: url(#shadow); }
-      .diamond-text { fill: #ffffff; font-family: 'Courier New', monospace; font-weight: bold; font-size: 16px; text-anchor: middle; }
+      .note { fill: #3A3F70; font-family: 'Courier New', monospace; font-weight: bold; font-size: 15px; }
+      .note.small { font-size: 14px; }
     </style>
   </defs>
 
   <!-- Fundo -->
-  <rect class="bg" width="1200" height="900" />
+  <rect class="bg" width="1500" height="1000" />
 
-  <!-- Grade -->
   <g class="grid">
-    <line x1="0" y1="40" x2="1200" y2="40" />
-    <line x1="0" y1="80" x2="1200" y2="80" />
-    <line x1="0" y1="120" x2="1200" y2="120" />
-    <line x1="0" y1="160" x2="1200" y2="160" />
-    <line x1="0" y1="200" x2="1200" y2="200" />
-    <line x1="0" y1="240" x2="1200" y2="240" />
-    <line x1="0" y1="280" x2="1200" y2="280" />
-    <line x1="0" y1="320" x2="1200" y2="320" />
-    <line x1="0" y1="360" x2="1200" y2="360" />
-    <line x1="0" y1="400" x2="1200" y2="400" />
-    <line x1="0" y1="440" x2="1200" y2="440" />
-    <line x1="0" y1="480" x2="1200" y2="480" />
-    <line x1="0" y1="520" x2="1200" y2="520" />
-    <line x1="0" y1="560" x2="1200" y2="560" />
-    <line x1="0" y1="600" x2="1200" y2="600" />
-    <line x1="0" y1="640" x2="1200" y2="640" />
-    <line x1="0" y1="680" x2="1200" y2="680" />
-    <line x1="0" y1="720" x2="1200" y2="720" />
-    <line x1="0" y1="760" x2="1200" y2="760" />
-    <line x1="0" y1="800" x2="1200" y2="800" />
-    <line x1="0" y1="840" x2="1200" y2="840" />
-    <line x1="0" y1="880" x2="1200" y2="880" />
-    <line x1="40" y1="0" x2="40" y2="900" />
-    <line x1="80" y1="0" x2="80" y2="900" />
-    <line x1="120" y1="0" x2="120" y2="900" />
-    <line x1="160" y1="0" x2="160" y2="900" />
-    <line x1="200" y1="0" x2="200" y2="900" />
-    <line x1="240" y1="0" x2="240" y2="900" />
-    <line x1="280" y1="0" x2="280" y2="900" />
-    <line x1="320" y1="0" x2="320" y2="900" />
-    <line x1="360" y1="0" x2="360" y2="900" />
-    <line x1="400" y1="0" x2="400" y2="900" />
-    <line x1="440" y1="0" x2="440" y2="900" />
-    <line x1="480" y1="0" x2="480" y2="900" />
-    <line x1="520" y1="0" x2="520" y2="900" />
-    <line x1="560" y1="0" x2="560" y2="900" />
-    <line x1="600" y1="0" x2="600" y2="900" />
-    <line x1="640" y1="0" x2="640" y2="900" />
-    <line x1="680" y1="0" x2="680" y2="900" />
-    <line x1="720" y1="0" x2="720" y2="900" />
-    <line x1="760" y1="0" x2="760" y2="900" />
-    <line x1="760" y1="0" x2="760" y2="900" />
-    <line x1="800" y1="0" x2="800" y2="900" />
-    <line x1="840" y1="0" x2="840" y2="900" />
-    <line x1="880" y1="0" x2="880" y2="900" />
-    <line x1="920" y1="0" x2="920" y2="900" />
-    <line x1="960" y1="0" x2="960" y2="900" />
-    <line x1="1000" y1="0" x2="1000" y2="900" />
-    <line x1="1040" y1="0" x2="1040" y2="900" />
-    <line x1="1080" y1="0" x2="1080" y2="900" />
-    <line x1="1120" y1="0" x2="1120" y2="900" />
-    <line x1="1160" y1="0" x2="1160" y2="900" />
+    <line x1="40" y1="0" x2="40" y2="1000" />
+    <line x1="80" y1="0" x2="80" y2="1000" />
+    <line x1="120" y1="0" x2="120" y2="1000" />
+    <line x1="160" y1="0" x2="160" y2="1000" />
+    <line x1="200" y1="0" x2="200" y2="1000" />
+    <line x1="240" y1="0" x2="240" y2="1000" />
+    <line x1="280" y1="0" x2="280" y2="1000" />
+    <line x1="320" y1="0" x2="320" y2="1000" />
+    <line x1="360" y1="0" x2="360" y2="1000" />
+    <line x1="400" y1="0" x2="400" y2="1000" />
+    <line x1="440" y1="0" x2="440" y2="1000" />
+    <line x1="480" y1="0" x2="480" y2="1000" />
+    <line x1="520" y1="0" x2="520" y2="1000" />
+    <line x1="560" y1="0" x2="560" y2="1000" />
+    <line x1="600" y1="0" x2="600" y2="1000" />
+    <line x1="640" y1="0" x2="640" y2="1000" />
+    <line x1="680" y1="0" x2="680" y2="1000" />
+    <line x1="720" y1="0" x2="720" y2="1000" />
+    <line x1="760" y1="0" x2="760" y2="1000" />
+    <line x1="800" y1="0" x2="800" y2="1000" />
+    <line x1="840" y1="0" x2="840" y2="1000" />
+    <line x1="880" y1="0" x2="880" y2="1000" />
+    <line x1="920" y1="0" x2="920" y2="1000" />
+    <line x1="960" y1="0" x2="960" y2="1000" />
+    <line x1="1000" y1="0" x2="1000" y2="1000" />
+    <line x1="1040" y1="0" x2="1040" y2="1000" />
+    <line x1="1080" y1="0" x2="1080" y2="1000" />
+    <line x1="1120" y1="0" x2="1120" y2="1000" />
+    <line x1="1160" y1="0" x2="1160" y2="1000" />
+    <line x1="1200" y1="0" x2="1200" y2="1000" />
+    <line x1="1240" y1="0" x2="1240" y2="1000" />
+    <line x1="1280" y1="0" x2="1280" y2="1000" />
+    <line x1="1320" y1="0" x2="1320" y2="1000" />
+    <line x1="1360" y1="0" x2="1360" y2="1000" />
+    <line x1="1400" y1="0" x2="1400" y2="1000" />
+    <line x1="1440" y1="0" x2="1440" y2="1000" />
+    <line x1="1480" y1="0" x2="1480" y2="1000" />
+    <line x1="0" y1="40" x2="1500" y2="40" />
+    <line x1="0" y1="80" x2="1500" y2="80" />
+    <line x1="0" y1="120" x2="1500" y2="120" />
+    <line x1="0" y1="160" x2="1500" y2="160" />
+    <line x1="0" y1="200" x2="1500" y2="200" />
+    <line x1="0" y1="240" x2="1500" y2="240" />
+    <line x1="0" y1="280" x2="1500" y2="280" />
+    <line x1="0" y1="320" x2="1500" y2="320" />
+    <line x1="0" y1="360" x2="1500" y2="360" />
+    <line x1="0" y1="400" x2="1500" y2="400" />
+    <line x1="0" y1="440" x2="1500" y2="440" />
+    <line x1="0" y1="480" x2="1500" y2="480" />
+    <line x1="0" y1="520" x2="1500" y2="520" />
+    <line x1="0" y1="560" x2="1500" y2="560" />
+    <line x1="0" y1="600" x2="1500" y2="600" />
+    <line x1="0" y1="640" x2="1500" y2="640" />
+    <line x1="0" y1="680" x2="1500" y2="680" />
+    <line x1="0" y1="720" x2="1500" y2="720" />
+    <line x1="0" y1="760" x2="1500" y2="760" />
+    <line x1="0" y1="800" x2="1500" y2="800" />
+    <line x1="0" y1="840" x2="1500" y2="840" />
+    <line x1="0" y1="880" x2="1500" y2="880" />
+    <line x1="0" y1="920" x2="1500" y2="920" />
+    <line x1="0" y1="960" x2="1500" y2="960" />
   </g>
 
-  <!-- Título -->
-  <text class="title" x="600" y="40">FLUXOGRAMA — LOOPBOUND: KENNEDYTO E A FUGA</text>
-
   <!-- Banner lateral -->
-  <rect class="banner" x="0" y="0" width="50" height="900" />
-  <text class="banner-text" x="25" y="200" transform="rotate(-90 25,200)">INÍCIO · MENU · TUTORIAL · JOGAR · VITÓRIA · CRÉDITOS</text>
+  <rect class="banner" x="0" y="0" width="50" height="1000" />
+  <text class="banner-text" x="25" y="500" transform="rotate(-90 25,500)">INÍCIO · MENU · HISTÓRIA · TUTORIAL · JOGAR · SETORES · VITÓRIA · CRÉDITOS</text>
 
-  <!-- ============ LINHA 1: Título → Login → Menu ============ -->
-  <!-- Tela Título -->
-  <rect class="box" x="100" y="120" width="220" height="60" rx="12" />
-  <text class="box-text" x="210" y="150">TELA TÍTULO</text>
+  <!-- Títulos e notas -->
+  <text class="title" x="750" y="40" text-anchor="middle">FLUXOGRAMA — LOOPBOUND: KENNEDYTO E A FUGA DA INSTALAÇÃO ALIENÍGENA</text>
+  <text class="note" x="845" y="222" text-anchor="middle">MENU → TUTORIAL / HISTÓRIA / FASES</text>
+  <text class="note" x="470" y="248" text-anchor="middle">QUALQUER UM DESTES VOLTA AO MENU</text>
+  <text class="note" x="1190" y="78" text-anchor="start">SETORES E DECORAÇÃO DAS PAREDES</text>
+  <text class="note small" x="1190" y="660" text-anchor="start">LEGENDA DE PAREDE (SÓ DESENHO)</text>
+  <text class="note small" x="1190" y="682" text-anchor="start">| CELA   ^ BANCADA   &amp; TANQUE</text>
+  <text class="note small" x="1190" y="704" text-anchor="start">/ ESTEIRA   + PRENSA   - TUBO</text>
+  <text class="note small" x="1190" y="726" text-anchor="start">w ESCRITÓRIO   f SERVIDOR   m MESA</text>
+  <text class="note small" x="1190" y="748" text-anchor="start">a ALIENÍGENA   h PEÇA DE NAVE</text>
+  <text class="note small" x="1190" y="770" text-anchor="start">p TRABALHANDO   t BRAÇO   F BARREIRA</text>
+  <text class="note small" x="1190" y="810" text-anchor="start">MECÂNICAS</text>
+  <text class="note small" x="1190" y="832" text-anchor="start">PLACA · ALAVANCA · BOTÃO · DUTO</text>
+  <text class="note small" x="1190" y="854" text-anchor="start">PASSAGEM SECRETA · ALÇAPÃO</text>
+  <text class="note small" x="1190" y="876" text-anchor="start">BUEIRO · TELA DE CÓDIGO (SENHA)</text>
+  <text class="note small" x="1190" y="898" text-anchor="start">GEMA · CHAVE · PORTA · VAZIO</text>
 
-  <!-- Seta Título → Login -->
-  <path class="arrow" d="M 320 150 L 370 150" />
-  <path class="arrow" d="M 370 150 L 392 142 L 392 158 Z" />
+  <!-- Ligações -->
+  <path class="arrow" d="M 260 128 L 290 128" />
+  <path class="arrow-head" d="M 290 128 L 269.7 136.6 L 269.7 119.4 Z" />
+  <path class="arrow" d="M 480 128 L 510 135" />
+  <path class="arrow-head" d="M 510 135 L 488.3 138.7 L 492.2 122.1 Z" />
+  <path class="arrow" d="M 690 135 L 730 128" />
+  <path class="arrow-head" d="M 730 128 L 711.5 139.9 L 708.6 123.1 Z" />
+  <path class="arrow" d="M 600 180 L 600 222 L 280 222 L 280 196" />
+  <path class="arrow-head" d="M 280 196 L 288.6 216.3 L 271.4 216.3 Z" />
+  <text class="note" x="314" y="216" text-anchor="middle">NÃO</text>
+  <path class="arrow" d="M 185 196 L 185 170 L 330 170 L 330 156" />
+  <path class="arrow-head" d="M 330 156 L 338.6 176.3 L 321.4 176.3 Z" />
+  <text class="note" x="330" y="188" text-anchor="middle">DEPOIS</text>
+  <path class="arrow" d="M 845 156 L 845 270 L 185 270" />
+  <path class="arrow-head" d="M 185 270 L 205.3 261.4 L 205.3 278.6 Z" />
+  <path class="arrow" d="M 185 270 L 185 300" />
+  <path class="arrow-head" d="M 185 300 L 176.4 279.7 L 193.6 279.7 Z" />
+  <path class="arrow" d="M 440 270 L 440 300" />
+  <path class="arrow-head" d="M 440 300 L 431.4 279.7 L 448.6 279.7 Z" />
+  <path class="arrow" d="M 695 270 L 695 300" />
+  <path class="arrow-head" d="M 695 300 L 686.4 279.7 L 703.6 279.7 Z" />
+  <path class="arrow" d="M 695 364 L 695 392 L 200 392 L 200 420" />
+  <path class="arrow-head" d="M 200 420 L 191.4 399.7 L 208.6 399.7 Z" />
+  <path class="arrow" d="M 310 452 L 340 452" />
+  <path class="arrow-head" d="M 340 452 L 319.7 460.6 L 319.7 443.4 Z" />
+  <path class="arrow" d="M 640 452 L 700 500" />
+  <path class="arrow-head" d="M 700 500 L 678.8 494.0 L 689.5 480.7 Z" />
+  <path class="arrow" d="M 400 494 L 400 522 L 200 522 L 200 540" />
+  <path class="arrow-head" d="M 200 540 L 191.4 519.7 L 208.6 519.7 Z" />
+  <text class="note" x="200" y="508" text-anchor="middle">TAB</text>
+  <path class="arrow" d="M 310 572 L 330 572 L 330 494" />
+  <path class="arrow-head" d="M 330 494 L 338.6 514.3 L 321.4 514.3 Z" />
+  <text class="note" x="330" y="558" text-anchor="middle">ECO</text>
+  <path class="arrow" d="M 900 545 L 1050 545 L 1050 700" />
+  <path class="arrow-head" d="M 1050 700 L 1041.4 679.7 L 1058.6 679.7 Z" />
+  <text class="note" x="1050" y="531" text-anchor="middle">NÃO</text>
+  <path class="arrow" d="M 930 738 L 870 738 L 870 640 L 640 640 L 640 494" />
+  <path class="arrow-head" d="M 640 494 L 648.6 514.3 L 631.4 514.3 Z" />
+  <path class="arrow" d="M 800 620 L 800 660 L 720 660 L 720 700" />
+  <path class="arrow-head" d="M 720 700 L 711.4 679.7 L 728.6 679.7 Z" />
+  <text class="note" x="674" y="656" text-anchor="middle">SIM</text>
+  <path class="arrow" d="M 600 732 L 570 732" />
+  <path class="arrow-head" d="M 570 732 L 590.3 723.4 L 590.3 740.6 Z" />
+  <path class="arrow" d="M 390 764 L 390 800 L 270 800 L 270 860" />
+  <path class="arrow-head" d="M 270 860 L 261.4 839.7 L 278.6 839.7 Z" />
+  <text class="note" x="270" y="786" text-anchor="middle">ÚLTIMA FASE (30)</text>
+  <path class="arrow" d="M 420 892 L 460 892" />
+  <path class="arrow-head" d="M 460 892 L 439.7 900.6 L 439.7 883.4 Z" />
 
-  <!-- Login/Cadastro -->
-  <rect class="box" x="380" y="120" width="240" height="60" rx="12" />
-  <text class="box-text" x="500" y="150">LOGIN / CADASTRO</text>
-
-  <!-- Seta Login → Menu -->
-  <path class="arrow" d="M 620 150 L 670 150" />
-  <path class="arrow" d="M 670 150 L 692 142 L 692 158 Z" />
-
-  <!-- Menu Principal -->
-  <rect class="box" x="680" y="120" width="240" height="60" rx="12" />
-  <text class="box-text" x="800" y="150">MENU PRINCIPAL</text>
-
-  <!-- ============ LINHA 2: Decisão "Já tem conta?" ============ -->
-  <!-- Losango decisão -->
-  <polygon class="diamond" points="500,260 590,260 590,400 500,400 410,400 410,260" />
-  <text class="diamond-text" x="500" y="320">JÁ TEM</text>
-  <text class="diamond-text" x="500" y="340">CONTA?</text>
-
-  <!-- Seta não → Cadastrar -->
-  <path class="arrow" d="M 590 330 L 800 330" />
-  <path class="arrow" d="M 800 330 L 822 322 L 822 338 Z" />
-
-  <!-- Cadastrar -->
-  <rect class="box" x="810" y="300" width="220" height="60" rx="12" />
-  <text class="box-text" x="920" y="330">CADASTRAR</text>
-
-  <!-- Seta Cadastrar → Menu (seta longa) -->
-  <path class="arrow" d="M 1030 330 L 960 410" />
-  <path class="arrow" d="M 960 410 L 982 402 L 938 402 L 960 418 Z" />
-
-  <!-- Menu (direita) -->
-  <rect class="box" x="680" y="420" width="240" height="60" rx="12" />
-  <text class="box-text" x="800" y="450">MENU</text>
-
-  <!-- Seta sim → Menu -->
-  <path class="arrow" d="M 500 330 L 700 410" />
-  <path class="arrow" d="M 700 410 L 722 402 L 678 402 L 700 418 Z" />
-
-  <!-- ============ LINHA 3: Escolher fase → Iniciar ============ -->
-  <rect class="box" x="100" y="440" width="220" height="60" rx="12" />
-  <text class="box-text" x="210" y="470">ESCOLHER FASE</text>
-
-  <path class="arrow" d="M 320 470 L 370 470" />
-  <path class="arrow" d="M 370 470 L 392 462 L 392 478 Z" />
-
-  <rect class="box" x="380" y="440" width="240" height="60" rx="12" />
-  <text class="box-text" x="500" y="470">INICIAR FASE</text>
-
-  <!-- ============ LINHA 4: Loop de jogo ============ -->
-  <rect class="box" x="100" y="540" width="340" height="60" rx="12" />
-  <text class="box-text" x="270" y="570">LOOP DE JOGO:</text>
-  <text class="box-text" x="270" y="596">INPUT → MOVER → ECO REGISTRA</text>
-
-  <path class="arrow" d="M 440 570 L 500 570" />
-  <path class="arrow" d="M 500 570 L 522 562 L 522 578 Z" />
-
-  <!-- Losango "Ciclo acabou?" -->
-  <polygon class="diamond" points="520,510 600,510 600,630 520,630 440,630 440,510" />
-  <text class="diamond-text" x="520" y="550">CICLO</text>
-  <text class="diamond-text" x="520" y="570">ACABOU?</text>
-
-  <!-- Não → volta para loop -->
-  <path class="arrow" d="M 560 570 L 720 570" />
-  <path class="arrow" d="M 720 570 L 742 562 L 742 578 Z" />
-  <path class="arrow" d="M 720 570 L 720 500" />
-  <path class="arrow" d="M 720 500 L 702 482 L 738 482 Z" />
-  <path class="arrow" d="M 720 500 L 420 500" />
-  <path class="arrow" d="M 420 500 L 402 482 L 438 482 Z" />
-  <path class="arrow" d="M 420 500 L 420 570" />
-  <path class="arrow" d="M 420 570 L 402 588 L 438 588 Z" />
-
-  <!-- Sim → Grava eco -->
-  <path class="arrow" d="M 600 570 L 780 570" />
-  <path class="arrow" d="M 780 570 L 802 562 L 802 578 Z" />
-
-  <rect class="box" x="790" y="540" width="220" height="60" rx="12" />
-  <text class="box-text" x="900" y="570">GRAVAR ECO</text>
-
-  <!-- ============ LINHA 5: Decisão "Venceu?" ============ -->
-  <polygon class="diamond" points="600,660 690,660 690,800 600,800 510,800 510,660" />
-  <text class="diamond-text" x="600" y="700">VENCEU?</text>
-
-  <!-- Não → Reiniciar fase -->
-  <path class="arrow" d="M 690 730 L 850 730" />
-  <path class="arrow" d="M 850 730 L 872 722 L 872 738 Z" />
-
-  <rect class="box" x="860" y="700" width="200" height="60" rx="12" />
-  <text class="box-text" x="960" y="730">REINICIAR FASE</text>
-
-  <!-- Seta Reiniciar → Loop -->
-  <path class="arrow" d="M 1060 730 L 520 730" />
-  <path class="arrow" d="M 520 730 L 502 722 L 538 722 Z" />
-  <path class="arrow" d="M 520 730 L 520 500" />
-  <path class="arrow" d="M 520 500 L 502 482 L 538 482 Z" />
-
-  <!-- Sim → Tela vitória -->
-  <path class="arrow" d="M 690 730 L 300 730" />
-  <path class="arrow" d="M 300 730 L 278 722 L 322 722 Z" />
-
-  <rect class="box" x="100" y="700" width="240" height="60" rx="12" />
-  <text class="box-text" x="220" y="730">TELA VITÓRIA</text>
-
-  <path class="arrow" d="M 340 730 L 460 730" />
-  <path class="arrow" d="M 460 730 L 482 722 L 482 738 Z" />
-
-  <rect class="box" x="470" y="700" width="240" height="60" rx="12" />
-  <text class="box-text" x="590" y="730">PRÓXIMA FASE</text>
-  <text class="box-text" x="590" y="756">OU FIM</text>
-
-  <!-- ============ LINHA 6: Pós-créditos ============ -->
-  <rect class="box" x="470" y="800" width="340" height="60" rx="12" />
-  <text class="box-text" x="640" y="825">PÓS-CRÉDITOS:</text>
-  <text class="box-text" x="640" y="851">CHUCHUTY AINDA</text>
-  <text class="box-text" x="640" y="877">ESTÁ VIVO</text>
-
-  <path class="arrow" d="M 640 830 L 740 830" />
-  <path class="arrow" d="M 740 830 L 762 822 L 762 838 Z" />
-
-  <rect class="box" x="750" y="800" width="140" height="60" rx="30" />
-  <text class="box-text" x="820" y="830">FIM</text>
+  <!-- Caixas -->
+  <rect class="box" x="90" y="100" width="170" height="56" rx="12" />
+  <text class="box-text" x="175" y="128">TELA TÍTULO</text>
+  <rect class="box" x="290" y="100" width="190" height="56" rx="12" />
+  <text class="box-text" x="385" y="128">LOGIN / CADASTRO</text>
+  <polygon class="box" points="600,90 690,90 690,180 600,180 510,180 510,90" />
+  <text class="box-text" x="600" y="135">JÁ TEM CONTA?</text>
+  <rect class="box" x="730" y="100" width="230" height="56" rx="12" />
+  <text class="box-text" x="845" y="128">MENU PRINCIPAL</text>
+  <rect class="box" x="90" y="196" width="190" height="52" rx="12" />
+  <text class="box-text" x="185" y="222">CADASTRAR</text>
+  <rect class="box" x="90" y="300" width="190" height="64" rx="12" />
+  <text class="box-text" x="185" y="320">TUTORIAL</text>
+  <text class="box-text" x="185" y="344">8 SALAS</text>
+  <rect class="box" x="320" y="300" width="270" height="64" rx="12" />
+  <text class="box-text" x="455" y="320">HISTÓRIA</text>
+  <text class="box-text" x="455" y="344">VOLTAR · PRÓXIMA · PULAR</text>
+  <rect class="box" x="600" y="300" width="190" height="64" rx="12" />
+  <text class="box-text" x="695" y="320">ESCOLHER FASE</text>
+  <text class="box-text" x="695" y="344">(MENU FASES)</text>
+  <rect class="box" x="90" y="420" width="220" height="64" rx="12" />
+  <text class="box-text" x="200" y="440">CARREGAR SETOR</text>
+  <text class="box-text" x="200" y="464">TEMA + DECORAÇÃO</text>
+  <rect class="box" x="340" y="410" width="300" height="84" rx="12" />
+  <text class="box-text small" x="490" y="432">LOOP DE JOGO</text>
+  <text class="box-text small" x="490" y="452">MOVER · INTERAGIR (E)</text>
+  <text class="box-text small" x="490" y="472">HUD: TAB · Z · H · ESC · TELA</text>
+  <polygon class="box" points="800,470 900,470 900,620 800,620 700,620 700,470" />
+  <text class="box-text" x="800" y="545">VENCEU?</text>
+  <rect class="box" x="90" y="540" width="220" height="64" rx="12" />
+  <text class="box-text" x="200" y="560">TAB: GRAVAR ECO</text>
+  <text class="box-text" x="200" y="584">O ECO REPETE O CAMINHO</text>
+  <rect class="box" x="930" y="700" width="240" height="76" rx="12" />
+  <text class="box-text small" x="1050" y="718">BUEIRO: CAPTURA</text>
+  <text class="box-text small" x="1050" y="738">VAZIO / PASSOS: MORTE</text>
+  <text class="box-text small" x="1050" y="758">REINICIA A FASE</text>
+  <rect class="box" x="600" y="700" width="240" height="64" rx="12" />
+  <text class="box-text" x="720" y="720">TELA DE VITÓRIA</text>
+  <text class="box-text" x="720" y="744">PROGRESSO SALVO</text>
+  <rect class="box" x="330" y="700" width="240" height="64" rx="12" />
+  <text class="box-text" x="450" y="720">PRÓXIMA FASE</text>
+  <text class="box-text" x="450" y="744">(HISTÓRIA DO SETOR)</text>
+  <rect class="box" x="120" y="860" width="300" height="64" rx="12" />
+  <text class="box-text" x="270" y="880">FASE 30 → PRÓS-CRÉDITOS</text>
+  <text class="box-text" x="270" y="904">CHUCHUTY AINDA ESTÁ VIVO</text>
+  <rect class="box" x="460" y="860" width="140" height="64" rx="32" />
+  <text class="box-text" x="530" y="892">FIM</text>
+  <rect class="box" x="1190" y="110" width="300" height="80" rx="12" />
+  <text class="box-text" x="1340" y="138">SETOR 1 · CELA (1-6)</text>
+  <text class="box-text" x="1340" y="162">CELAS + CABINE DE GUARDA</text>
+  <rect class="box" x="1190" y="210" width="300" height="90" rx="12" />
+  <text class="box-text small" x="1340" y="235">SETOR 2 · LAB (7-12)</text>
+  <text class="box-text small" x="1340" y="255">FRASCOS · MICROSCOPIOS</text>
+  <text class="box-text small" x="1340" y="275">TANQUES DE ESPÉCIE</text>
+  <rect class="box" x="1190" y="320" width="300" height="90" rx="12" />
+  <text class="box-text small" x="1340" y="345">SETOR 3 · FÁBRICA (13-18)</text>
+  <text class="box-text small" x="1340" y="365">ESTEIRAS · PRENSAS</text>
+  <text class="box-text small" x="1340" y="385">TUBULAÇÃO</text>
+  <rect class="box" x="1190" y="430" width="300" height="90" rx="12" />
+  <text class="box-text small" x="1340" y="455">SETOR 4 · COMANDO (19-24)</text>
+  <text class="box-text small" x="1340" y="475">ESCRITÓRIOS · SERVIDORES</text>
+  <text class="box-text small" x="1340" y="495">MESAS · ALIENÍGENAS</text>
+  <rect class="box" x="1190" y="540" width="300" height="90" rx="12" />
+  <text class="box-text small" x="1340" y="565">SETOR 5 · HANGAR (25-30)</text>
+  <text class="box-text small" x="1340" y="585">PEÇAS DE NAVE</text>
+  <text class="box-text small" x="1340" y="605">BRAÇOS ROBÓTICOS · BARREIRA</text>
 </svg>

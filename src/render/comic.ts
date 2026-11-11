@@ -16,6 +16,7 @@ import radioSrc from '../assets/comic/radio.png';
 import escapeSrc from '../assets/comic/escape.png';
 import landingSrc from '../assets/comic/landing.png';
 import signalSrc from '../assets/comic/signal.png';
+import capsuleSrc from '../assets/comic/capsule.png';
 
 const W = 640;
 const H = 360;
@@ -179,6 +180,18 @@ const PHOTOS: Partial<Record<ComicPanelId, string>> = {
   escape: escapeSrc,
   landing: landingSrc,
   signal: signalSrc,
+  capsule: capsuleSrc,
+};
+
+/**
+ * Foco horizontal do recorte (cover) por painel: 0 = canto esquerdo,
+ * 0.5 = centro (padrão), 1 = canto direito.
+ *
+ * A cena da fuga do hangar é panorâmica (1622×534) e, centralizada, cortava
+ * o batedor; com 0.21 cabem o batedor e a cápsula inteira.
+ */
+const PHOTOS_FOCUS: Partial<Record<ComicPanelId, number>> = {
+  capsule: 0.21,
 };
 
 const images = new Map<string, HTMLImageElement>();
@@ -233,7 +246,8 @@ function drawComicPanel(ctx: Ctx, id: ComicPanelId): void {
     let sh = ih;
     if (srcRatio > target) {
       sw = ih * target;
-      sx = (iw - sw) / 2;
+      const focus = PHOTOS_FOCUS[id] ?? 0.5;
+      sx = (iw - sw) * focus;
     } else {
       sh = iw / target;
       sy = (ih - sh) * 0.32; // prioriza o rosto/tronco

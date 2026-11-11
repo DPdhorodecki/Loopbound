@@ -125,6 +125,7 @@ npx vite-node scripts/rebuild-levels.ts  # resolve e regrava as fases 13–30 (s
 npx vite-node scripts/enlarge-levels.ts  # amplia e decora as 30 fases (rodar uma vez)
 npx vite-node scripts/export-levels.ts   # exporta um PNG por fase para a pasta de saída
 npm run audit        # audita design (caminho livre, ciclo prematuro, folga) e mecânicas órfãs/não usadas
+npm run fluxograma   # regenera public/fluxograma-jogo.svg a partir do modelo
 npm run icons        # regenera os ícones do PWA
 npm run sprite       # gera um PNG de preview do Kennedyto
 ```
@@ -139,19 +140,20 @@ Hooks de debug: `?level=3&moves=DDDR|DDRRRR` (o `|` encerra o ciclo) e `&pause=1
 
 ```
 README.md                apresentação + GDD completo (regras, arte, fases, arquitetura)
-public/fluxograma-jogo.svg  fluxograma completo do jogo (pixel art)
+public/fluxograma-jogo.svg  fluxograma completo do jogo (pixel art, gerado por `npm run fluxograma`)
 render.yaml              Blueprint do Render (Static Site + Web Service)
 server/                  API Express + PostgreSQL (auth, progresso, histórico)
 docker-compose.yml       PostgreSQL de desenvolvimento
 src/game/                regras canônicas, fases, tutorial, história, dicas, análise, save
 src/net/api.ts           cliente da API e sessão
 src/render/              paleta, Kennedyto, retratos, temas, sala, fundo espacial, entidades, fonte
+src/render/flowchart-model.ts  modelo único do fluxograma (SVG + canvas usam este arquivo)
 src/ui/                  HUD (640×360), rádio e casca DOM (login + menu em abas)
 src/app.ts               máquina de estados, input, tutorial, telas, rádio/dicas
 src/sketch.ts            instância p5 e escala inteira do canvas
 src/main.ts              bootstrap, listeners, PWA
-tests/                   248 testes (regras, invariantes, narrativa e soluções das fases)
-scripts/                 gerador de ícones, preview do sprite e fechamento dos mapas
+tests/                   261 testes (regras, invariantes, narrativa e soluções das fases)
+scripts/                 gerador de ícones, preview do sprite, fechamento dos mapas e fluxograma
 ```
 
 ---
@@ -638,6 +640,8 @@ loopbound/
 ## 10b. Fluxograma do jogo
 
 O fluxograma abaixo ilustra todo o ciclo de vida do jogo, desde a inicialização até o ciclo completo. Foi criado a partir da análise dos arquivos do código-fonte (`src/`, `server/`, `scripts/`) para verificar consistência com o GDD na seção anterior.
+
+A arte do fluxograma está versionada em `public/fluxograma-jogo.svg` e é **gerada** a partir de `src/render/flowchart-model.ts` (o mesmo modelo alimenta o renderizador em canvas `src/render/flowchart.ts`): rode `npm run fluxograma` depois de mexer no modelo.
 
 ### Arquitetura geral
 
