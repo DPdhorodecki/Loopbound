@@ -11,7 +11,7 @@ export const HUD_HINT = { x: 58, y: 10, w: 44, h: 44 };
 export const HUD_ESC = { x: 10, y: VIEW_H - 54, w: 44, h: 44 };
 export const HUD_UNDO = { x: 10, y: VIEW_H - 106, w: 44, h: 44 };
 export const HUD_E = { x: 10, y: VIEW_H - 158, w: 44, h: 44 };
-export const HUD_HATCH = { x: 58, y: VIEW_H - 158, w: 44, h: 44 };
+export const HUD_HATCH = { x: 10, y: VIEW_H - 210, w: 44, h: 44 };
 
 export function drawFrame(p: p5, x: number, y: number, w: number, h: number, active = false): void {
   p.noStroke();

@@ -248,6 +248,19 @@ canvas {
   background: #7df0f8;
 }
 
+.lb-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.lb-btn:disabled:hover {
+  background: var(--cyan);
+}
+
+.lb-btn-ghost:disabled:hover {
+  background: transparent;
+}
+
 .lb-btn-ghost {
   color: var(--cyan);
   background: transparent;

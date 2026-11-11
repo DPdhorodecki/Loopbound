@@ -27,7 +27,9 @@ function h<K extends keyof HTMLElementTagNameMap>(
     if (value === undefined || value === null) continue;
     if (key === 'class') node.className = String(value);
     else if (key === 'text') node.textContent = String(value);
-    else if (key.startsWith('on') && typeof value === 'function') {
+    else if (key === 'disabled') {
+      if (value) node.setAttribute('disabled', '');
+    } else if (key.startsWith('on') && typeof value === 'function') {
       node.addEventListener(key.slice(2).toLowerCase(), value as EventListener);
     } else node.setAttribute(key, String(value));
   }
@@ -538,6 +540,12 @@ export class Shell {
         'div',
         { class: 'lb-actions lb-story-actions' },
         h('button', {
+          class: 'lb-btn lb-btn-ghost',
+          text: 'VOLTAR',
+          disabled: this.storyIndex === 0,
+          onclick: () => this.storyPrev(),
+        }),
+        h('button', {
           class: 'lb-btn lb-btn-big',
           text: last ? 'CONTINUAR' : 'PRÓXIMA',
           onclick: () => this.storyNext(),
@@ -548,7 +556,7 @@ export class Shell {
           onclick: () => this.skipStory(),
         }),
       ),
-      h('p', { class: 'lb-note', text: 'ENTER / ESPAÇO AVANÇA · ESC PULA' }),
+      h('p', { class: 'lb-note', text: 'ENTER / ESPAÇO AVANÇA · ← VOLTA · ESC PULA' }),
     );
     this.storyEl.replaceChildren(card);
     (card.querySelector('.lb-btn-big') as HTMLButtonElement | null)?.focus();
@@ -561,6 +569,13 @@ export class Shell {
       return;
     }
     this.closeStory();
+  }
+
+  /** Volta um slide da história (não dá a volta no primeiro). */
+  private storyPrev(): void {
+    if (this.storyIndex <= 0) return;
+    this.storyIndex--;
+    this.renderStory();
   }
 
   private skipStory(): void {
@@ -598,6 +613,7 @@ export class Shell {
 
   private storyKey(event: KeyboardEvent): void {
     if (event.key === 'Escape') this.skipStory();
+    else if (event.key === 'ArrowLeft') this.storyPrev();
     else if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowRight') this.storyNext();
   }
 
