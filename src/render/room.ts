@@ -401,6 +401,144 @@ function decoratePipeWall(g: p5.Graphics, theme: SectorTheme, x: number, y: numb
   }
 }
 
+/** Escritório: mesa com monitor, cadeira e papelada. */
+function decorateDeskWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number, r: number): void {
+  const px = x * TILE;
+  const py = y * TILE;
+
+  // Nicho rebaixado.
+  g.fill(theme.wallShadow);
+  g.rect(px + 2, py + 2, 12, 12);
+  g.fill('#0C0A18');
+  g.rect(px + 3, py + 3, 10, 10);
+
+  // Tampo da mesa.
+  g.fill(theme.wallCap);
+  g.rect(px + 2, py + 7, 12, 3);
+  g.fill(theme.wallCapHi);
+  g.rect(px + 2, py + 7, 12, 1);
+
+  // Monitor.
+  g.fill(theme.accentDim);
+  g.rect(px + 6, py + 3, 4, 3);
+  g.fill(theme.accent);
+  g.rect(px + 7, py + 4, 2, 1);
+
+  // Cadeira e papelada.
+  g.fill(theme.floorLo);
+  g.rect(px + 6, py + 11, 4, 1);
+  if (r % 2 === 0) {
+    g.fill(theme.wallCapHi);
+    g.rect(px + 3, py + 8, 2, 1);
+  }
+}
+
+/** Rack de servidores: colunas de arquivos com prateleiras e LEDs acesos. */
+function decorateServerWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number, r: number): void {
+  const px = x * TILE;
+  const py = y * TILE;
+
+  // Nicho rebaixado.
+  g.fill(theme.wallShadow);
+  g.rect(px + 3, py + 1, 10, 14);
+  g.fill('#0C0A18');
+  g.rect(px + 4, py + 2, 8, 12);
+
+  // Rack.
+  g.fill(theme.wallCap);
+  g.rect(px + 4, py + 2, 8, 12);
+  g.fill(theme.accentDim);
+  g.rect(px + 4, py + 2, 1, 12);
+
+  // Prateleiras.
+  g.fill(theme.wallShadow);
+  g.rect(px + 5, py + 5, 6, 1);
+  g.rect(px + 5, py + 9, 6, 1);
+
+  // LEDs piscando.
+  g.fill(theme.accent);
+  g.rect(px + 5, py + 3, 1, 1);
+  if (r % 2 === 0) g.rect(px + 10, py + 7, 1, 1);
+  if (r % 3 === 0) g.rect(px + 10, py + 12, 1, 1);
+}
+
+/** Mesa: mesa redonda com cadeira e luz de status. */
+function decorateTableWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number, r: number): void {
+  const px = x * TILE;
+  const py = y * TILE;
+
+  // Nicho rebaixado.
+  g.fill(theme.wallShadow);
+  g.rect(px + 3, py + 3, 10, 10);
+  g.fill('#0C0A18');
+  g.rect(px + 4, py + 4, 8, 8);
+
+  // Mesa.
+  g.fill(theme.wallCap);
+  g.ellipse(px + 8, py + 8, 8, 6);
+  g.fill(theme.wallCapHi);
+  g.ellipse(px + 8, py + 7, 5, 3);
+
+  // Cadeiras e luz de status.
+  g.fill(theme.floorLo);
+  g.rect(px + 7, py + 12, 3, 1);
+  if (r % 2 === 0) {
+    g.fill(theme.accent);
+    g.rect(px + 8, py + 6, 1, 1);
+  }
+}
+
+/** Alienígena: cabeça verde do Chuchuty espiando por trás da parede. */
+function decorateAlienWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number, r: number): void {
+  const px = x * TILE;
+  const py = y * TILE;
+
+  // Nicho rebaixado.
+  g.fill(theme.wallShadow);
+  g.rect(px + 2, py + 3, 12, 11);
+  g.fill('#0C0A18');
+  g.rect(px + 3, py + 4, 10, 9);
+
+  const variant = r % 3;
+  if (variant === 0) {
+    // Cabeca com dois olhos.
+    g.fill('#2E7A5E');
+    g.rect(px + 4, py + 3, 1, 3);
+    g.rect(px + 11, py + 3, 1, 3);
+    g.fill('#1E5C46');
+    g.ellipse(px + 8, py + 10, 10, 8);
+    g.fill('#2E7A5E');
+    g.ellipse(px + 8, py + 9, 8, 6);
+    g.fill('#06120F');
+    g.rect(px + 5, py + 8, 3, 3);
+    g.rect(px + 9, py + 8, 3, 3);
+    g.fill('#7CFFC4');
+    g.rect(px + 5, py + 8, 1, 1);
+    g.rect(px + 9, py + 8, 1, 1);
+  } else if (variant === 1) {
+    // Um olho grande espiando a sala.
+    g.fill('#1E5C46');
+    g.ellipse(px + 8, py + 10, 9, 7);
+    g.fill('#2E7A5E');
+    g.ellipse(px + 8, py + 9, 6, 5);
+    g.fill('#06120F');
+    g.ellipse(px + 8, py + 9, 4, 3);
+    g.fill('#7CFFC4');
+    g.rect(px + 7, py + 8, 2, 2);
+  } else {
+    // Duas antenas e olhos flutuando no escuro.
+    g.fill('#2E7A5E');
+    g.rect(px + 5, py + 5, 1, 5);
+    g.rect(px + 10, py + 5, 1, 5);
+    g.fill('#06120F');
+    g.rect(px + 4, py + 9, 3, 2);
+    g.rect(px + 9, py + 9, 3, 2);
+    g.fill('#7CFFC4');
+    g.rect(px + 4, py + 9, 1, 1);
+    g.rect(px + 9, py + 9, 1, 1);
+  }
+}
+
 /** Faixas de perigo em volta do vazio. */
 function decorateVoidEdge(g: p5.Graphics, theme: SectorTheme, level: Level, x: number, y: number): void {
   const px = x * TILE;
@@ -564,6 +702,14 @@ export function bakeRoom(p: p5, level: Level, sector = 1): p5.Graphics {
       decoratePressWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
     } else if (decor.kind === 'pipe') {
       decoratePipeWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
+    } else if (decor.kind === 'desk') {
+      decorateDeskWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
+    } else if (decor.kind === 'server') {
+      decorateServerWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
+    } else if (decor.kind === 'table') {
+      decorateTableWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
+    } else if (decor.kind === 'alien') {
+      decorateAlienWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
     } else {
       decorateGuardCabin(g, theme, decor.x, decor.y);
     }

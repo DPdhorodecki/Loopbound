@@ -38,6 +38,7 @@ A fuga é narrada pelo rádio: o **General Marcinho** dá o briefing e dicas gra
 - **Paredes de cela (`|`) e cabine de guarda (`G`):** as fases 1–5 têm trechos de parede transformados em celas com grades, e a fase 6 — última do setor de celas — fecha com uma cabine de guarda alienígena. Desenho apenas: continuam bloqueando como parede.
 - **Laboratórios alienígenas (`^` e `&`):** no setor do laboratório (fases 7–12), os paredões vazios viram bancadas com frascos e tanques de espécime com criaturas flutuando. Mesma regra: é só decoração, a parede continua bloqueando.
 - **Fábrica alienígena (`/`, `+` e `-`):** no setor industrial (fases 13–18), os paredões ganham esteiras que atravessam a parede, prensas com pistão e tubulação com flanges e válvulas. Também é só decoração: a parede continua bloqueando.
+- **Central de comando alienígena (`w`, `f`, `m` e `a`):** no setor de comando (fases 19–24), as paredes viram escritórios com monitor, arquivos de servidores (sempre em colunas), mesas e — em quase um terço dos tiles — alienígenas do Chuchuty espiando de trêsjezes. Também é só decoração: a parede continua bloqueando.
 - **Puzzles elaborados:** caixotes em cadeia, placas e portões coloridos, chave e porta, vazio, gema e o uso combinado de vários ecos.
 - **Alavanca (`E`):** liga e fica ligada (persiste entre ciclos); aperte `E` de novo para desligar.
 - **Botão (`E`):** só fica pressionado com peso — um caixote em cima o mantém ligado.
@@ -82,7 +83,7 @@ Os retratos do **General Marcinho**, do **Alien Chuchuty**, do Kennedyto e do si
 - **Vite** + **vite-plugin-pwa** (Workbox) para build e offline.
 - **UI em HTML/CSS** (login e menu em abas) por cima do canvas.
 - **Node + Express + `pg` + Zod** no backend, com **PostgreSQL** (login, progresso e histórico).
-- **Vitest**: 256 testes — regras, invariantes de design (nenhuma fase tem caminho livre; nenhuma solução estoura o ciclo), senha sorteada por fase, diversidade das fases, layout das salas, narrativa/história, escalada de dicas, auditoria de mecânicas (nenhuma órfã ou decorativa) e replays.
+- **Vitest**: 257 testes — regras, invariantes de design (nenhuma fase tem caminho livre; nenhuma solução estoura o ciclo), senha sorteada por fase, diversidade das fases, layout das salas, narrativa/história, escalada de dicas, auditoria de mecânicas (nenhuma órfã ou decorativa) e replays.
 - Sprites em mapas de caracteres, fonte bitmap 3×5 própria, áudio sintetizado — **zero assets binários** (só os PNGs de ícone gerados no build).
 
 ## Contas, banco e API
@@ -322,6 +323,10 @@ Se o eco reexecutasse o input, ele colidiria com caixotes em posições diferent
 | Esteira | `/` | Parede decorada com esteira de fábrica; continua bloqueando | — | — |
 | Prensa | `+` | Parede decorada com prensa hidráulica; continua bloqueando | — | — |
 | Tubulação | `-` | Parede decorada com cano e flange; continua bloqueando | — | — |
+| Escritório | `w` | Parede decorada com mesa, monitor e cadeira; continua bloqueando | — | — |
+| Rack de servidores | `f` | Parede decorada com arquivo de servidores e LEDs; continua bloqueando | — | — |
+| Mesa | `m` | Parede decorada com mesa redonda; continua bloqueando | — | — |
+| Alienígena | `a` | Parede decorada com alienígena do Chuchuty espiando; continua bloqueando | — | — |
 | Vazio | ` ` (espaço) | Mata quem entra | — | — |
 | Jogador (spawn) | `P` | Você | — | 1 |
 | Núcleo / saída | `E` | Vence se requisitos cumpridos | — | — |

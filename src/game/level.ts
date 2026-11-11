@@ -46,7 +46,18 @@ export interface Decor extends Vec {
 }
 
 /** Enfeite de parede: desenho especial, mas a colisão continua sendo parede. */
-export type WallDecorKind = 'cell' | 'guard' | 'lab' | 'tank' | 'belt' | 'press' | 'pipe';
+export type WallDecorKind =
+  | 'cell'
+  | 'guard'
+  | 'lab'
+  | 'tank'
+  | 'belt'
+  | 'press'
+  | 'pipe'
+  | 'desk'
+  | 'server'
+  | 'table'
+  | 'alien';
 export interface WallDecor extends Vec {
   kind: WallDecorKind;
 }
@@ -181,6 +192,10 @@ const CHAR_TILE: Record<string, TileId> = {
   '/': TILE_WALL,
   '+': TILE_WALL,
   '-': TILE_WALL,
+  w: TILE_WALL,
+  f: TILE_WALL,
+  m: TILE_WALL,
+  a: TILE_WALL,
 };
 
 const GATE_COLOR: Record<string, ColorKey> = { R: 'red', L: 'blue', Y: 'gold' };
@@ -201,7 +216,8 @@ const DECOR_KIND: Record<string, DecorKind> = {
 /**
  * Paredes decoradas: `|` é uma cela, `G` a âncora 2×2 da cabine de guarda,
  * `^` uma bancada de laboratório, `&` um tanque de espécime, `/` uma esteira,
- * `+` uma prensa e `-` um trecho de tubulação.
+ * `+` uma prensa, `-` um trecho de tubulação, `w` um escritório, `f` um rack
+ * de servidores, `m` uma mesa e `a` uma alienígena.
  */
 const WALL_DECOR_KIND: Record<string, WallDecorKind> = {
   '|': 'cell',
@@ -211,6 +227,10 @@ const WALL_DECOR_KIND: Record<string, WallDecorKind> = {
   '/': 'belt',
   '+': 'press',
   '-': 'pipe',
+  w: 'desk',
+  f: 'server',
+  m: 'table',
+  a: 'alien',
 };
 
 export class LevelError extends Error {}

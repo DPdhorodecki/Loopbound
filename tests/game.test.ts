@@ -626,6 +626,31 @@ describe('paredes decoradas (celas e cabine)', () => {
     });
   });
 
+  it('as fases 19–24 têm escritórios, servidores, mesas e alienígenas', () => {
+    const expected = [
+      [38, 28, 73, 67],
+      [12, 21, 12, 22],
+      [33, 13, 61, 53],
+      [6, 13, 2, 7],
+      [25, 25, 70, 54],
+      [15, 19, 4, 16],
+    ];
+    expected.forEach(([desk, server, table, alien], i) => {
+      const level = parseLevel(LEVELS[i + 18], mulberry32(0));
+      const counts = { desk: 0, server: 0, table: 0, alien: 0 };
+      for (const decor of level.wallDecor) {
+        if (decor.kind === 'desk') counts.desk++;
+        else if (decor.kind === 'server') counts.server++;
+        else if (decor.kind === 'table') counts.table++;
+        else if (decor.kind === 'alien') counts.alien++;
+      }
+      expect(counts.desk, LEVELS[i + 18].id).toBe(desk);
+      expect(counts.server, LEVELS[i + 18].id).toBe(server);
+      expect(counts.table, LEVELS[i + 18].id).toBe(table);
+      expect(counts.alien, LEVELS[i + 18].id).toBe(alien);
+    });
+  });
+
   it('a fase 6 tem uma única cabine de guarda 2×2', () => {
     const level = parseLevel(LEVELS[5], mulberry32(0));
     const guards = level.wallDecor.filter((d) => d.kind === 'guard');
