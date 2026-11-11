@@ -539,6 +539,114 @@ function decorateAlienWall(g: p5.Graphics, theme: SectorTheme, x: number, y: num
   }
 }
 
+/** Peça de nave: chapa rebitada com luz de navegação. */
+function decorateHullWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number, r: number): void {
+  const px = x * TILE;
+  const py = y * TILE;
+
+  // Nicho rebaixado.
+  g.fill(theme.wallShadow);
+  g.rect(px + 2, py + 2, 12, 12);
+  g.fill('#150C0A');
+  g.rect(px + 3, py + 3, 10, 10);
+
+  // Chapa do casco.
+  g.fill(theme.wallCap);
+  g.rect(px + 3, py + 4, 10, 7);
+  g.fill(theme.wallCapHi);
+  g.rect(px + 3, py + 4, 10, 1);
+  g.fill(theme.panel);
+  g.rect(px + 5, py + 6, 6, 1);
+
+  // Rebites.
+  g.fill(theme.wallCapHi);
+  g.rect(px + 4, py + 9, 1, 1);
+  g.rect(px + 11, py + 9, 1, 1);
+  g.rect(px + 4, py + 5, 1, 1);
+  g.rect(px + 11, py + 5, 1, 1);
+
+  // Luz de navegação.
+  if (r % 2 === 0) {
+    g.fill(theme.accent);
+    g.rect(px + 7, py + 2, 2, 1);
+  }
+}
+
+/** Alienígena trabalhando numa peça de nave, com maçarico e faíscas. */
+function decorateWorkerWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number, r: number): void {
+  const px = x * TILE;
+  const py = y * TILE;
+
+  // Nicho rebaixado.
+  g.fill(theme.wallShadow);
+  g.rect(px + 2, py + 2, 12, 12);
+  g.fill('#150C0A');
+  g.rect(px + 3, py + 3, 10, 10);
+
+  // Peça de nave embaixo.
+  g.fill(theme.wallCap);
+  g.rect(px + 3, py + 11, 10, 2);
+
+  // Alien curvado sobre a peça.
+  g.fill('#1E5C46');
+  g.ellipse(px + 6, py + 9, 8, 7);
+  g.fill('#2E7A5E');
+  g.ellipse(px + 5, py + 8, 6, 5);
+  g.fill('#06120F');
+  g.rect(px + 3, py + 7, 2, 2);
+  g.fill('#7CFFC4');
+  g.rect(px + 3, py + 7, 1, 1);
+
+  // Maçarico e faíscas.
+  g.fill(theme.pipe);
+  g.rect(px + 8, py + 8, 3, 1);
+  g.fill(theme.accent);
+  g.rect(px + 11, py + 7, 1, 1);
+  if (r % 2 === 0) {
+    g.fill(theme.accent);
+    g.rect(px + 12, py + 9, 1, 1);
+    g.rect(px + 11, py + 5, 1, 1);
+  }
+}
+
+/** Braço robótico: base, segmento e garra com luz de status. */
+function decorateArmWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number, r: number): void {
+  const px = x * TILE;
+  const py = y * TILE;
+
+  // Nicho rebaixado.
+  g.fill(theme.wallShadow);
+  g.rect(px + 3, py + 1, 10, 14);
+  g.fill('#150C0A');
+  g.rect(px + 4, py + 2, 8, 12);
+
+  // Base do braço.
+  g.fill(theme.wallCap);
+  g.rect(px + 5, py + 11, 6, 3);
+  g.fill(theme.wallCapHi);
+  g.rect(px + 5, py + 11, 6, 1);
+
+  // Segmento e cotovelo.
+  g.fill(theme.pipe);
+  g.rect(px + 7, py + 6, 2, 6);
+  g.fill(theme.accentDim);
+  g.rect(px + 6, py + 5, 4, 2);
+
+  // Garra.
+  g.fill(theme.wallCapHi);
+  g.rect(px + 5, py + 3, 2, 3);
+  g.rect(px + 9, py + 3, 2, 3);
+  g.fill(theme.accent);
+  g.rect(px + 6, py + 2, 1, 2);
+  g.rect(px + 9, py + 2, 1, 2);
+
+  // Luz de status.
+  if (r % 3 === 0) {
+    g.fill(theme.accent);
+    g.rect(px + 11, py + 12, 1, 1);
+  }
+}
+
 /** Faixas de perigo em volta do vazio. */
 function decorateVoidEdge(g: p5.Graphics, theme: SectorTheme, level: Level, x: number, y: number): void {
   const px = x * TILE;
@@ -710,6 +818,12 @@ export function bakeRoom(p: p5, level: Level, sector = 1): p5.Graphics {
       decorateTableWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
     } else if (decor.kind === 'alien') {
       decorateAlienWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
+    } else if (decor.kind === 'hull') {
+      decorateHullWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
+    } else if (decor.kind === 'worker') {
+      decorateWorkerWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
+    } else if (decor.kind === 'arm') {
+      decorateArmWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
     } else {
       decorateGuardCabin(g, theme, decor.x, decor.y);
     }

@@ -651,6 +651,35 @@ describe('paredes decoradas (celas e cabine)', () => {
     });
   });
 
+  it('as fases 25–29 têm peças de nave, aliens trabalhando e braços robóticos', () => {
+    const expected = [
+      [83, 45, 16],
+      [31, 1, 1],
+      [103, 48, 36],
+      [42, 12, 4],
+      [108, 59, 24],
+    ];
+    expected.forEach(([hull, worker, arm], i) => {
+      const level = parseLevel(LEVELS[i + 24], mulberry32(0));
+      const counts = { hull: 0, worker: 0, arm: 0 };
+      for (const decor of level.wallDecor) {
+        if (decor.kind === 'hull') counts.hull++;
+        else if (decor.kind === 'worker') counts.worker++;
+        else if (decor.kind === 'arm') counts.arm++;
+      }
+      expect(counts.hull, LEVELS[i + 24].id).toBe(hull);
+      expect(counts.worker, LEVELS[i + 24].id).toBe(worker);
+      expect(counts.arm, LEVELS[i + 24].id).toBe(arm);
+    });
+  });
+
+  it('a fase 30 fecha a fenda da parede sem abrir caminho', () => {
+    const level = parseLevel(LEVELS[29], mulberry32(0));
+    for (const [x, y] of [[16, 3], [16, 4], [17, 3], [17, 4], [18, 3]]) {
+      expect(tileAt(level, x, y), `tile ${x},${y}`).toBe(TILE_WALL);
+    }
+  });
+
   it('a fase 6 tem uma única cabine de guarda 2×2', () => {
     const level = parseLevel(LEVELS[5], mulberry32(0));
     const guards = level.wallDecor.filter((d) => d.kind === 'guard');
