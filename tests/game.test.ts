@@ -582,6 +582,27 @@ describe('paredes decoradas (celas e cabine)', () => {
     });
   });
 
+  it('as fases 7–12 têm laboratórios alienígenas nas paredes sobrantes', () => {
+    const expected = [
+      [61, 3],
+      [82, 8],
+      [102, 8],
+      [92, 6],
+      [38, 4],
+      [109, 10],
+    ];
+    expected.forEach(([lab, tank], i) => {
+      const level = parseLevel(LEVELS[i + 6], mulberry32(0));
+      const counts = { lab: 0, tank: 0 };
+      for (const decor of level.wallDecor) {
+        if (decor.kind === 'lab') counts.lab++;
+        else if (decor.kind === 'tank') counts.tank++;
+      }
+      expect(counts.lab, LEVELS[i + 6].id).toBe(lab);
+      expect(counts.tank, LEVELS[i + 6].id).toBe(tank);
+    });
+  });
+
   it('a fase 6 tem uma única cabine de guarda 2×2', () => {
     const level = parseLevel(LEVELS[5], mulberry32(0));
     const guards = level.wallDecor.filter((d) => d.kind === 'guard');

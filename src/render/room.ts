@@ -203,6 +203,96 @@ function decorateGuardCabin(g: p5.Graphics, theme: SectorTheme, x: number, y: nu
   g.rect(px + 22, py + 25, 4, 1);
 }
 
+/** Bancada de laboratório: frascos, pipetas e bancada sobre um nicho escuro. */
+function decorateLabWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number, r: number): void {
+  const px = x * TILE;
+  const py = y * TILE;
+
+  // Nicho rebaixado.
+  g.fill(theme.wallShadow);
+  g.rect(px + 2, py + 2, 12, 12);
+  g.fill('#06120F');
+  g.rect(px + 3, py + 3, 10, 10);
+
+  // Tampo da bancada.
+  g.fill(theme.wallCap);
+  g.rect(px + 3, py + 9, 10, 2);
+  g.fill(theme.wallCapHi);
+  g.rect(px + 3, py + 9, 10, 1);
+
+  // Frascos com líquido alienígena.
+  g.fill('#10332B');
+  g.rect(px + 4, py + 4, 2, 5);
+  g.rect(px + 7, py + 5, 2, 4);
+  g.rect(px + 10, py + 3, 2, 6);
+  g.fill(theme.accentDim);
+  g.rect(px + 4, py + 7, 2, 2);
+  g.rect(px + 7, py + 7, 2, 2);
+  g.rect(px + 10, py + 7, 2, 2);
+  g.fill(theme.accent);
+  g.rect(px + 4, py + 8, 2, 1);
+  if (r % 2 === 0) g.rect(px + 7, py + 8, 2, 1);
+  g.rect(px + 10, py + 8, 2, 1);
+
+  // Rack de pipetas no alto do nicho.
+  g.fill(theme.wallCapHi);
+  g.rect(px + 3, py + 3, 10, 1);
+
+  // LED de status.
+  if (r % 3 === 0) {
+    g.fill(theme.accent);
+    g.rect(px + 12, py + 10, 1, 1);
+  }
+}
+
+/** Tanque de espécime: cilindro de vidro com criatura flutuando. */
+function decorateTankWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number, r: number): void {
+  const px = x * TILE;
+  const py = y * TILE;
+
+  // Nicho rebaixado.
+  g.fill(theme.wallShadow);
+  g.rect(px + 2, py + 2, 12, 12);
+  g.fill('#06120F');
+  g.rect(px + 3, py + 3, 10, 10);
+
+  // Cilindro de vidro.
+  g.fill('#0A2A23');
+  g.rect(px + 4, py + 4, 8, 9);
+  g.fill(theme.accentDim);
+  g.rect(px + 4, py + 8, 8, 5);
+  g.fill(theme.accent);
+  g.rect(px + 4, py + 12, 8, 1);
+
+  // Criatura dentro do tanque.
+  g.fill('#0B241E');
+  g.rect(px + 6, py + 8, 3, 3);
+  g.fill(theme.accent);
+  g.rect(px + 6, py + 8, 2, 2);
+  g.fill('#06120F');
+  g.rect(px + 6, py + 8, 1, 1);
+  g.fill('#06120F');
+  g.rect(px + 9, py + 10, 1, 1);
+
+  // Bolhas subindo.
+  const bubble = r % 2 === 0 ? 5 : 6;
+  g.fill(theme.accent);
+  g.rect(px + bubble, py + 6, 1, 1);
+  g.rect(px + 9, py + 5, 1, 1);
+
+  // Aro do vidro e luz de status.
+  g.fill(theme.wallCapHi);
+  g.rect(px + 3, py + 3, 10, 1);
+  g.rect(px + 3, py + 13, 10, 1);
+  if (r % 3 !== 0) {
+    g.fill('#E4675C');
+    g.rect(px + 12, py + 2, 2, 2);
+  } else {
+    g.fill(theme.accent);
+    g.rect(px + 12, py + 2, 2, 2);
+  }
+}
+
 /** Faixas de perigo em volta do vazio. */
 function decorateVoidEdge(g: p5.Graphics, theme: SectorTheme, level: Level, x: number, y: number): void {
   const px = x * TILE;
@@ -343,6 +433,10 @@ export function bakeRoom(p: p5, level: Level, sector = 1): p5.Graphics {
   for (const decor of level.wallDecor) {
     if (decor.kind === 'cell') {
       decorateCellWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
+    } else if (decor.kind === 'lab') {
+      decorateLabWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
+    } else if (decor.kind === 'tank') {
+      decorateTankWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
     } else {
       decorateGuardCabin(g, theme, decor.x, decor.y);
     }

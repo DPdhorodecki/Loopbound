@@ -46,7 +46,7 @@ export interface Decor extends Vec {
 }
 
 /** Enfeite de parede: desenho especial, mas a colisão continua sendo parede. */
-export type WallDecorKind = 'cell' | 'guard';
+export type WallDecorKind = 'cell' | 'guard' | 'lab' | 'tank';
 export interface WallDecor extends Vec {
   kind: WallDecorKind;
 }
@@ -176,6 +176,8 @@ const CHAR_TILE: Record<string, TileId> = {
   // paredes decoradas (continuam bloqueando)
   '|': TILE_WALL,
   G: TILE_WALL,
+  '^': TILE_WALL,
+  '&': TILE_WALL,
 };
 
 const GATE_COLOR: Record<string, ColorKey> = { R: 'red', L: 'blue', Y: 'gold' };
@@ -193,10 +195,15 @@ const DECOR_KIND: Record<string, DecorKind> = {
   ';': 'vine',
   '=': 'capsule',
 };
-/** Paredes decoradas: `|` é uma cela e `G` a âncora 2×2 da cabine de guarda. */
+/**
+ * Paredes decoradas: `|` é uma cela, `G` a âncora 2×2 da cabine de guarda,
+ * `^` uma bancada de laboratório e `&` um tanque de espécime.
+ */
 const WALL_DECOR_KIND: Record<string, WallDecorKind> = {
   '|': 'cell',
   G: 'guard',
+  '^': 'lab',
+  '&': 'tank',
 };
 
 export class LevelError extends Error {}
