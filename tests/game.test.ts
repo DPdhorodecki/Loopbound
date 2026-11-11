@@ -680,6 +680,43 @@ describe('paredes decoradas (celas e cabine)', () => {
     }
   });
 
+  it('a fase 28 fecha o bolso vazio ao redor do botão', () => {
+    const level = parseLevel(LEVELS[27], mulberry32(0));
+    const fechado = [
+      [10, 3],
+      [11, 3],
+      [10, 4],
+      [11, 4],
+      [12, 4],
+      [10, 5],
+      [11, 5],
+      [12, 5],
+    ];
+    for (const [x, y] of fechado) {
+      expect(tileAt(level, x, y), `tile ${x},${y}`).toBe(TILE_WALL);
+    }
+  });
+
+  it('a fase 30 tem barreira visível no bloco de parede', () => {
+    const level = parseLevel(LEVELS[29], mulberry32(0));
+    const barreiras = level.wallDecor.filter((d) => d.kind === 'barrier');
+    expect(barreiras).toHaveLength(6);
+    for (const [x, y] of [
+      [16, 3],
+      [17, 3],
+      [18, 3],
+      [16, 4],
+      [17, 4],
+      [18, 4],
+    ]) {
+      expect(tileAt(level, x, y), `tile ${x},${y}`).toBe(TILE_WALL);
+      expect(
+        barreiras.some((b) => b.x === x && b.y === y),
+        `barreira faltando em ${x},${y}`,
+      ).toBe(true);
+    }
+  });
+
   it('a fase 6 tem uma única cabine de guarda 2×2', () => {
     const level = parseLevel(LEVELS[5], mulberry32(0));
     const guards = level.wallDecor.filter((d) => d.kind === 'guard');

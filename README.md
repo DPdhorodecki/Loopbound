@@ -36,7 +36,7 @@ A fuga é narrada pelo rádio: o **General Marcinho** dá o briefing e dicas gra
 - **Fases 13–30 redesenhadas:** mapas maiores com câmaras decoradas (até três salas ligadas por portões), **pelo menos 3 mecânicas por fase** e seis fases com senha (quatro delas de cor), recombinando contêiner, placa, alavanca, botão, duto, vazio e código.
 - **Botões do HUD clicáveis:** ciclo (`TAB`), desfazer um passo (`Z`), dica (`H`), usar (`E`), alçapão (`TAMPA`) e menu (`ESC`) respondem tanto ao teclado quanto ao **clique do mouse** (o botão acende ao passar o cursor). O botão de alçapão recolhe a tampa ou cobre o bueiro por perto, e todo botão sem ação dá um aviso curto na tela.
 - **Paredes de cela (`|`) e cabine de guarda (`G`):** as fases 1–5 têm trechos de parede transformados em celas com grades, e a fase 6 — última do setor de celas — fecha com uma cabine de guarda alienígena. Desenho apenas: continuam bloqueando como parede.
-- **Laboratórios alienígenas (`^` e `&`):** no setor do laboratório (fases 7–12), os paredões vazios viram bancadas com frascos e tanques de espécime com criaturas flutuando. Mesma regra: é só decoração, a parede continua bloqueando.
+- **Laboratórios alienígenas (`^` e `&`):** no setor do laboratório (fases 7–12), os paredões viram um laboratório de verdade: frascos de Erlenmeyer com líquido verde, microscópios, racks de tubos de ensaio e tanques de espécime com criaturas flutuando (quatro variações alternadas para o bloco não virar um carimbo repetido). Mesma regra: é só decoração, a parede continua bloqueando.
 - **Fábrica alienígena (`/`, `+` e `-`):** no setor industrial (fases 13–18), os paredões ganham esteiras que atravessam a parede, prensas com pistão e tubulação com flanges e válvulas. Também é só decoração: a parede continua bloqueando.
 - **Central de comando alienígena (`w`, `f`, `m` e `a`):** no setor de comando (fases 19–24), as paredes viram escritórios com monitor, arquivos de servidores (sempre em colunas), mesas e — em quase um terço dos tiles — alienígenas do Chuchuty espiando de trêsjezes. Também é só decoração: a parede continua bloqueando.
 - **Hangar alienígena (`h`, `p` e `t`):** no hangar (fases 25–29), os paredões viram peças de casco rebitadas, aliens trabalhando com maçarico e braços robóticos articulados. Só decoração: a parede continua bloqueando.
@@ -84,7 +84,7 @@ Os retratos do **General Marcinho**, do **Alien Chuchuty**, do Kennedyto e do si
 - **Vite** + **vite-plugin-pwa** (Workbox) para build e offline.
 - **UI em HTML/CSS** (login e menu em abas) por cima do canvas.
 - **Node + Express + `pg` + Zod** no backend, com **PostgreSQL** (login, progresso e histórico).
-- **Vitest**: 259 testes — regras, invariantes de design (nenhuma fase tem caminho livre; nenhuma solução estoura o ciclo), senha sorteada por fase, diversidade das fases, layout das salas, narrativa/história, escalada de dicas, auditoria de mecânicas (nenhuma órfã ou decorativa) e replays.
+- **Vitest**: 261 testes — regras, invariantes de design (nenhuma fase tem caminho livre; nenhuma solução estoura o ciclo), senha sorteada por fase, diversidade das fases, layout das salas, narrativa/história, escalada de dicas, auditoria de mecânicas (nenhuma órfã ou decorativa) e replays.
 - Sprites em mapas de caracteres, fonte bitmap 3×5 própria, áudio sintetizado — **zero assets binários** (só os PNGs de ícone gerados no build).
 
 ## Contas, banco e API
@@ -331,6 +331,7 @@ Se o eco reexecutasse o input, ele colidiria com caixotes em posições diferent
 | Peça de nave | `h` | Parede decorada com chapa de casco; continua bloqueando | — | — |
 | Alien trabalhando | `p` | Parede decorada com alien soldando uma peça; continua bloqueando | — | — |
 | Braço robótico | `t` | Parede decorada com braço robótico de hangar; continua bloqueando | — | — |
+| Barreira | `F` | Parede decorada com cerca de advertência; continua bloqueando | — | — |
 | Vazio | ` ` (espaço) | Mata quem entra | — | — |
 | Jogador (spawn) | `P` | Você | — | 1 |
 | Núcleo / saída | `E` | Vence se requisitos cumpridos | — | — |

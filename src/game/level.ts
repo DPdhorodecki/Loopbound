@@ -60,7 +60,8 @@ export type WallDecorKind =
   | 'alien'
   | 'hull'
   | 'worker'
-  | 'arm';
+  | 'arm'
+  | 'barrier';
 export interface WallDecor extends Vec {
   kind: WallDecorKind;
 }
@@ -202,6 +203,7 @@ const CHAR_TILE: Record<string, TileId> = {
   h: TILE_WALL,
   p: TILE_WALL,
   t: TILE_WALL,
+  F: TILE_WALL,
 };
 
 const GATE_COLOR: Record<string, ColorKey> = { R: 'red', L: 'blue', Y: 'gold' };
@@ -224,7 +226,7 @@ const DECOR_KIND: Record<string, DecorKind> = {
  * `^` uma bancada de laboratório, `&` um tanque de espécime, `/` uma esteira,
  * `+` uma prensa, `-` um trecho de tubulação, `w` um escritório, `f` um rack
  * de servidores, `m` uma mesa, `a` uma alienígena, `h` uma peça de nave, `p`
- * uma alienígena trabalhando e `t` um braço robótico.
+ * uma alienígena trabalhando, `t` um braço robótico e `F` uma barreira.
  */
 const WALL_DECOR_KIND: Record<string, WallDecorKind> = {
   '|': 'cell',
@@ -241,6 +243,7 @@ const WALL_DECOR_KIND: Record<string, WallDecorKind> = {
   h: 'hull',
   p: 'worker',
   t: 'arm',
+  F: 'barrier',
 };
 
 export class LevelError extends Error {}

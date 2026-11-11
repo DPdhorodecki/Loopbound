@@ -203,62 +203,114 @@ function decorateGuardCabin(g: p5.Graphics, theme: SectorTheme, x: number, y: nu
   g.rect(px + 22, py + 25, 4, 1);
 }
 
-/** Bancada de laboratório: frascos, pipetas e bancada sobre um nicho escuro. */
-function decorateLabWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number, r: number): void {
+/** Base comum dos enfeites de laboratorio: nicho escuro e moldura de luz. */
+function labBase(g: p5.Graphics, theme: SectorTheme, px: number, py: number): void {
+  g.fill(theme.wallShadow);
+  g.rect(px + 1, py + 1, 14, 14);
+  g.fill('#0A1F1B');
+  g.rect(px + 2, py + 2, 12, 12);
+  g.fill(theme.accentDim);
+  g.rect(px + 2, py + 2, 12, 1);
+}
+
+/** Frasco de Erlenmeyer com liquido alienigena. */
+function decorateFlaskWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number): void {
   const px = x * TILE;
   const py = y * TILE;
+  labBase(g, theme, px, py);
 
-  // Nicho rebaixado.
-  g.fill(theme.wallShadow);
-  g.rect(px + 2, py + 2, 12, 12);
-  g.fill('#06120F');
-  g.rect(px + 3, py + 3, 10, 10);
+  g.fill('#1A4A3F');
+  g.rect(px + 7, py + 3, 3, 2);
+  g.fill('#9BEFF6');
+  g.rect(px + 7, py + 3, 3, 1);
+  g.rect(px + 6, py + 5, 5, 1);
+  g.rect(px + 5, py + 6, 7, 1);
+  g.rect(px + 4, py + 7, 9, 1);
+  g.rect(px + 4, py + 8, 9, 1);
+  g.rect(px + 3, py + 9, 11, 1);
+  g.rect(px + 3, py + 10, 11, 1);
 
-  // Tampo da bancada.
-  g.fill(theme.wallCap);
-  g.rect(px + 3, py + 9, 10, 2);
-  g.fill(theme.wallCapHi);
-  g.rect(px + 3, py + 9, 10, 1);
-
-  // Frascos com líquido alienígena.
-  g.fill('#10332B');
-  g.rect(px + 4, py + 4, 2, 5);
-  g.rect(px + 7, py + 5, 2, 4);
-  g.rect(px + 10, py + 3, 2, 6);
   g.fill(theme.accentDim);
-  g.rect(px + 4, py + 7, 2, 2);
-  g.rect(px + 7, py + 7, 2, 2);
-  g.rect(px + 10, py + 7, 2, 2);
+  g.rect(px + 4, py + 9, 9, 1);
   g.fill(theme.accent);
-  g.rect(px + 4, py + 8, 2, 1);
-  if (r % 2 === 0) g.rect(px + 7, py + 8, 2, 1);
-  g.rect(px + 10, py + 8, 2, 1);
+  g.rect(px + 4, py + 10, 9, 1);
+  g.rect(px + 5, py + 11, 7, 1);
+  g.fill('#9BEFF6');
+  g.rect(px + 5, py + 9, 2, 1);
 
-  // Rack de pipetas no alto do nicho.
+  g.fill(theme.wallCap);
+  g.rect(px + 3, py + 12, 11, 1);
+}
+
+/** Microscopio: base, coluna, braco e ocular. */
+function decorateScopeWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number): void {
+  const px = x * TILE;
+  const py = y * TILE;
+  labBase(g, theme, px, py);
+
+  g.fill(theme.wallCap);
+  g.rect(px + 3, py + 12, 11, 1);
   g.fill(theme.wallCapHi);
-  g.rect(px + 3, py + 3, 10, 1);
+  g.rect(px + 3, py + 13, 11, 1);
 
-  // LED de status.
-  if (r % 3 === 0) {
-    g.fill(theme.accent);
-    g.rect(px + 12, py + 10, 1, 1);
-  }
+  g.fill(theme.pipe);
+  g.rect(px + 4, py + 10, 5, 2);
+  g.fill(theme.wallCapHi);
+  g.rect(px + 4, py + 10, 5, 1);
+  g.fill(theme.pipe);
+  g.rect(px + 5, py + 5, 2, 6);
+  g.fill(theme.wallCapHi);
+  g.rect(px + 5, py + 4, 5, 2);
+  g.fill('#9BEFF6');
+  g.rect(px + 9, py + 5, 2, 3);
+  g.fill(theme.wallCapHi);
+  g.rect(px + 8, py + 8, 5, 1);
+
+  g.fill(theme.accent);
+  g.ellipse(px + 6, py + 10, 4, 2);
+  g.fill(theme.accentDim);
+  g.rect(px + 11, py + 12, 2, 1);
+}
+
+/** Rack de tubos de ensaio coloridos. */
+function decorateTubesWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number): void {
+  const px = x * TILE;
+  const py = y * TILE;
+  labBase(g, theme, px, py);
+
+  g.fill(theme.wallCap);
+  g.rect(px + 2, py + 12, 12, 1);
+  g.fill(theme.wallCapHi);
+  g.rect(px + 2, py + 13, 12, 1);
+
+  g.fill('#1A4A3F');
+  g.rect(px + 3, py + 5, 3, 7);
+  g.rect(px + 7, py + 3, 3, 9);
+  g.rect(px + 11, py + 6, 3, 6);
+  g.fill(theme.accent);
+  g.rect(px + 3, py + 9, 3, 3);
+  g.fill(theme.accentDim);
+  g.rect(px + 7, py + 8, 3, 3);
+  g.fill('#9BEFF6');
+  g.rect(px + 7, py + 10, 3, 2);
+  g.fill(theme.accent);
+  g.rect(px + 11, py + 10, 3, 2);
+
+  g.fill('#9BEFF6');
+  g.rect(px + 3, py + 4, 3, 1);
+  g.rect(px + 7, py + 2, 3, 1);
+  g.rect(px + 11, py + 5, 3, 1);
 }
 
 /** Tanque de espécime: cilindro de vidro com criatura flutuando. */
 function decorateTankWall(g: p5.Graphics, theme: SectorTheme, x: number, y: number, r: number): void {
   const px = x * TILE;
   const py = y * TILE;
-
-  // Nicho rebaixado.
-  g.fill(theme.wallShadow);
-  g.rect(px + 2, py + 2, 12, 12);
-  g.fill('#06120F');
-  g.rect(px + 3, py + 3, 10, 10);
+  labBase(g, theme, px, py);
 
   // Cilindro de vidro.
   g.fill('#0A2A23');
-  g.rect(px + 4, py + 4, 8, 9);
+  g.rect(px + 4, py + 3, 8, 10);
   g.fill(theme.accentDim);
   g.rect(px + 4, py + 8, 8, 5);
   g.fill(theme.accent);
@@ -266,19 +318,17 @@ function decorateTankWall(g: p5.Graphics, theme: SectorTheme, x: number, y: numb
 
   // Criatura dentro do tanque.
   g.fill('#0B241E');
-  g.rect(px + 6, py + 8, 3, 3);
+  g.ellipse(px + 7, py + 9, 4, 4);
   g.fill(theme.accent);
   g.rect(px + 6, py + 8, 2, 2);
   g.fill('#06120F');
   g.rect(px + 6, py + 8, 1, 1);
-  g.fill('#06120F');
-  g.rect(px + 9, py + 10, 1, 1);
 
   // Bolhas subindo.
-  const bubble = r % 2 === 0 ? 5 : 6;
   g.fill(theme.accent);
-  g.rect(px + bubble, py + 6, 1, 1);
-  g.rect(px + 9, py + 5, 1, 1);
+  g.rect(px + 6, py + 5, 1, 1);
+  g.fill('#9BEFF6');
+  g.rect(px + 9, py + 4, 1, 1);
 
   // Aro do vidro e luz de status.
   g.fill(theme.wallCapHi);
@@ -290,6 +340,57 @@ function decorateTankWall(g: p5.Graphics, theme: SectorTheme, x: number, y: numb
   } else {
     g.fill(theme.accent);
     g.rect(px + 12, py + 2, 2, 2);
+  }
+}
+
+/** Barreira de hangar: cerca de metal com faixas de advertencia. */
+function decorateBarrierWall(
+  g: p5.Graphics,
+  theme: SectorTheme,
+  x: number,
+  y: number,
+  r: number,
+  openLeft: boolean,
+  openRight: boolean,
+): void {
+  const px = x * TILE;
+  const py = y * TILE;
+
+  g.fill(theme.wallShadow);
+  g.rect(px + 1, py + 1, 14, 14);
+  g.fill('#150C0A');
+  g.rect(px + 2, py + 2, 12, 12);
+
+  g.fill(theme.pipe);
+  g.rect(px, py + 6, TILE, 4);
+  g.fill(theme.wallCapHi);
+  g.rect(px, py + 6, TILE, 1);
+  g.rect(px, py + 9, TILE, 1);
+
+  g.fill(theme.accentDim);
+  for (let i = 0; i < 4; i++) g.rect(px + 1 + i * 4, py + 7, 2, 2);
+  g.fill(theme.accent);
+  for (let i = 0; i < 4; i++) g.rect(px + 3 + i * 4, py + 7, 1, 2);
+
+  if (openLeft) {
+    g.fill(theme.wallCap);
+    g.rect(px + 1, py + 3, 2, 10);
+    g.fill(theme.wallCapHi);
+    g.rect(px + 1, py + 3, 1, 10);
+  }
+  if (openRight) {
+    g.fill(theme.wallCap);
+    g.rect(px + 13, py + 3, 2, 10);
+    g.fill(theme.wallCapHi);
+    g.rect(px + 14, py + 3, 1, 10);
+  }
+
+  if (r % 2 === 0) {
+    g.fill(theme.accent);
+    g.rect(px + 7, py + 3, 2, 2);
+  } else {
+    g.fill('#E4675C');
+    g.rect(px + 7, py + 3, 2, 2);
   }
 }
 
@@ -786,14 +887,19 @@ export function bakeRoom(p: p5, level: Level, sector = 1): p5.Graphics {
   // base para não serem cobertos pelos tiles vizinhos. A colisão continua
   // sendo parede.
   const belts = new Set<string>();
+  const barriers = new Set<string>();
   for (const decor of level.wallDecor) {
     if (decor.kind === 'belt') belts.add(`${decor.x},${decor.y}`);
+    if (decor.kind === 'barrier') barriers.add(`${decor.x},${decor.y}`);
   }
   for (const decor of level.wallDecor) {
     if (decor.kind === 'cell') {
       decorateCellWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
     } else if (decor.kind === 'lab') {
-      decorateLabWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
+      const variant = hash(decor.x, decor.y) % 3;
+      if (variant === 0) decorateFlaskWall(g, theme, decor.x, decor.y);
+      else if (variant === 1) decorateScopeWall(g, theme, decor.x, decor.y);
+      else decorateTubesWall(g, theme, decor.x, decor.y);
     } else if (decor.kind === 'tank') {
       decorateTankWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
     } else if (decor.kind === 'belt') {
@@ -824,6 +930,16 @@ export function bakeRoom(p: p5, level: Level, sector = 1): p5.Graphics {
       decorateWorkerWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
     } else if (decor.kind === 'arm') {
       decorateArmWall(g, theme, decor.x, decor.y, hash(decor.x, decor.y));
+    } else if (decor.kind === 'barrier') {
+      decorateBarrierWall(
+        g,
+        theme,
+        decor.x,
+        decor.y,
+        hash(decor.x, decor.y),
+        !barriers.has(`${decor.x - 1},${decor.y}`),
+        !barriers.has(`${decor.x + 1},${decor.y}`),
+      );
     } else {
       decorateGuardCabin(g, theme, decor.x, decor.y);
     }
