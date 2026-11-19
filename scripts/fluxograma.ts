@@ -1,154 +1,293 @@
 /**
- * Gera o SVG do fluxograma do jogo em `public/fluxograma-jogo.svg`.
+ * Gera os dois fluxogramas do jogo em `public/fluxogramas/`:
  *
- * O desenho vem de `src/render/flowchart-model.ts` — o mesmo modelo usado
- * pelo renderizador em canvas (`src/render/flowchart.ts`).
+ *   fluxo-do-jogo.svg / .png   — fluxo geral (acesso → campanha → fim)
+ *   fluxo-da-fase.svg / .png   — loop de uma fase (ações, decisões, falhas)
  *
- * Uso: npx vite-node scripts/fluxograma.ts [arquivo-de-saida]
+ * Os desenhos vêm de `src/render/flowchart-model.ts`, fonte única de verdade.
+ * O SVG é escrito diretamente; o PNG é rasterizado em 2× com o Edge/Chrome
+ * headless instalado na máquina (se nenhum navegador for encontrado, o SVG
+ * ainda é gerado e o script avisa).
+ *
+ * Uso: npm run fluxograma
+ *      NO_PNG=1 npm run fluxograma   (só SVG)
  */
-import { writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { PNG } from 'pngjs';
 import {
-  FLOW_BANNER,
   FLOW_COLORS,
-  FLOW_EDGES,
-  FLOW_H,
-  FLOW_NODES,
-  FLOW_NOTES,
-  FLOW_W,
+  FLOW_DIAGRAMS,
+  FLOW_STYLE,
+  FlowDiagram,
   FlowEdge,
+  FlowLegend,
   FlowNode,
+  FlowShape,
 } from '../src/render/flowchart-model';
 
-const OUT = resolve(process.argv[2] ?? 'public/fluxograma-jogo.svg');
+const OUT_DIR = resolve(process.argv[2] ?? 'public/fluxogramas');
+const SCALE = 2;
 
 const esc = (s: string): string =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-function shadow(): string {
-  return `<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="6" />
-      <feOffset dx="8" dy="8" result="offsetblur" />
-      <feComponentTransfer>
-        <feFuncA type="linear" slope="0.5" />
-      </feComponentTransfer>
-      <feMerge>
-        <feMergeNode />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
-    </filter>`;
+const SHADOW_OFFSET = 6;
+
+function shapeMarkup(
+  shape: FlowShape,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  fill: string,
+  stroke: string,
+  strokeWidth = 2,
+): string {
+  const common = `fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"`;
+  switch (shape) {
+    case 'terminal':
+      return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h / 2}" ${common} />`;
+    case 'process':
+      return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" ${common} />`;
+    case 'decision': {
+      const cx = x + w / 2;
+      const cy = y + h / 2;
+      return `<polygon points="${cx},${y} ${x + w},${cy} ${cx},${y + h} ${x},${cy}" ${common} />`;
+    }
+    case 'io': {
+      const k = Math.min(20, w * 0.08);
+      return `<polygon points="${x + k},${y} ${x + w},${y} ${x + w - k},${y + h} ${x},${y + h}" ${common} />`;
+    }
+    case 'subroutine':
+      return `<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" ${common} /><line x1="${x + 14}" y1="${y + 4}" x2="${x + 14}" y2="${y + h - 4}" stroke="${stroke}" stroke-width="${strokeWidth}" /><line x1="${x + w - 14}" y1="${y + 4}" x2="${x + w - 14}" y2="${y + h - 4}" stroke="${stroke}" stroke-width="${strokeWidth}" /></g>`;
+    case 'connector':
+      return `<circle cx="${x + w / 2}" cy="${y + h / 2}" r="${Math.min(w, h) / 2}" ${common} />`;
+  }
 }
 
-function style(): string {
-  return `<style>
-      .bg { fill: ${FLOW_COLORS.bg}; }
-      .grid { stroke: ${FLOW_COLORS.grid}; stroke-width: 1; }
-      .box { fill: ${FLOW_COLORS.box}; stroke: ${FLOW_COLORS.boxDark}; stroke-width: 2; filter: url(#shadow); }
-      .box-text { fill: ${FLOW_COLORS.text}; font-family: 'Courier New', monospace; font-weight: bold; font-size: 17px; text-anchor: middle; }
-      .box-text.small { font-size: 15px; }
-      .arrow { stroke: ${FLOW_COLORS.arrow}; stroke-width: 5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-      .arrow-head { fill: ${FLOW_COLORS.arrow}; stroke: none; }
-      .banner { fill: ${FLOW_COLORS.boxDark}; }
-      .banner-text { fill: ${FLOW_COLORS.text}; font-family: 'Courier New', monospace; font-weight: bold; font-size: 16px; text-anchor: middle; dominant-baseline: middle; }
-      .title { fill: ${FLOW_COLORS.boxDark}; font-family: 'Courier New', monospace; font-weight: bold; font-size: 24px; text-anchor: middle; }
-      .note { fill: ${FLOW_COLORS.boxDark}; font-family: 'Courier New', monospace; font-weight: bold; font-size: 15px; }
-      .note.small { font-size: 14px; }
-    </style>`;
+function fontSize(lines: string[]): number {
+  if (lines.length >= 4) return 15;
+  if (lines.length === 3) return 16;
+  return 18;
 }
 
-function grid(): string {
-  const lines: string[] = [];
-  for (let x = 40; x < FLOW_W; x += 40) lines.push(`    <line x1="${x}" y1="0" x2="${x}" y2="${FLOW_H}" />`);
-  for (let y = 40; y < FLOW_H; y += 40) lines.push(`    <line x1="0" y1="${y}" x2="${FLOW_W}" y2="${y}" />`);
-  return `  <g class="grid">\n${lines.join('\n')}\n  </g>`;
+function fittedSize(node: FlowNode): number {
+  if (node.shape === 'connector') return 20;
+  let size = fontSize(node.lines);
+  const maxWidth =
+    node.w - (node.shape === 'io' ? 46 : node.shape === 'decision' ? 46 : 28);
+  const widest = Math.max(...node.lines.map((line) => line.length));
+  while (size > 11 && widest * size * 0.62 > maxWidth) size -= 1;
+  return size;
 }
 
 function nodeText(node: FlowNode): string {
-  const cls = node.lines.length > 2 ? 'box-text small' : 'box-text';
-  const lineH = node.lines.length > 2 ? 20 : 24;
-  const startY = node.y + node.h / 2 - ((node.lines.length - 1) * lineH) / 2;
+  const size = fittedSize(node);
+  const lineH = size + 5;
+  const cx = node.x + node.w / 2;
+  const cy = node.y + node.h / 2;
+  const startY = cy - ((node.lines.length - 1) * lineH) / 2;
   return node.lines
-    .map((line, i) => `  <text class="${cls}" x="${node.x + node.w / 2}" y="${startY + i * lineH}">${esc(line)}</text>`)
-    .join('\n');
-}
-
-function boxNode(node: FlowNode): string {
-  const r = node.kind === 'terminal' ? node.h / 2 : 12;
-  return `  <rect class="box" x="${node.x}" y="${node.y}" width="${node.w}" height="${node.h}" rx="${r}" />
-${nodeText(node)}`;
-}
-
-function diamondNode(node: FlowNode): string {
-  const mid = node.x + node.w / 2;
-  const points = [
-    [mid, node.y],
-    [node.x + node.w, node.y],
-    [node.x + node.w, node.y + node.h],
-    [mid, node.y + node.h],
-    [node.x, node.y + node.h],
-    [node.x, node.y],
-  ]
-    .map((p) => p.join(','))
-    .join(' ');
-  return `  <polygon class="box" points="${points}" />
-${nodeText(node)}`;
-}
-
-function arrow(edge: FlowEdge): string {
-  const pts = edge.path;
-  const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p[0]} ${p[1]}`).join(' ');
-  const [tx, ty] = pts[pts.length - 1];
-  const [px, py] = pts[pts.length - 2];
-  const angle = Math.atan2(ty - py, tx - px);
-  const head = (a: number, r = 22): string =>
-    `${(tx - r * Math.cos(angle - a)).toFixed(1)} ${(ty - r * Math.sin(angle - a)).toFixed(1)}`;
-  const mid = pts[Math.floor(pts.length / 2)];
-  const [dx, dy] = edge.labelOffset ?? [0, -14];
-  const label = edge.label
-    ? `\n  <text class="note" x="${mid[0] + dx}" y="${mid[1] + dy}" text-anchor="middle">${esc(edge.label)}</text>`
-    : '';
-  return `  <path class="arrow" d="${d}" />
-  <path class="arrow-head" d="M ${tx} ${ty} L ${head(0.4)} L ${head(-0.4)} Z" />${label}`;
-}
-
-const notes = FLOW_NOTES.map((note) => {
-  const isTitle = note.lines.length === 1 && note.y < 60;
-  const cls = isTitle ? 'title' : note.lines.length > 2 ? 'note small' : 'note';
-  const anchor = note.align === 'middle' ? 'middle' : note.align === 'end' ? 'end' : 'start';
-  const lineH = isTitle ? 28 : 22;
-  return note.lines
     .map(
       (line, i) =>
-        `  <text class="${cls}" x="${note.x}" y="${note.y + i * lineH}" text-anchor="${anchor}">${esc(line)}</text>`,
+        `<text x="${cx}" y="${startY + i * lineH}" font-family="'Courier New', monospace" font-weight="bold" font-size="${size}" fill="${FLOW_STYLE[node.shape].text}" text-anchor="middle" dominant-baseline="middle">${esc(line)}</text>`,
     )
-    .join('\n');
-}).join('\n');
+    .join('');
+}
 
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${FLOW_W}" height="${FLOW_H}" viewBox="0 0 ${FLOW_W} ${FLOW_H}">
-  <defs>
-    ${shadow()}
-    ${style()}
-  </defs>
+function nodeMarkup(node: FlowNode): string {
+  const style = FLOW_STYLE[node.shape];
+  return `<g>
+    ${shapeMarkup(node.shape, node.x + SHADOW_OFFSET, node.y + SHADOW_OFFSET, node.w, node.h, 'rgba(30,32,52,0.18)', 'none', 0)}
+    ${shapeMarkup(node.shape, node.x, node.y, node.w, node.h, style.fill, style.stroke)}
+    ${nodeText(node)}
+  </g>`;
+}
 
-  <!-- Fundo -->
-  <rect class="bg" width="${FLOW_W}" height="${FLOW_H}" />
+function arrowHead(tip: [number, number], from: [number, number], size = 14): string {
+  const angle = Math.atan2(tip[1] - from[1], tip[0] - from[0]);
+  const base = (a: number): string =>
+    `${(tip[0] - size * Math.cos(angle - a)).toFixed(1)},${(tip[1] - size * Math.sin(angle - a)).toFixed(1)}`;
+  return `<polygon points="${tip[0]},${tip[1]} ${base(0.42)} ${base(-0.42)}" fill="${FLOW_COLORS.arrow}" />`;
+}
 
-${grid()}
+function edgeLabel(edge: FlowEdge): string {
+  if (!edge.label) return '';
+  const pts = edge.points;
+  const at = edge.labelAt ?? pts[Math.floor(pts.length / 2)];
+  const align = edge.labelAlign ?? 'middle';
+  const size = 14;
+  const width = edge.label.length * (size * 0.64) + 10;
+  const x = align === 'start' ? at[0] : align === 'end' ? at[0] - width : at[0] - width / 2;
+  const anchor = align === 'start' ? 'start' : align === 'end' ? 'end' : 'middle';
+  const textX = align === 'start' ? at[0] + 5 : align === 'end' ? at[0] - 5 : at[0];
+  return `<g>
+    <rect x="${x}" y="${at[1] - 11}" width="${width}" height="22" rx="4" fill="${FLOW_COLORS.labelBg}" fill-opacity="0.92" />
+    <text x="${textX}" y="${at[1]}" font-family="'Courier New', monospace" font-weight="bold" font-size="${size}" fill="${FLOW_COLORS.ink}" text-anchor="${anchor}" dominant-baseline="middle">${esc(edge.label)}</text>
+  </g>`;
+}
 
-  <!-- Banner lateral -->
-  <rect class="banner" x="0" y="0" width="50" height="${FLOW_H}" />
-  <text class="banner-text" x="25" y="${FLOW_H / 2}" transform="rotate(-90 25,${FLOW_H / 2})">${esc(FLOW_BANNER)}</text>
+function edgeMarkup(edge: FlowEdge): string {
+  const pts = edge.points;
+  const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p[0]} ${p[1]}`).join(' ');
+  const head =
+    edge.arrow === false
+      ? ''
+      : arrowHead(pts[pts.length - 1], pts[pts.length - 2]);
+  return `<path d="${d}" fill="none" stroke="${FLOW_COLORS.arrow}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+  ${head}
+  ${edgeLabel(edge)}`;
+}
 
-  <!-- Títulos e notas -->
-${notes}
+function legendMarkup(legend: FlowLegend): string {
+  const rowH = 34;
+  const height = 50 + legend.entries.length * rowH;
+  const rows = legend.entries
+    .map((entry, i) => {
+      const rowY = legend.y + 44 + i * rowH;
+      const style = FLOW_STYLE[entry.shape];
+      const w = entry.shape === 'connector' ? 26 : 64;
+      const h = entry.shape === 'decision' ? 26 : 26;
+      const x = legend.x + 18;
+      return `<g>
+        ${shapeMarkup(entry.shape, x, rowY, w, h, style.fill, style.stroke, 1.5)}
+        <text x="${legend.x + 100}" y="${rowY + h / 2}" font-family="'Courier New', monospace" font-weight="bold" font-size="14" fill="${FLOW_COLORS.ink}" dominant-baseline="middle">${esc(entry.label)}</text>
+      </g>`;
+    })
+    .join('');
+  return `<g>
+    <rect x="${legend.x}" y="${legend.y}" width="${legend.w}" height="${height}" rx="10" fill="#FFFFFF" fill-opacity="0.94" stroke="#C9CEDC" stroke-width="1.5" />
+    <text x="${legend.x + 18}" y="${legend.y + 22}" font-family="'Courier New', monospace" font-weight="bold" font-size="15" fill="${FLOW_COLORS.ink}">${esc(legend.title)}</text>
+    ${rows}
+  </g>`;
+}
 
-  <!-- Ligações -->
-${FLOW_EDGES.map((e) => arrow(e)).join('\n')}
+function svgFor(diagram: FlowDiagram): string {
+  const { width, height } = diagram;
+  const grid: string[] = [];
+  for (let x = 40; x < width; x += 40) {
+    grid.push(`<line x1="${x}" y1="0" x2="${x}" y2="${height}" />`);
+  }
+  for (let y = 40; y < height; y += 40) {
+    grid.push(`<line x1="0" y1="${y}" x2="${width}" y2="${y}" />`);
+  }
 
-  <!-- Caixas -->
-${FLOW_NODES.map((n) => (n.kind === 'diamond' ? diamondNode(n) : boxNode(n))).join('\n')}
+  const notes = (diagram.notes ?? [])
+    .map((note) => {
+      const anchor = note.align === 'middle' ? 'middle' : note.align === 'end' ? 'end' : 'start';
+      return note.lines
+        .map(
+          (line, i) =>
+            `<text x="${note.x}" y="${note.y + i * 20}" font-family="'Courier New', monospace" font-weight="bold" font-size="16" fill="#8A90A8" text-anchor="${anchor}">${esc(line)}</text>`,
+        )
+        .join('');
+    })
+    .join('');
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="${FLOW_COLORS.bg}" />
+  <g stroke="${FLOW_COLORS.grid}" stroke-width="1">${grid.join('')}</g>
+
+  <text x="${width / 2}" y="44" font-family="'Courier New', monospace" font-weight="bold" font-size="27" fill="${FLOW_COLORS.title}" text-anchor="middle">${esc(diagram.title)}</text>
+  <text x="${width / 2}" y="72" font-family="'Courier New', monospace" font-weight="bold" font-size="14" fill="#6D7389" text-anchor="middle">${esc(diagram.subtitle)}</text>
+
+  ${notes}
+
+  <g>${diagram.edges.map(edgeMarkup).join('\n')}</g>
+  <g>${diagram.nodes.map(nodeMarkup).join('\n')}</g>
+  ${diagram.legend ? legendMarkup(diagram.legend) : ''}
+
+  <text x="${width - 24}" y="${height - 16}" font-family="'Courier New', monospace" font-size="12" fill="#A2A7B8" text-anchor="end">LoopBound · npm run fluxograma</text>
 </svg>
 `;
+}
 
-writeFileSync(OUT, svg, 'utf8');
-console.log(`fluxograma gerado: ${OUT} (${FLOW_W}x${FLOW_H})`);
+function findBrowser(): string | null {
+  const candidates = [
+    process.env.EDGE_PATH,
+    process.env.CHROME_PATH,
+    'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+    'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
+    'C:/Program Files/Google/Chrome/Application/chrome.exe',
+    'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium',
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  ].filter((p): p is string => Boolean(p));
+  return candidates.find((p) => existsSync(p)) ?? null;
+}
+
+function cropPng(file: string, width: number, height: number): void {
+  const img = PNG.sync.read(readFileSync(file));
+  if (img.width === width && img.height === height) return;
+  if (img.width < width || img.height < height) {
+    throw new Error(`captura ${img.width}x${img.height} menor que ${width}x${height}`);
+  }
+  const out = new PNG({ width, height });
+  for (let y = 0; y < height; y++) {
+    const from = (y * img.width) * 4;
+    const to = (y * width) * 4;
+    img.data.copy(out.data, to, from, from + width * 4);
+  }
+  writeFileSync(file, PNG.sync.write(out));
+}
+
+function rasterize(browser: string, svg: string, pngPath: string, w: number, h: number): void {
+  const profile = mkdtempSync(join(tmpdir(), 'lb-flow-'));
+  const htmlPath = join(profile, 'flow.html');
+  try {
+    const scaled = svg.replace(
+      /<svg ([^>]*?)width="[^"]+" height="[^"]+"/,
+      `<svg $1width="${w * SCALE}" height="${h * SCALE}"`,
+    );
+    writeFileSync(
+      htmlPath,
+      `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;background:#fff;overflow:hidden}svg{display:block}</style></head><body>${scaled}</body></html>`,
+      'utf8',
+    );
+
+    const result = spawnSync(
+      browser,
+      [
+        '--headless=new',
+        '--disable-gpu',
+        '--no-sandbox',
+        '--no-first-run',
+        '--hide-scrollbars',
+        '--force-device-scale-factor=1',
+        `--user-data-dir=${profile}`,
+        `--window-size=${w * SCALE},${h * SCALE}`,
+        '--virtual-time-budget=5000',
+        `--screenshot=${pngPath}`,
+        `file:///${htmlPath.replace(/\\/g, '/')}`,
+      ],
+      { stdio: 'ignore', timeout: 120_000 },
+    );
+    if (result.error) throw result.error;
+    cropPng(pngPath, w * SCALE, h * SCALE);
+  } finally {
+    rmSync(profile, { recursive: true, force: true });
+  }
+}
+
+mkdirSync(OUT_DIR, { recursive: true });
+const browser = findBrowser();
+
+for (const diagram of FLOW_DIAGRAMS) {
+  const svgPath = join(OUT_DIR, `${diagram.id}.svg`);
+  const svg = svgFor(diagram);
+  writeFileSync(svgPath, svg, 'utf8');
+  console.log(`SVG  ${svgPath} (${diagram.width}x${diagram.height})`);
+
+  if (process.env.NO_PNG) continue;
+  if (!browser) {
+    console.warn('PNG  ignorado: Edge/Chrome não encontrado (defina CHROME_PATH).');
+    continue;
+  }
+  const pngPath = join(OUT_DIR, `${diagram.id}.png`);
+  rasterize(browser, svg, pngPath, diagram.width, diagram.height);
+  console.log(`PNG  ${pngPath} (${diagram.width * SCALE}x${diagram.height * SCALE})`);
+}

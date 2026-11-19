@@ -20,7 +20,7 @@ A fuga é narrada pelo rádio: o **General Marcinho** dá o briefing e dicas gra
 | História: prólogo, setores, final e pós-créditos | ✅ |
 | Rádio com General Marcinho + Chuchuty | ✅ |
 | Mecânicas: alavanca, botão, duto, porta de código, bueiro/alçapão e passagem secreta | ✅ |
-| Fluxograma completo do jogo | ✅ (`public/fluxograma-jogo.svg`) |
+| Fluxogramas (fluxo geral + loop de fase) | ✅ PNG e SVG em `public/fluxogramas/` |
 | Labirintos e puzzles elaborados | ✅ |
 | Login + banco PostgreSQL + histórico | ✅ |
 | Menu em abas (estilo CEPK Rush) | ✅ |
@@ -125,7 +125,7 @@ npx vite-node scripts/rebuild-levels.ts  # resolve e regrava as fases 13–30 (s
 npx vite-node scripts/enlarge-levels.ts  # amplia e decora as 30 fases (rodar uma vez)
 npx vite-node scripts/export-levels.ts   # exporta um PNG por fase para a pasta de saída
 npm run audit        # audita design (caminho livre, ciclo prematuro, folga) e mecânicas órfãs/não usadas
-npm run fluxograma   # regenera public/fluxograma-jogo.svg a partir do modelo
+npm run fluxograma   # regenera os dois fluxogramas (SVG + PNG) em public/fluxogramas/
 npm run icons        # regenera os ícones do PWA
 npm run sprite       # gera um PNG de preview do Kennedyto
 ```
@@ -140,14 +140,14 @@ Hooks de debug: `?level=3&moves=DDDR|DDRRRR` (o `|` encerra o ciclo) e `&pause=1
 
 ```
 README.md                apresentação + GDD completo (regras, arte, fases, arquitetura)
-public/fluxograma-jogo.svg  fluxograma completo do jogo (pixel art, gerado por `npm run fluxograma`)
+public/fluxogramas/          os dois fluxogramas do jogo em PNG e SVG (gerados por `npm run fluxograma`)
 render.yaml              Blueprint do Render (Static Site + Web Service)
 server/                  API Express + PostgreSQL (auth, progresso, histórico)
 docker-compose.yml       PostgreSQL de desenvolvimento
 src/game/                regras canônicas, fases, tutorial, história, dicas, análise, save
 src/net/api.ts           cliente da API e sessão
 src/render/              paleta, Kennedyto, retratos, temas, sala, fundo espacial, entidades, fonte
-src/render/flowchart-model.ts  modelo único do fluxograma (SVG + canvas usam este arquivo)
+src/render/flowchart-model.ts  modelo dos dois fluxogramas (formas, textos e conexões)
 src/ui/                  HUD (640×360), rádio e casca DOM (login + menu em abas)
 src/app.ts               máquina de estados, input, tutorial, telas, rádio/dicas
 src/sketch.ts            instância p5 e escala inteira do canvas
@@ -637,289 +637,51 @@ loopbound/
 
 ---
 
-## 10b. Fluxograma do jogo
+## 10b. Fluxogramas do jogo
 
-O fluxograma abaixo ilustra todo o ciclo de vida do jogo, desde a inicialização até o ciclo completo. Foi criado a partir da análise dos arquivos do código-fonte (`src/`, `server/`, `scripts/`) para verificar consistência com o GDD na seção anterior.
+Os dois fluxogramas abaixo foram desenhados com **simbologia padrão de fluxograma** — terminal (início/fim), processo, decisão, entrada/saída, subprocesso e conector — e cobrem o jogo como ele está hoje, não só o protótipo. Os desenhos vêm de uma fonte única (`src/render/flowchart-model.ts`) e são gerados por `npm run fluxograma` em SVG e PNG (2×).
 
-A arte do fluxograma está versionada em `public/fluxograma-jogo.svg` e é **gerada** a partir de `src/render/flowchart-model.ts` (o mesmo modelo alimenta o renderizador em canvas `src/render/flowchart.ts`): rode `npm run fluxograma` depois de mexer no modelo.
+| Arquivo | Conteúdo |
+|---|---|
+| `public/fluxogramas/fluxo-do-jogo.png` · `.svg` | Fluxo geral: acesso, prólogo, tutorial, menu, campanha, histórias de setor e final |
+| `public/fluxogramas/fluxo-da-fase.png` · `.svg` | Loop de uma fase: entrada, ações, decisões, falhas e vitória |
 
-### Arquitetura geral
+### Fluxograma 1 — fluxo geral do jogo
 
-```mermaid
-flowchart TB
-    subgraph Init["Bootstrap (main.ts → sketch.ts → App.ts)"]
-        A1["document.getElementById('game')"] --> A2["new p5()"]
-        A2 --> A3["new Shell(instance, container)"]
-        A3 --> A4["App.constructor()"]
-        A4 --> A5["loadSave() → localStorage"]
-        A5 --> A6["p = p5 instance; atlas = buildAtlas()"]
-        A6 --> A7["screen='title'; titleIndex=min(unlocked-1, 30-1)"]
-    end
+Do login ao fim da campanha: sessão salva, autenticação, prólogo, tutorial de 8 salas, menu em abas, escolha de fase, história de abertura do setor, execução da fase, histórias de encerramento, avanço de fase e cena final. Cada decisão mostra explicitamente os caminhos **SIM** e **NÃO**.
 
-    subgraph Dom["Camada DOM (shell.ts)"]
-        S1["Auth Layer<br/>Login / Cadastro<br/>Senha → bcrypt<br/>→ token SHA-256"]
-        S2["Menu Tabs<br/>▶ JOGAR | FASES<br/>| HISTÓRICO | PERFIL"]
-        S3["Win Card / Pause<br/>Code Panel overlay"]
-    end
+![Fluxograma 1 — fluxo geral do jogo](public/fluxogramas/fluxo-do-jogo.png)
 
-    subgraph GameLayer["Camada de Jogo (app.ts + rules.ts + levels.ts)"]
-        G1["Parse Level → Runtime"]
-        G2["Game Loop (60fps)"]
-        G3["Input → enqueue → step()"]
-        G4["tryMove() → PushChain / Teleport / Die / Win"]
-        G5["interact() → Lever / Button / Terminal / Key"]
-        G6["pressure() → Placas vermelhas/azuis/douradas"]
-        G7["colorPowered() → Portões abrem/fecham"]
-        G8["endCycle() → Grava Eco → Reset Ciclo"]
-        G9["eco replay → echoPoses()"]
-        G10["restoreEntities() → Zustand persistível<br/>(gems, chaves, levers, anchors)"]
-    end
+[abrir o PNG em tamanho real](public/fluxogramas/fluxo-do-jogo.png) · [abrir o SVG](public/fluxogramas/fluxo-do-jogo.svg)
 
-    subgraph RenderLayer["Camada Render (render/*)"]
-        R1["Room bake<br/>tiles / walls / void / clue"]
-        R2["Entities<br/>crate, plate, gate, gem,<br/>lever, button, duct,<br/>terminal, exit"]
-        R3["Player anim<br/>idle / walk / push / death"]
-        R4["Eco render<br/>silhueta ciano 35%"]
-        R5["HUD 640×360<br/>TAB / ESC / gems / cycle"]
-    end
+### Fluxograma 2 — loop de uma fase
 
-    Start["Jogar — Página Inicial"] --> MenuCheck{"Já autenticado?"}
-    MenuCheck ---false--- AuthFlow["Autenticação<br/>Login / Cadastro"]
-    AuthFlow --> HasSession{"session token<br/>presente?"}
-    HasSession ---false--- Register["Registar<br/>POST /api/auth/register<br/>bcrypt(senha) → token<br/>→ cacheMe() → persist"]
-    Register --> LogoutBtn["Logo no canto esquerdo<br/>ESC → sair"]
-    HasSession ---true--- HasSession<br/>(token localStorage) --> MenuOpen["Menu Aberto (4 tabs)<br/>JOGAR / FASES / HISTóRICO / PERFIL"]
-    MenuOpen --> LoadProgress["GET /api/me<br/>unlocked / best / history / muted"]
-    LoadProgress --> MenuTabs{tab selection}
-    MenuTabs --->|JOGAR| StartLevel
-    MenuTabs --->|FASES| ShowFases
-    MenuTabs --->|HISTÓRICO| ShowHistory
-    MenuTabs --->|PERFIL| ShowProfile
-    ShowFases ---> LoadMenu["menu entradas<br/>fases liberadas / nível ativo"]
+O detalhe de dentro da fase: leitura da entrada, pausa, escolha entre mover/empurrar, interagir e encerrar o ciclo (TAB), resolução da casa pisada, captura pelo bueiro, queda no vazio, orçamento de passos, saída e vitória. Os conectores **A** (reiniciar a fase) e **B** (voltar ao início do ciclo) evitam linhas atravessando o diagrama.
 
-    StartLevel["Iniciar Fase"] --> ParseLvl["parseLevel(def)<br/>• tiles · spawn · exit<br/>• plates · gates · doors<br/>• levers · buttons · ducts<br/>• gems · key · terminal<br/>• clueTiles · code"]
-    ParseLvl --> CreateRt["createRuntime(level)<br/>estado=player+crates+gems<br/>persistido:hasKey,leversOn<br/>resetado por ciclo:crates,plates,gates"]
-    CreateRt --> BakeRoom["room = bakeRoom(p, level)<br/>piso / paredes / vazio"]
-    BakeRoom --> ZoomFit["zoom = floor(min(vw/480, vh/270))<br/>margin 16px"]
-    ZoomFit --> StatePlay["screen='play'; paused=false; queue=[]"]
-    StatePlay --> ShowHint{"início do ciclo ≠0?"}
-    ShowHint ---true--- DrawHint["fadehint FASE_INDEX - NAME<br/>5 segundos → disappear"]
-    DrawHint --> TutorialCheck{"inTutorial?"}
-    TutorialCheck ---true--- TutorialLoop["TUTORIO LOOP<br/>tutIndex++ → next room<br/>8 rooms sequenciais:<br/>▸ Andar → Empurrar →<br/>  Eco → Chave → Alavanca<br/>  → Botão → Duto → Código"]
-    TutorialCheck ---false--- NormalLevel["CAMADA NORMAL<br/>▸ Fase 1..30<br/>(30 fases com dificuldade crescente)"]
-    NormalLevel --> CycleStart["CICLO #1 começa"]
-    CycleStart --> EnqueueInput{INPUT<br/>— teclado / toque swipe<br/>— botões HUD TAB/ESC<br/>— botão E para interação<br/>— teclas código 1-9 / C / X}
-    EnqueueInput --> CheckPainel{"terminalOpen?"}
-    CheckPainel ---false--- CoreStep{Step available?}
-    CheckPainel ---true--- CodePanelInput["Input → código<br/>1-9 / Enter=confirm<br/>C=clear, Escape=close"]
-    CodePanelInput --> CoreStep
-    CoreStep --> DirFromKey{key → Dir?<br/>W/A/S/D → U/L/D/R<br/>↑↓ ← →}
-    DirFromKey --> Enqueue{queue.length < 3?}
-    Enqueue ---false--- Blocked["blocked! (wall/crate/gate/door/void)<br/>sound + stepTimer=40ms"]
-    Enqueue ---true--- Dequeue["shift(): dir → step()"]
-    Dequeue --> TryMove["tryMove(rt, dir)<br/>1. check blockedBy<br/>2. push chain crates back→front<br/>3. snapshot (undo stack=256)<br/>4. update player pos + facing<br/>5. pressure plates → open/close<br/>6. pickup gems, keys<br/>7. duct teleport mate<br/>8. check void → die<br/>9. check exit → win<br/>10. check beat >= cycleLength → endCycle"]
-    TryMove --> EndResult{"RESULT"}
-    EndResult ---moved--- SfxCheck{sound by action}
-    EndResult ---died--- DeathFlash["flash red .5s<br/'death' sound<br/>endCycle('death')"]
-    EndResult ---won--- WinCard["finishLevel()<br/>── Win card ──<br/>steps / cycles / gems / record<br/>ENTER → nextLevel → Fase N+1"]
-    EndResult ---cycleEnded--- CycleDone["endCycle()<br/>1. push track → echo[]<br/>2. cap maxEchoes<br/>3. cyclesUsed++<br/>4. reset player/crates/plates/gates<br/>5. beat=0, status='playing'"]
-    EndResult ---no result--- NormalContinue["continua outro passo"]
-    CycleDone --> NextCycle["CYCLE #N+1 começa<br/>player volta ao spawn<br/>crates/plates/doors revertem<br/>estado persistente mantido: gems, chaves, levers, anchors"]
-    NextCycle --> InnerLoop{"Termina vencendo?<br/>(Phase 30)"}
-    InnerLoop ---YES["unlock next level<br/>save.unlocked++<br/>persist → /api/progress"]
-    InnerLoop ---NO["prova outros ciclos"]
-    NormalContinue --> PlayMore["joga mais..."]
-    DeathFlash --> NextCycle
-    WinCard --> DoneNextLevel["Enter → Fase N+1<br/>ESC → backToTitle()"]
-    DoneNextLevel --> Done["Jogo terminado<br/>menu em abas<br/>HISTóRICO / PERFIL"]
-    SfxCheck --> PlayMore
-    PlayMore --> Inside2["Ciclo interno<br/>90ms/passo"]
-    Inside2 --> Inside2Detail["Passo interno: tryMove()<br/>(10 ordens canônicas)"]
-    Inside2Detail --> Endings2["4 ways a ciclo termina<br/>▸ TAB manual / E não conta<br/>▸ orçamento esgotado<br/>▸ void / espinho → morte<br/>▸ reach exit → vitória"]
-    Endings2 --> Output["endCycle('death')<br/>ecós + ciclo<br/>→ screen='play' again"]
-    Endings2 -.-> CycleDone
+![Fluxograma 2 — loop de uma fase](public/fluxogramas/fluxo-da-fase.png)
 
-    Backend["Server Express :3001<br/>+ PostgreSQL on Neon"]
-    Backend --> Routes["Rotas:<br/>▸ POST /api/auth/register<br/>  bcrypt → token → Session<br/>▸ POST /api/auth/login<br/>  bcrypt compare → token<br/>▸ POST /api/auth/logout<br/>  hash token → remove session<br/>▸ GET /api/me (auth)<br/>  user+progress+bests+history<br/>▸ PUT /api/progress (auth)<br/>  unlocked/best/muted/avatar<br/>▸ POST /api/runs (auth)<br/>  register run → update best<br/>▸ GET /api/runs (auth)<br/>  histórico<br/>▸ GET /api/leaderboard<br/>  melhores passos/fase<br/>▸ GET /api/ping (semauth)<br/>  monitor=UptimeRobot 5min"]
-    Routes --> Tables["Tabelas:<br/>users · sessions · progress<br/>level_bests · runs"]
+[abrir o PNG em tamanho real](public/fluxogramas/fluxo-da-fase.png) · [abrir o SVG](public/fluxogramas/fluxo-da-fase.svg)
 
-    classDef green fill:#0B1220,stroke:#45E08C,color:#fff
-    classDef cyan fill:#0B1220,stroke:#35E6F2,color:#fff
-    classDef red fill:#111C2E,stroke:#C43B31,color:#fff
-    classDef gold fill:#111C2E,stroke:#D9A63C,color:#fff
-    classDef bg fill:#0B1220,stroke:#9BC0B2,color:#fff
+### Simbologia usada
 
-    style Start fill:#0B1220,stroke:#35E6F2,color:#fff
-    style MenuOpen fill:#111C2E,stroke:#35E6F2,color:#fff
-    style StartLevel fill:#111C2E,stroke:#35E6F2,color:#fff
-    style CycleStart fill:#0B1220,stroke:#57D8E6,color:#fff
-    style CycleDone fill:#0B1220,stroke:#57D8E6,color:#fff
-    style WinCard fill:#111C2E,stroke:#45E08C,color:#fff
-    style DeathFlash fill:#111C2E,stroke:#C43B31,color:#fff
-    style SaveData fill:#0B1220,stroke:#D9A63C,color:#fff
-    style Backend fill:#0B1220,stroke:#9BC0B2,color:#fff
-    style Done fill:#111C2E,stroke:#35E6F2,color:#fff
+| Símbolo | Forma | Significado no LoopBound |
+|---|---|---|
+| Terminal | elipse alongada | **INÍCIO** e **FIM** de cada fluxo |
+| Processo | retângulo | ação do jogo ou da interface (abrir o jogo, executar a fase, mover...) |
+| Decisão | losango | pergunta com dois caminhos, sempre rotulados **SIM** / **NÃO** |
+| Entrada / saída | paralelogramo | dados que entram ou saem (login/cadastro, leitura do teclado) |
+| Subprocesso | retângulo com barras laterais | rotina à parte (prólogo, tutorial, histórias em quadrinhos) |
+| Conector | círculo | continuação do fluxo em outro ponto (`A` = reiniciar, `B` = novo ciclo) |
+
+### Como regerar
+
+```bash
+npm run fluxograma   # gera SVG + PNG em public/fluxogramas/
 ```
 
-### Ciclo central (dentro de uma fase)
+O gerador usa o Edge/Chrome headless da máquina para rasterizar os PNGs em 2× (3000×4000 e 3120×3600). Se nenhum navegador for encontrado, os SVGs ainda são gerados; defina `CHROME_PATH` para apontar para o executável. O script também aceita `NO_PNG=1` para gerar só os vetores.
 
-```mermaid
-flowchart LR
-    subgraph Inside["Ciclo interno — 90ms/passo"]
-        direction TB
-        Mover{Passo<br/>Player move<br/>Dir: U/D/L/R}
-        PBox["Primeiro checagem:<br/>tile alvo bloqueado?<br/>(wall / void / gate / door / crate)"]
-        PBOut["→ Bloqueado<br/>sound + stepTimer=40ms"]
-        PGNot1["Caixote chain: ¿ checa<br/>bloqueado além?<br/>if no → push from tail"]
-        PGOut["Empurra caixote<br/>(cadeia vertical)<br/>→ nothing beyond"]
-        Snap["pushSnapshot():<br/>copia player/crates/gems/doors<br/>em hist. [len ≤ 256]"]
-        Upd["player.pos + facing"]
-        Pres["pressure(plates):<br/>red / blue / gold ← ocupado?"]
-        Doors["doorsOpen: atualiza<br/>portas momentâneas"]
-        Pick["gems + key<br/>persistente entre ciclos"]
-        DuctTP["duct mate? teleport<br/>(caixote cobrindo → inativo)"]
-        VoidDie{"tile == void?"}
-        WinChk{"player == exit?"}
-        OrCyc{"beat >= cycleLength?"}
-    end
-
-    subgraph Endings["4 ways a ciclo termina"]
-        E1["TAB manual<br/>E/E não contam no ciclo"]
-        E2["Sem passos<br/>orçamento esgotado"]
-        E3{"Died<br/>void / espinho"}
-        E4["Won<br/>reached exit<br/>status='won'"]
-    end
-
-    Inside --> E1
-    Inside --> E2
-    Inside --> E3
-    Inside --> E4
-
-    E3 --> Output["endCycle('death')<br/>→ ecós + ciclo<br/>→ screen='play' again"]
-    E1 --> Output
-    E2 --> Output
-    E4 --> Output
-
-    Output --> Echo["GRAVA ECHO<br/>track = posicoes gravadas<br/>não input<br/>deterministico"]
-    Echo --> Encap["cap maxEchoes<br/>oldest dissolves<br/>≤3 ecos"]
-    Encap --> ResetPlayer["reset: player→spawn<br/>crates/plates/gates revertem<br/>estado persistente mantido<br/>leversOn / hasKey ← permanece"]
-    ResetPlayer --> NextCycle["CYCLE #N+1<br/>beat=0, tracks=[spawn]"]
-
-    NextCycle --> InnerLoop{"Termina vencendo?<br/>(Phase 30)"}
-    InnerLoop ---YES["unlock next level<br/>save.unlocked++<br/>persist → /api/progress"]
-    InnerLoop ---NO["prova outros ciclos"]
-
-    classDef keyEmpt fill:#0B1220,stroke:#45E08C,color:#fff
-    classDef keyPlate fill:#0B1220,stroke:#C43B31,color:#fff
-    classDef keyGate fill:#111C2E,stroke:#D9A63C,color:#fff
-    classDef keyDuct fill:#0B1220,stroke:#57D8E6,color:#fff
-
-    style keyEmpt fill:#0B1220,stroke:#45E08C,color:#fff
-    style keyPlate fill:#0B1220,stroke:#C43B31,color:#fff
-    style keyGate fill:#111C2E,stroke:#D9A63C,color:#fff
-    style keyDuct fill:#0B1220,stroke:#57D8E6,color:#fff
-```
-
-### Progressão das fases (38 fases × evolução mecânica)
-
-```mermaid
-flowchart LR
-    subgraph Tutorial["Tutorial (8 salas)"]
-        T1["Andar — P spawn→E"]
-        T2["Empurrar — C na placa r"]
-        T3["Eco — TAB + eco segura placa"]
-        T4["Chave — K abre porta D"]
-        T5["Alavanca — E liga V"]
-        T6["Botão — C sobre H mantém"]
-        T7["Duto — O teleporta para o par"]
-        T8["Código — 1-9 + C confirma"]
-    end
-
-    subgraph Base["Fases 1–12 (base)"]
-        L1["Andar até o núcleo"]
-        L2["Caixote empurra placa"]
-        L3["Eco segura placa por você"]
-        L4["Dois ecos, duas portas, vazio"]
-        L5["Chave + porta + eco sincronizado"]
-        L6["Caixote e eco segurando placas"]
-        L7["Três ecos, três cores, quatro ciclos"]
-        L8["Ciclo curto (8 steps), rota cirúrgica"]
-        L9["Caixote e eco em rotas diferentes"]
-        L10["Três portões, dois ecos, caixote"]
-        L11["Alavanca — ligada permanentemente"]
-        L12["Duas alavancas (um por cor)"]
-    end
-
-    subgraph Advanced["Fases 13–30 (mecânicas combinadas)"]
-        F13["Circuito Duplo<br/>alavanca + caixote + placa"]
-        F14["Prelo — botão com peso"]
-        F15["Dois Botões — cada um com caixote"]
-        F16["Alavanca + Botão separados"]
-        F17["Conduto — duto cruza sala"]
-        F18["Duto Coberto — caixote desliga duto"]
-        F19["Dutos em Série — um leva ao outro"]
-        F20["Código Romano — pistas no chão"]
-        F21["Código de Cor — ordem das cores"]
-        F22["Código e Peso — caixote + senha"]
-        F23["Código e Alavanca — senha + saída"]
-        F24["Código e Duto — senha + duto + saída"]
-        F25["Cores e Botões — senha + peso"]
-        F26["Senha e Vão — senha + vazio + alavanca"]
-        F27["Três Mecanismos — caixote + alavanca + senha"]
-        F28["Quatro Mecanismos — duto + botão + senha + alavanca"]
-        F29["Labirinto Final — duas alavancas + caixote + duto"]
-        F30["Última Prova — tudo junto"]
-    end
-
-    T1 --> Base --> Advanced
-```
-
-### Hierarquia das camadas
-
-```mermaid
-flowchart TB
-    subgraph L1["L1 — Frontend (Vite + p5.js + TypeScript)"]
-        FN["DOM shell<br/>login / menu tabs / overlays"]
-        GS["Game engine<br/>app.ts + rules.ts + levels.ts"]
-        RC["Render pipeline<br/>room → entities → player → hud"]
-        AC["Audio<br/>WebAudio 100% sintetizado"]
-    end
-
-    subgraph L2["L2 — Backend (Express + pg + Zod)"]
-        AE["Express app<br/>auth / progress / runs"]
-        PO["PostgreSQL<br/>users · sessions · progress<br/>level_bests · runs"]
-        FH["Health + ping routes"]
-    end
-
-    subgraph L3["L3 — Banco de dados (Neon)"]
-        DB1["Static Site (Render)"]
-        DB2["Web Service (Render)"]
-        DB3["PostgreSQL (Neon)"]
-    end
-
-    subgraph L0["L0 — UX Global"]
-        UI["PWA + touch + keyboard"]
-        STP["Save: localStorage (offline)<br/>+ PostgreSQL (online)"]
-    end
-
-    FN --> GS --> RC --> AC
-    AE --> PO
-    UI --> FN
-    STP -.->|progresso| UI
-    STP -.->|progresso| AE
-
-    classDef l1 fill:#0B1220,stroke:#35E6F2,color:#fff
-    classDef l2 fill:#111C2E,stroke:#9BC0B2,color:#fff
-    classDef l3 fill:#04070B,stroke:#D9A63C,color:#fff
-    classDef l0 fill:#111C2E,stroke:#45E08C,color:#fff
-
-    style L1 fill:#0B1220,stroke:#35E6F2,color:#fff
-    style L2 fill:#111C2E,stroke:#9BC0B2,color:#fff
-    style L3 fill:#04070B,stroke:#D9A63C,color:#fff
-    style L0 fill:#111C2E,stroke:#45E08C,color:#fff
-```
-
----
+Além do repositório, os arquivos são servidos pelo site em `https://loopbound-web.onrender.com/fluxogramas/fluxo-do-jogo.png` e `.../fluxo-da-fase.png`.
 
 ## 11. Testes e critérios de aceite
 
