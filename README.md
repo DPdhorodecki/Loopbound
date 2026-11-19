@@ -639,7 +639,7 @@ loopbound/
 
 ## 10b. Fluxograma completo do jogo
 
-Um único fluxograma cobre o jogo inteiro, do login ao fim da campanha, passando pelo loop completo de cada fase. Foi desenhado com **simbologia padrão de fluxograma** — terminal (início/fim), processo, decisão, entrada/saída, subprocesso e conector — e usa conectores para os retornos, em vez de linhas atravessando o diagrama.
+Um único fluxograma cobre o jogo inteiro, do login ao fim da campanha, passando pelo loop completo de cada fase. Foi desenhado com **simbologia padrão de fluxograma** — terminal (início/fim), processo, decisão, entrada/saída, subprocesso e conector — e usa conectores para os retornos, em vez de linhas atravessando o diagrama. O visual é **dark mode**: fundo azul-noite com grade discreta, nós em tons profundos e arestas/textos claros.
 
 | Arquivo | Conteúdo |
 |---|---|

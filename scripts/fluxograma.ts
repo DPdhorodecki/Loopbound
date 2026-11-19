@@ -100,7 +100,7 @@ function nodeText(node: FlowNode): string {
 function nodeMarkup(node: FlowNode): string {
   const style = FLOW_STYLE[node.shape];
   return `<g>
-    ${shapeMarkup(node.shape, node.x + SHADOW_OFFSET, node.y + SHADOW_OFFSET, node.w, node.h, 'rgba(30,32,52,0.18)', 'none', 0)}
+    ${shapeMarkup(node.shape, node.x + SHADOW_OFFSET, node.y + SHADOW_OFFSET, node.w, node.h, FLOW_COLORS.shadow, 'none', 0)}
     ${shapeMarkup(node.shape, node.x, node.y, node.w, node.h, style.fill, style.stroke)}
     ${nodeText(node)}
   </g>`;
@@ -158,7 +158,7 @@ function legendMarkup(legend: FlowLegend): string {
     })
     .join('');
   return `<g>
-    <rect x="${legend.x}" y="${legend.y}" width="${legend.w}" height="${height}" rx="10" fill="#FFFFFF" fill-opacity="0.94" stroke="#C9CEDC" stroke-width="1.5" />
+    <rect x="${legend.x}" y="${legend.y}" width="${legend.w}" height="${height}" rx="10" fill="${FLOW_COLORS.panel}" fill-opacity="0.96" stroke="${FLOW_COLORS.border}" stroke-width="1.5" />
     <text x="${legend.x + 18}" y="${legend.y + 22}" font-family="'Courier New', monospace" font-weight="bold" font-size="15" fill="${FLOW_COLORS.ink}">${esc(legend.title)}</text>
     ${rows}
   </g>`;
@@ -180,7 +180,7 @@ function svgFor(diagram: FlowDiagram): string {
       return note.lines
         .map(
           (line, i) =>
-            `<text x="${note.x}" y="${note.y + i * 20}" font-family="'Courier New', monospace" font-weight="bold" font-size="16" fill="#8A90A8" text-anchor="${anchor}">${esc(line)}</text>`,
+            `<text x="${note.x}" y="${note.y + i * 20}" font-family="'Courier New', monospace" font-weight="bold" font-size="16" fill="${FLOW_COLORS.note}" text-anchor="${anchor}">${esc(line)}</text>`,
         )
         .join('');
     })
@@ -193,7 +193,7 @@ function svgFor(diagram: FlowDiagram): string {
   <g stroke="${FLOW_COLORS.grid}" stroke-width="1">${grid.join('')}</g>
 
   <text x="${width / 2}" y="46" font-family="'Courier New', monospace" font-weight="bold" font-size="${titleSize}" fill="${FLOW_COLORS.title}" text-anchor="middle">${esc(diagram.title)}</text>
-  <text x="${width / 2}" y="76" font-family="'Courier New', monospace" font-weight="bold" font-size="${subtitleSize}" fill="#6D7389" text-anchor="middle">${esc(diagram.subtitle)}</text>
+  <text x="${width / 2}" y="76" font-family="'Courier New', monospace" font-weight="bold" font-size="${subtitleSize}" fill="${FLOW_COLORS.subtitle}" text-anchor="middle">${esc(diagram.subtitle)}</text>
 
   ${notes}
 
@@ -201,7 +201,7 @@ function svgFor(diagram: FlowDiagram): string {
   <g>${diagram.nodes.map(nodeMarkup).join('\n')}</g>
   ${diagram.legend ? legendMarkup(diagram.legend) : ''}
 
-  <text x="${width - 24}" y="${height - 16}" font-family="'Courier New', monospace" font-size="12" fill="#A2A7B8" text-anchor="end">LoopBound · npm run fluxograma</text>
+  <text x="${width - 24}" y="${height - 16}" font-family="'Courier New', monospace" font-size="12" fill="${FLOW_COLORS.footer}" text-anchor="end">LoopBound · npm run fluxograma</text>
 </svg>
 `;
 }
@@ -246,7 +246,7 @@ function rasterize(browser: string, svg: string, pngPath: string, w: number, h: 
     );
     writeFileSync(
       htmlPath,
-      `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;background:#fff;overflow:hidden}svg{display:block}</style></head><body>${scaled}</body></html>`,
+      `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;background:#070C16;overflow:hidden}svg{display:block}</style></head><body>${scaled}</body></html>`,
       'utf8',
     );
 

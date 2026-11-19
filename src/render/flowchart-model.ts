@@ -72,26 +72,32 @@ export interface FlowDiagram {
   legend?: FlowLegend;
 }
 
-/** Cores no estilo do jogo (pixel art / painéis roxos). */
+/** Cores no estilo do jogo (pixel art noturna / painéis escuros). */
 export const FLOW_STYLE: Record<
   FlowShape,
   { fill: string; stroke: string; text: string }
 > = {
-  terminal: { fill: '#2E7D5B', stroke: '#1B4F38', text: '#FFFFFF' },
-  process: { fill: '#5B5F97', stroke: '#3A3F70', text: '#FFFFFF' },
-  decision: { fill: '#A66A1E', stroke: '#6E4410', text: '#FFFFFF' },
-  io: { fill: '#2E6F8E', stroke: '#1D4A60', text: '#FFFFFF' },
-  subroutine: { fill: '#6A4C93', stroke: '#46306A', text: '#FFFFFF' },
-  connector: { fill: '#3A3F70', stroke: '#22254A', text: '#FFFFFF' },
+  terminal: { fill: '#153B2C', stroke: '#43C593', text: '#DFFBF0' },
+  process: { fill: '#262C4F', stroke: '#8D95DF', text: '#EDF0FF' },
+  decision: { fill: '#42300F', stroke: '#E2AC4F', text: '#FFF1D6' },
+  io: { fill: '#0F3243', stroke: '#57B8DA', text: '#E1F6FF' },
+  subroutine: { fill: '#331F4D', stroke: '#B58CF0', text: '#F3E9FF' },
+  connector: { fill: '#1B2140', stroke: '#9AA4DE', text: '#E8EBFF' },
 };
 
 export const FLOW_COLORS = {
-  bg: '#FFFFFF',
-  grid: '#ECEEF3',
-  ink: '#2A2C4A',
-  arrow: '#20223A',
-  labelBg: '#FFFFFF',
-  title: '#2A2C4A',
+  bg: '#0B1220',
+  grid: '#1A2436',
+  ink: '#E4E8F6',
+  arrow: '#B9C2DE',
+  labelBg: '#111A2B',
+  title: '#F4F7FF',
+  panel: '#111A2B',
+  border: '#2A3650',
+  note: '#7B86A3',
+  subtitle: '#9AA5C2',
+  footer: '#5B6784',
+  shadow: 'rgba(0,0,0,0.55)',
 } as const;
 
 const n = (
