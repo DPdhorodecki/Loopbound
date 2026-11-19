@@ -1,10 +1,9 @@
 /**
- * Gera os dois fluxogramas do jogo em `public/fluxogramas/`:
+ * Gera o fluxograma completo do jogo em `public/fluxogramas/`:
  *
- *   fluxo-do-jogo.svg / .png   — fluxo geral (acesso → campanha → fim)
- *   fluxo-da-fase.svg / .png   — loop de uma fase (ações, decisões, falhas)
+ *   fluxograma-completo.svg / .png
  *
- * Os desenhos vêm de `src/render/flowchart-model.ts`, fonte única de verdade.
+ * O desenho vem de `src/render/flowchart-model.ts`, fonte única de verdade.
  * O SVG é escrito diretamente; o PNG é rasterizado em 2× com o Edge/Chrome
  * headless instalado na máquina (se nenhum navegador for encontrado, o SVG
  * ainda é gerado e o script avisa).
@@ -187,12 +186,14 @@ function svgFor(diagram: FlowDiagram): string {
     })
     .join('');
 
+  const titleSize = width >= 2000 ? 36 : 27;
+  const subtitleSize = width >= 2000 ? 16 : 14;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <rect width="${width}" height="${height}" fill="${FLOW_COLORS.bg}" />
   <g stroke="${FLOW_COLORS.grid}" stroke-width="1">${grid.join('')}</g>
 
-  <text x="${width / 2}" y="44" font-family="'Courier New', monospace" font-weight="bold" font-size="27" fill="${FLOW_COLORS.title}" text-anchor="middle">${esc(diagram.title)}</text>
-  <text x="${width / 2}" y="72" font-family="'Courier New', monospace" font-weight="bold" font-size="14" fill="#6D7389" text-anchor="middle">${esc(diagram.subtitle)}</text>
+  <text x="${width / 2}" y="46" font-family="'Courier New', monospace" font-weight="bold" font-size="${titleSize}" fill="${FLOW_COLORS.title}" text-anchor="middle">${esc(diagram.title)}</text>
+  <text x="${width / 2}" y="76" font-family="'Courier New', monospace" font-weight="bold" font-size="${subtitleSize}" fill="#6D7389" text-anchor="middle">${esc(diagram.subtitle)}</text>
 
   ${notes}
 

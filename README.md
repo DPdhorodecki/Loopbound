@@ -20,7 +20,7 @@ A fuga é narrada pelo rádio: o **General Marcinho** dá o briefing e dicas gra
 | História: prólogo, setores, final e pós-créditos | ✅ |
 | Rádio com General Marcinho + Chuchuty | ✅ |
 | Mecânicas: alavanca, botão, duto, porta de código, bueiro/alçapão e passagem secreta | ✅ |
-| Fluxogramas (fluxo geral + loop de fase) | ✅ PNG e SVG em `public/fluxogramas/` |
+| Fluxograma completo (acesso + loop + campanha) | ✅ PNG e SVG em `public/fluxogramas/` |
 | Labirintos e puzzles elaborados | ✅ |
 | Login + banco PostgreSQL + histórico | ✅ |
 | Menu em abas (estilo CEPK Rush) | ✅ |
@@ -125,7 +125,7 @@ npx vite-node scripts/rebuild-levels.ts  # resolve e regrava as fases 13–30 (s
 npx vite-node scripts/enlarge-levels.ts  # amplia e decora as 30 fases (rodar uma vez)
 npx vite-node scripts/export-levels.ts   # exporta um PNG por fase para a pasta de saída
 npm run audit        # audita design (caminho livre, ciclo prematuro, folga) e mecânicas órfãs/não usadas
-npm run fluxograma   # regenera os dois fluxogramas (SVG + PNG) em public/fluxogramas/
+npm run fluxograma   # regenera o fluxograma completo (SVG + PNG) em public/fluxogramas/
 npm run icons        # regenera os ícones do PWA
 npm run sprite       # gera um PNG de preview do Kennedyto
 ```
@@ -140,14 +140,14 @@ Hooks de debug: `?level=3&moves=DDDR|DDRRRR` (o `|` encerra o ciclo) e `&pause=1
 
 ```
 README.md                apresentação + GDD completo (regras, arte, fases, arquitetura)
-public/fluxogramas/          os dois fluxogramas do jogo em PNG e SVG (gerados por `npm run fluxograma`)
+public/fluxogramas/          fluxograma completo em PNG e SVG (gerado por `npm run fluxograma`)
 render.yaml              Blueprint do Render (Static Site + Web Service)
 server/                  API Express + PostgreSQL (auth, progresso, histórico)
 docker-compose.yml       PostgreSQL de desenvolvimento
 src/game/                regras canônicas, fases, tutorial, história, dicas, análise, save
 src/net/api.ts           cliente da API e sessão
 src/render/              paleta, Kennedyto, retratos, temas, sala, fundo espacial, entidades, fonte
-src/render/flowchart-model.ts  modelo dos dois fluxogramas (formas, textos e conexões)
+src/render/flowchart-model.ts  modelo do fluxograma completo (formas, textos e conexões)
 src/ui/                  HUD (640×360), rádio e casca DOM (login + menu em abas)
 src/app.ts               máquina de estados, input, tutorial, telas, rádio/dicas
 src/sketch.ts            instância p5 e escala inteira do canvas
@@ -637,41 +637,36 @@ loopbound/
 
 ---
 
-## 10b. Fluxogramas do jogo
+## 10b. Fluxograma completo do jogo
 
-Os dois fluxogramas abaixo foram desenhados com **simbologia padrão de fluxograma** — terminal (início/fim), processo, decisão, entrada/saída, subprocesso e conector — e cobrem o jogo como ele está hoje, não só o protótipo. Os desenhos vêm de uma fonte única (`src/render/flowchart-model.ts`) e são gerados por `npm run fluxograma` em SVG e PNG (2×).
+Um único fluxograma cobre o jogo inteiro, do login ao fim da campanha, passando pelo loop completo de cada fase. Foi desenhado com **simbologia padrão de fluxograma** — terminal (início/fim), processo, decisão, entrada/saída, subprocesso e conector — e usa conectores para os retornos, em vez de linhas atravessando o diagrama.
 
 | Arquivo | Conteúdo |
 |---|---|
-| `public/fluxogramas/fluxo-do-jogo.png` · `.svg` | Fluxo geral: acesso, prólogo, tutorial, menu, campanha, histórias de setor e final |
-| `public/fluxogramas/fluxo-da-fase.png` · `.svg` | Loop de uma fase: entrada, ações, decisões, falhas e vitória |
+| `public/fluxogramas/fluxograma-completo.png` · `.svg` | Acesso, menu, loop da fase, falhas, vitória e progressão da campanha em um só fluxo |
 
-### Fluxograma 1 — fluxo geral do jogo
+![Fluxograma completo do LoopBound](public/fluxogramas/fluxograma-completo.png)
 
-Do login ao fim da campanha: sessão salva, autenticação, prólogo, tutorial de 8 salas, menu em abas, escolha de fase, história de abertura do setor, execução da fase, histórias de encerramento, avanço de fase e cena final. Cada decisão mostra explicitamente os caminhos **SIM** e **NÃO**.
+[abrir o PNG em tamanho real](public/fluxogramas/fluxograma-completo.png) · [abrir o SVG](public/fluxogramas/fluxograma-completo.svg)
 
-![Fluxograma 1 — fluxo geral do jogo](public/fluxogramas/fluxo-do-jogo.png)
+### O que está no fluxo
 
-[abrir o PNG em tamanho real](public/fluxogramas/fluxo-do-jogo.png) · [abrir o SVG](public/fluxogramas/fluxo-do-jogo.svg)
-
-### Fluxograma 2 — loop de uma fase
-
-O detalhe de dentro da fase: leitura da entrada, pausa, escolha entre mover/empurrar, interagir e encerrar o ciclo (TAB), resolução da casa pisada, captura pelo bueiro, queda no vazio, orçamento de passos, saída e vitória. Os conectores **A** (reiniciar a fase) e **B** (voltar ao início do ciclo) evitam linhas atravessando o diagrama.
-
-![Fluxograma 2 — loop de uma fase](public/fluxogramas/fluxo-da-fase.png)
-
-[abrir o PNG em tamanho real](public/fluxogramas/fluxo-da-fase.png) · [abrir o SVG](public/fluxogramas/fluxo-da-fase.svg)
+- **Acesso:** abrir o jogo, verificar sessão salva, login/cadastro na API (com retorno em caso de credenciais inválidas), prólogo e tutorial de 8 salas.
+- **Menu e campanha:** menu em abas, escolha de fase, história de abertura do setor, vitória, história de encerramento, avanço de fase, cena final e **FIM**.
+- **Loop da fase:** ler entrada, pausa, mover/empurrar, interagir, encerrar o ciclo (TAB), resolver a casa pisada, captura pelo bueiro, queda no vazio, orçamento de passos, saída e vitória.
+- **Conectores:** **A** reinicia a fase (captura, morte ou orçamento), **B** volta ao início do ciclo (bloqueio, interação, TAB ou fim do orçamento) e **C** carrega a próxima fase.
+- Cada decisão tem os caminhos **SIM** e **NÃO** rotulados, e todo caminho termina em outro nó ou em **FIM**.
 
 ### Simbologia usada
 
 | Símbolo | Forma | Significado no LoopBound |
 |---|---|---|
-| Terminal | elipse alongada | **INÍCIO** e **FIM** de cada fluxo |
-| Processo | retângulo | ação do jogo ou da interface (abrir o jogo, executar a fase, mover...) |
+| Terminal | elipse alongada | **INÍCIO** e **FIM** do fluxo |
+| Processo | retângulo | ação do jogo ou da interface (abrir o jogo, mover, reiniciar...) |
 | Decisão | losango | pergunta com dois caminhos, sempre rotulados **SIM** / **NÃO** |
 | Entrada / saída | paralelogramo | dados que entram ou saem (login/cadastro, leitura do teclado) |
 | Subprocesso | retângulo com barras laterais | rotina à parte (prólogo, tutorial, histórias em quadrinhos) |
-| Conector | círculo | continuação do fluxo em outro ponto (`A` = reiniciar, `B` = novo ciclo) |
+| Conector | círculo | continuação do fluxo em outro ponto (`A`, `B` e `C`) |
 
 ### Como regerar
 
@@ -679,9 +674,9 @@ O detalhe de dentro da fase: leitura da entrada, pausa, escolha entre mover/empu
 npm run fluxograma   # gera SVG + PNG em public/fluxogramas/
 ```
 
-O gerador usa o Edge/Chrome headless da máquina para rasterizar os PNGs em 2× (3000×4000 e 3120×3600). Se nenhum navegador for encontrado, os SVGs ainda são gerados; defina `CHROME_PATH` para apontar para o executável. O script também aceita `NO_PNG=1` para gerar só os vetores.
+O gerador usa o Edge/Chrome headless da máquina para rasterizar o PNG em 2× (4800×6640). Se nenhum navegador for encontrado, o SVG ainda é gerado; defina `CHROME_PATH` para apontar para o executável. O script também aceita `NO_PNG=1` para gerar só o vetor.
 
-Além do repositório, os arquivos são servidos pelo site em `https://loopbound-web.onrender.com/fluxogramas/fluxo-do-jogo.png` e `.../fluxo-da-fase.png`.
+Além do repositório, o arquivo é servido pelo site em `https://loopbound-web.onrender.com/fluxogramas/fluxograma-completo.png`.
 
 ## 11. Testes e critérios de aceite
 
