@@ -5,7 +5,7 @@ import { persistSave } from '../game/save';
 import { CODE_COLORS, ROMAN } from '../game/types';
 import { ENDING, PROLOGUE, SECTORS, StorySlide, sectorForLevel, speakerName } from '../game/story';
 import { portraitDataUrl } from '../render/portraits';
-import { comicArt } from '../render/comic';
+import { comicArt, preloadComicArt } from '../render/comic';
 import * as api from '../net/api';
 
 type Tab = 'jogar' | 'fases' | 'historia' | 'historico' | 'perfil';
@@ -58,6 +58,7 @@ export class Shell {
   private storySlides: StorySlide[] = [];
   private storyIndex = 0;
   private storyDone: (() => void) | null = null;
+  private comicPreloadStarted = false;
 
   constructor(
     private readonly app: App,
@@ -490,6 +491,16 @@ export class Shell {
     this.app.menuOpen = true;
     this.storyEl.classList.remove('hidden');
     this.renderStory();
+    // Baixa só os PNGs desta história e redesenha quando chegarem, para a
+    // arte vetorial não ficar presa no lugar da foto.
+    const ids = slides
+      .map((slide) => slide.art)
+      .filter((art): art is NonNullable<typeof art> => Boolean(art));
+    if (ids.length > 0) {
+      void preloadComicArt(ids).then(() => {
+        if (this.storySlides === slides) this.renderStory();
+      });
+    }
   }
 
   private renderStory(): void {
@@ -898,6 +909,12 @@ export class Shell {
 
     const comicSlides = [...PROLOGUE, ...ENDING].filter((s) => s.art);
     if (comicSlides.length) {
+      if (!this.comicPreloadStarted) {
+        this.comicPreloadStarted = true;
+        void preloadComicArt(comicSlides.map((s) => s.art!)).then(() => {
+          if (this.tab === 'historia') this.renderMenu();
+        });
+      }
       const gallery = h('div', { class: 'lb-comic-gallery' });
       for (const slide of comicSlides) {
         gallery.append(

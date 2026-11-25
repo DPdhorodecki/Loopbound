@@ -195,6 +195,7 @@ const PHOTOS_FOCUS: Partial<Record<ComicPanelId, number>> = {
 };
 
 const images = new Map<string, HTMLImageElement>();
+const failed = new Set<string>();
 
 function photoImage(id: ComicPanelId): HTMLImageElement | null {
   const src = PHOTOS[id];
@@ -203,26 +204,48 @@ function photoImage(id: ComicPanelId): HTMLImageElement | null {
   if (!img) {
     img = new Image();
     img.decoding = 'async';
+    // Quando o PNG chega, invalida o cache de fallback do painel.
+    img.onload = () => cache.delete(id);
+    img.onerror = () => failed.add(src);
     img.src = src;
     images.set(src, img);
   }
   return img.complete && img.naturalWidth > 0 ? img : null;
 }
 
-/** Pré-carrega as imagens das cenas da HQ. */
-export function preloadComicArt(): Promise<void> {
+/**
+ * Pré-carrega as cenas da HQ. Sem argumento carrega todas; com uma lista,
+ * carrega só os painéis que a história atual vai mostrar (mobile-friendly).
+ */
+export function preloadComicArt(ids?: ComicPanelId[]): Promise<void> {
   if (typeof Image === 'undefined') return Promise.resolve();
+  const list = (ids ?? (Object.keys(PHOTOS) as ComicPanelId[])).filter((id) => PHOTOS[id]);
   return Promise.all(
-    Object.values(PHOTOS).map(
-      (src) =>
+    list.map(
+      (id) =>
         new Promise<void>((resolve) => {
-          const img = new Image();
+          const src = PHOTOS[id]!;
+          const existing = images.get(src);
+          if (existing && existing.complete) {
+            if (existing.naturalWidth > 0) cache.delete(id);
+            resolve();
+            return;
+          }
+          const img = existing ?? new Image();
+          img.decoding = 'async';
           img.onload = () => {
             images.set(src, img);
+            cache.delete(id);
             resolve();
           };
-          img.onerror = () => resolve();
-          img.src = src;
+          img.onerror = () => {
+            failed.add(src);
+            resolve();
+          };
+          if (!existing) {
+            img.src = src;
+            images.set(src, img);
+          }
         }),
     ),
   ).then(() => undefined);
@@ -498,6 +521,10 @@ export function comicArt(id: ComicPanelId): string {
   const cached = cache.get(id);
   if (cached) return cached;
   if (typeof document === 'undefined') return '';
+  // Dispara o download do PNG e só congela o resultado quando ele já está
+  // disponível; senão a versão vetorial ficaria presa no cache.
+  const src = PHOTOS[id];
+  const ready = !src || photoImage(id) !== null || failed.has(src);
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
@@ -508,6 +535,6 @@ export function comicArt(id: ComicPanelId): string {
   scanlines(ctx);
   border(ctx);
   const url = canvas.toDataURL('image/png');
-  cache.set(id, url);
+  if (ready) cache.set(id, url);
   return url;
 }
