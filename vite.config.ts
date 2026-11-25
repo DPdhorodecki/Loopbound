@@ -45,14 +45,19 @@ export default defineConfig(({ mode }) => {
           start_url: BASE,
           scope: BASE,
           display: 'standalone',
-          orientation: 'landscape',
+          display_override: ['standalone', 'minimal-ui'],
+          // Mobile-first: retrato e paisagem são suportados (a barra de toque
+          // aparece em telas sensíveis ao toque).
+          orientation: 'any',
           background_color: '#0B1220',
           theme_color: '#0B1220',
           lang: 'pt-BR',
+          dir: 'ltr',
           categories: ['games', 'puzzle'],
+          prefer_related_applications: false,
           icons: [
-            { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-            { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+            { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+            { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
             {
               src: 'icons/maskable-512.png',
               sizes: '512x512',
@@ -62,9 +67,21 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,png,svg,webmanifest,woff2}'],
+          // Só a casca do app entra no precache (instalação rápida no celular).
+          // As artes grandes (HQ/personagens) são cacheadas sob demanda.
+          globPatterns: ['**/*.{js,css,html,svg,webmanifest,woff2}', 'icons/*.png'],
           navigateFallback: 'index.html',
           cleanupOutdatedCaches: true,
+          runtimeCaching: [
+            {
+              urlPattern: /\/assets\/.*\.(?:png|jpe?g|webp)$/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'loopbound-art',
+                expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              },
+            },
+          ],
         },
         devOptions: { enabled: false },
       }),

@@ -1,21 +1,59 @@
 import './style.css';
 import p5 from 'p5';
-import { App } from './app';
+import { App, TouchAction } from './app';
 import { createSketch } from './sketch';
 import { Shell } from './ui/shell';
 import { initPWA } from './pwa';
 import { preloadPortraits } from './render/portraits';
-import { preloadComicArt } from './render/comic';
 import { VIEW_H, VIEW_W } from './ui/hud';
 import { Dir } from './game/types';
 
+// Só os retratos (pequenos) são pré-carregados. As artes de HQ são baixadas
+// sob demanda para não gastar ~8 MB de dados na primeira abertura mobile.
 void preloadPortraits();
-void preloadComicArt();
 
 const container = document.getElementById('game') as HTMLElement;
 const fullscreenBtn = document.getElementById('fullscreen') as HTMLButtonElement | null;
+const touchEl = document.getElementById('touch') as HTMLElement | null;
+const hatchBtn = document.getElementById('act-hatch') as HTMLButtonElement | null;
 
 let app: App | null = null;
+
+// ---------------------------------------------------------------- mobile
+
+/** Liga a barra de toque em aparelhos com toque (celular/tablet). */
+const isTouch = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+if (isTouch) document.body.classList.add('touch');
+
+/** Mantém `--touch-h` igual à altura real da barra (posiciona botões fixos). */
+function syncTouchHeight(): void {
+  const visible = touchEl && getComputedStyle(touchEl).display !== 'none';
+  document.documentElement.style.setProperty(
+    '--touch-h',
+    `${visible ? touchEl.offsetHeight : 0}px`,
+  );
+}
+if (touchEl && typeof ResizeObserver !== 'undefined') {
+  new ResizeObserver(syncTouchHeight).observe(touchEl);
+}
+syncTouchHeight();
+
+touchEl?.querySelectorAll<HTMLButtonElement>('[data-act]').forEach((btn) => {
+  btn.addEventListener('pointerdown', (event) => {
+    event.preventDefault();
+    const action = btn.dataset.act as TouchAction | undefined;
+    if (!action) return;
+    navigator.vibrate?.(8);
+    app?.touchAction(action);
+  });
+});
+
+// Sem Fullscreen API (iPhone) ou já instalado, o botão não tem função.
+const standalone = window.matchMedia('(display-mode: standalone)').matches;
+if (fullscreenBtn) {
+  const supported = typeof document.documentElement.requestFullscreen === 'function';
+  if (!supported || standalone) fullscreenBtn.hidden = true;
+}
 
 if (fullscreenBtn) {
   fullscreenBtn.addEventListener('click', (event) => {
@@ -41,6 +79,12 @@ new p5(
     app = instance;
 
     const shell = new Shell(instance, container);
+
+    instance.onTouchState = (state) => {
+      if (!hatchBtn) return;
+      hatchBtn.hidden = !state.hatch;
+      hatchBtn.classList.toggle('ready', state.hatchReady);
+    };
 
     window.addEventListener('keydown', (event) => {
       const target = event.target as HTMLElement | null;
@@ -109,6 +153,7 @@ new p5(
         instance.hintTimer = 0;
         instance.radioTimer = 0;
         if (fullscreenBtn) fullscreenBtn.hidden = true;
+        document.body.classList.remove('touch');
       }
       if (params.get('pause')) instance.debugPause();
     }

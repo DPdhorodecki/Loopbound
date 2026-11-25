@@ -8,7 +8,7 @@ Ecos não empurram contêineres nem pegam gemas. Mas eles **têm peso**: seguram
 
 A fuga é narrada pelo rádio: o **General Marcinho** dá o briefing e dicas graduais, enquanto o **Chuchuty** interrompe a frequência com ameaças. Nenhuma dica entrega a senha.
 
-**Jogue:** https://loopbound-web.onrender.com
+**Jogue:** https://loopbound-web-n4br.onrender.com
 
 ## Status
 
@@ -66,16 +66,38 @@ Os retratos do **General Marcinho**, do **Alien Chuchuty**, do Kennedyto e do si
 
 | Ação | Teclado | Toque |
 |---|---|---|
-| Mover | WASD / setas | swipe |
+| Mover | WASD / setas | swipe ou D-pad na barra de toque |
 | Interagir (alavanca, botão, tela, alçapão, passagem, bueiro) | `E` | botão `E` |
 | Dica do General Marcinho | `H` | botão `?` |
 | Painel de código | `1`–`9`, `C` confirma, `X`/`Backspace` limpa | toque nos botões |
-| Encerrar ciclo | `TAB` | botão do ciclo |
-| Desfazer | `Z` | — |
-| Reiniciar fase | `R` | — |
-| Tela cheia | `F` | botão `TELA` (canto superior direito) |
-| Pausa / menu | `ESC` | botão ESC |
+| Encerrar ciclo | `TAB` | botão `TAB` |
+| Desfazer | `Z` | botão `Z` |
+| Tampa do bueiro | botão do HUD | botão `▣` (aparece quando a fase tem bueiro) |
+| Reiniciar fase | `R` | menu de pausa |
+| Tela cheia | `F` | botão `TELA` (desktop; escondido no celular) |
+| Pausa / menu | `ESC` | botão `☰` |
 | Som | `M` | item do menu |
+
+### Mobile e PWA
+
+O jogo é mobile-first: em **retrato** o canvas ocupa a largura e uma barra de
+toque fixa (D-pad + `TAB`, `E`, `Z`, `?`, tampa e pausa) fica ao alcance dos
+polegares; em **paisagem** a barra some e valem o HUD do canvas e o swipe.
+
+- `body.touch` é ligado quando o aparelho tem toque (`pointer: coarse` ou
+  `maxTouchPoints`); a altura real da barra vira a variável CSS `--touch-h`,
+  usada para posicionar botões flutuantes (atualizar/instalar).
+- **Instalar:** no Android/Chromium aparece o botão **INSTALAR APP**
+  (`beforeinstallprompt`); no iOS Safari aparece a dica dispensável
+  *Compartilhar → Adicionar à Tela de Início*.
+- **Manifest:** `display: standalone`, `orientation: any`, ícones 192/512 e
+  maskable, tema `#0B1220`.
+- **Service worker:** precache só da casca (JS/CSS/HTML/ícones) para a
+  instalação ser rápida no celular; as artes de HQ/personagens são baixadas
+  sob demanda e guardadas no cache `loopbound-art`. O botão **ATUALIZAR**
+  aparece quando há versão nova.
+- `100dvh`, `viewport-fit=cover` e `env(safe-area-inset-*)` cuidam de notch,
+  barra de status e indicador de home.
 
 ## Stack
 
@@ -676,7 +698,7 @@ npm run fluxograma   # gera SVG + PNG em public/fluxogramas/
 
 O gerador usa o Edge/Chrome headless da máquina para rasterizar o PNG em 2× (4800×6640). Se nenhum navegador for encontrado, o SVG ainda é gerado; defina `CHROME_PATH` para apontar para o executável. O script também aceita `NO_PNG=1` para gerar só o vetor.
 
-Além do repositório, o arquivo é servido pelo site em `https://loopbound-web.onrender.com/fluxogramas/fluxograma-completo.png`.
+Além do repositório, o arquivo é servido pelo site em `https://loopbound-web-n4br.onrender.com/fluxogramas/fluxograma-completo.png`.
 
 ## 11. Testes e critérios de aceite
 
@@ -743,8 +765,8 @@ O deploy usa três peças, todas gratuitas:
 
 | Peça | Onde | Endereço |
 |---|---|---|
-| Frontend (build do Vite) | Render **Static Site** | `https://loopbound-web.onrender.com` |
-| API (Express) | Render **Web Service** | `https://loopbound-api.onrender.com` |
+| Frontend (build do Vite) | Render **Static Site** | `https://loopbound-web-n4br.onrender.com` |
+| API (Express) | Render **Web Service** | `https://loopbound-api-dkfs.onrender.com` |
 | PostgreSQL | **Neon** | connection string privada |
 
 O `render.yaml` na raiz descreve o Static Site e o Web Service, então o Render
@@ -796,7 +818,7 @@ graça:
 2. **+ Add New Monitor** → **Monitor Type: HTTP(s)**.
 3. Preencha:
    - **Friendly Name:** `Loopbound API`
-   - **URL:** `https://loopbound-api.onrender.com/api/ping`
+   - **URL:** `https://loopbound-api-dkfs.onrender.com/api/ping`
    - **Monitoring Interval:** `5 minutes` (mínimo do plano grátis)
    - **Alert Contacts:** deixe seu e-mail marcado
 4. **Create Monitor**. Em poucos minutos o status fica **Up** (verde).

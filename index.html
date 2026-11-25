@@ -15,18 +15,41 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="LoopBound" />
+    <meta name="application-name" content="LoopBound" />
+    <meta name="format-detection" content="telephone=no" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
     <link rel="icon" type="image/png" href="icons/icon-32.png" />
     <title>LoopBound — Kennedyto: A Fuga da Instalação Alienígena</title>
   </head>
   <body>
     <div id="game"></div>
+
+    <!-- Controles de toque: aparecem em dispositivos com tela sensível (body.touch). -->
+    <nav id="touch" aria-label="Controles de toque">
+      <div class="pad" role="group" aria-label="Mover">
+        <button type="button" class="pad-btn pad-up" data-act="up" aria-label="Mover para cima">▲</button>
+        <button type="button" class="pad-btn pad-left" data-act="left" aria-label="Mover para a esquerda">◀</button>
+        <button type="button" class="pad-btn pad-down" data-act="down" aria-label="Mover para baixo">▼</button>
+        <button type="button" class="pad-btn pad-right" data-act="right" aria-label="Mover para a direita">▶</button>
+      </div>
+      <div class="acts" role="group" aria-label="Ações">
+        <button type="button" class="act" data-act="tab">TAB<small>CICLO</small></button>
+        <button type="button" class="act" data-act="use">E<small>USA</small></button>
+        <button type="button" class="act" data-act="undo">Z<small>VOLTA</small></button>
+        <button type="button" class="act" data-act="hint">?<small>DICA</small></button>
+        <button type="button" class="act" data-act="hatch" id="act-hatch" hidden>▣<small>TAMPA</small></button>
+        <button type="button" class="act" data-act="pause">☰<small>PAUSA</small></button>
+      </div>
+    </nav>
+
     <button id="fullscreen" type="button" aria-label="Alternar tela cheia">TELA</button>
     <button id="update" type="button">ATUALIZAR</button>
-    <div id="rotate">
-      GIRE O DISPOSITIVO
-      <span>LOOPBOUND — KENNEDYTO E A FUGA DA INSTALAÇÃO ALIENÍGENA<br />FOI FEITO PARA TELA DEITADA</span>
-    </div>
+    <button id="install" type="button">INSTALAR APP</button>
+    <aside id="ios-install" aria-label="Como instalar no iPhone">
+      <span>No iPhone: <strong>Compartilhar</strong> → <strong>Adicionar à Tela de Início</strong></span>
+      <button type="button" id="ios-install-close" aria-label="Fechar dica">×</button>
+    </aside>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

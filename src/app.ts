@@ -54,6 +54,19 @@ import {
 
 export type Screen = 'title' | 'play' | 'win';
 
+/** Botões da barra de toque (mobile). */
+export type TouchAction =
+  | 'up'
+  | 'down'
+  | 'left'
+  | 'right'
+  | 'tab'
+  | 'use'
+  | 'undo'
+  | 'hint'
+  | 'pause'
+  | 'hatch';
+
 export interface WinResult {
   levelId: string;
   levelName: string;
@@ -89,6 +102,11 @@ export class App {
   /** Avisa a casca DOM para abrir a pausa (ou a senha) em overlay. */
   onPause: (() => void) | null = null;
   onCode: (() => void) | null = null;
+  /** Estado dos botões extras da barra de toque (tampa/alçapão). */
+  onTouchState:
+    | ((state: { hatch: boolean; hatchReady: boolean; interactive: boolean }) => void)
+    | null = null;
+  private touchStateKey = '';
 
   screen: Screen = 'title';
   /** Modo captura (`?level=N&shot=1`): desenha só a sala, sem HUD/rádio/faixa. */
@@ -293,6 +311,8 @@ export class App {
       this.toastTimer = Math.max(0, this.toastTimer - seconds);
       if (this.toastTimer === 0) this.toast = '';
     }
+
+    this.syncTouchState();
 
     if (this.screen !== 'play' || this.paused || !this.rt) return;
 
@@ -749,6 +769,66 @@ export class App {
   onSwipe(dir: Dir): void {
     if (this.menuOpen) return;
     if (this.screen === 'play' && !this.paused) this.enqueue(dir);
+  }
+
+  /**
+   * Ações da barra de toque (DOM fora do canvas). Reaproveita os mesmos
+   * caminhos do teclado para manter o comportamento idêntico.
+   */
+  touchAction(action: TouchAction): void {
+    this.sfx.unlock();
+    switch (action) {
+      case 'up':
+        this.onKey('ArrowUp');
+        break;
+      case 'down':
+        this.onKey('ArrowDown');
+        break;
+      case 'left':
+        this.onKey('ArrowLeft');
+        break;
+      case 'right':
+        this.onKey('ArrowRight');
+        break;
+      case 'tab':
+        this.onKey('Tab');
+        break;
+      case 'use':
+        this.onKey('e');
+        break;
+      case 'undo':
+        this.onKey('z');
+        break;
+      case 'hint':
+        this.onKey('h');
+        break;
+      case 'pause':
+        this.onKey('Escape');
+        break;
+      case 'hatch':
+        if (!this.menuOpen && !this.paused) this.useHatch();
+        break;
+    }
+  }
+
+  /** Informa a barra de toque quando o botão de tampa deve aparecer. */
+  private syncTouchState(): void {
+    if (!this.onTouchState) return;
+    const rt = this.rt;
+    const hatch = !!rt && rt.level.drains.length > 0;
+    const hatchReady = !!rt?.hasHatch;
+    const interactive =
+      !!rt &&
+      (rt.level.levers.length > 0 ||
+        rt.level.buttons.length > 0 ||
+        rt.level.terminal !== null ||
+        rt.level.hatch !== null ||
+        rt.level.secrets.length > 0 ||
+        rt.level.drains.length > 0);
+    const key = `${hatch}|${hatchReady}|${interactive}`;
+    if (key === this.touchStateKey) return;
+    this.touchStateKey = key;
+    this.onTouchState({ hatch, hatchReady, interactive });
   }
 
   /** Alterna tela cheia (botão DOM fixo ou tecla F). */
