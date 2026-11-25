@@ -2,11 +2,11 @@
 # O banco fica no Neon (grátis e sem expiração) — só a DATABASE_URL é pedida
 # na hora de criar o Blueprint.
 #
-# Importante: os nomes abaixo definem as URLs públicas.
-#   front: https://loopbound-web.onrender.com
-#   API:   https://loopbound-api.onrender.com
-# Se algum nome já estiver em uso no Render, ele ganha um sufixo e você precisa
-# atualizar VITE_API_URL e APP_ORIGIN aqui e redeployar.
+# Importante: os nomes abaixo definem as URLs públicas. Como os nomes base já
+# estavam em uso no Render, os serviços ganharam sufixo:
+#   front: https://loopbound-web-n4br.onrender.com
+#   API:   https://loopbound-api-dkfs.onrender.com
+# Se as URLs mudarem de novo, atualize VITE_API_URL e APP_ORIGIN aqui e redeploye.
 
 services:
   - type: web
@@ -18,7 +18,7 @@ services:
       - key: VITE_BASE
         value: /
       - key: VITE_API_URL
-        value: https://loopbound-api.onrender.com
+        value: https://loopbound-api-dkfs.onrender.com
     headers:
       - path: /sw.js
         name: Cache-Control
@@ -44,4 +44,4 @@ services:
         value: "1"
       # Origem liberada no CORS (o domínio do Static Site).
       - key: APP_ORIGIN
-        value: https://loopbound-web.onrender.com
+        value: https://loopbound-web-n4br.onrender.com
