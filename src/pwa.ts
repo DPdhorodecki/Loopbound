@@ -5,9 +5,11 @@ type InstallPrompt = Event & {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 };
 
-const IOS_HINT_KEY = 'loopbound.ios-install-dismissed';
+/** Como o jogador pode instalar o app neste navegador. */
+export type InstallState = 'none' | 'prompt' | 'ios' | 'manual';
 
 let deferred: InstallPrompt | null = null;
+let notify: ((msg: string) => void) | null = null;
 
 function isIOS(): boolean {
   if (/iphone|ipad|ipod/i.test(navigator.userAgent)) return true;
@@ -20,83 +22,84 @@ function isStandalone(): boolean {
   return window.matchMedia('(display-mode: standalone)').matches || legacy;
 }
 
+function isTouchDevice(): boolean {
+  return window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+}
+
 /**
- * Service worker (offline/atualização), botão de instalação do PWA e dica de
- * instalação no iOS (que não dispara `beforeinstallprompt`).
+ * O evento `beforeinstallprompt` pode chegar antes de o jogo inicializar, por
+ * isso o listener é registrado já na importação do módulo.
  */
-export function initPWA(notify: (msg: string) => void): void {
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferred = event as InstallPrompt;
+  });
+  window.addEventListener('appinstalled', () => {
+    deferred = null;
+    notify?.('LoopBound instalado!');
+  });
+}
+
+/**
+ * `prompt` = o navegador oferece o diálogo nativo; `ios`/`manual` = é preciso
+ * seguir as instruções do sistema; `none` = já instalado ou sem suporte.
+ */
+export function installState(): InstallState {
+  if (isStandalone()) return 'none';
+  if (deferred) return 'prompt';
+  if (isIOS()) return 'ios';
+  return isTouchDevice() ? 'manual' : 'none';
+}
+
+/** Texto de ajuda quando não há diálogo nativo de instalação. */
+export function installHint(): string {
+  return isIOS()
+    ? 'NO IPHONE: COMPARTILHAR → ADICIONAR À TELA DE INÍCIO'
+    : 'ABRA O MENU DO NAVEGADOR → INSTALAR APP';
+}
+
+export async function promptInstall(): Promise<void> {
+  if (!deferred) {
+    notify?.(installHint());
+    return;
+  }
+  const prompt = deferred;
+  deferred = null;
+  try {
+    await prompt.prompt();
+    const choice = await prompt.userChoice;
+    if (choice.outcome === 'accepted') notify?.('Instalando o LoopBound…');
+  } catch {
+    notify?.(installHint());
+  }
+}
+
+/**
+ * Service worker (offline/atualização). A instalação é oferecida pela casca
+ * DOM (`ui/shell.ts`), que consulta `installState()`.
+ */
+export function initPWA(n: (msg: string) => void): void {
+  notify = n;
   const updateBtn = document.getElementById('update');
-  const installBtn = document.getElementById('install');
 
   try {
     const updateSW = registerSW({
       immediate: true,
       onNeedRefresh() {
         updateBtn?.classList.add('visible');
-        notify('Nova versão pronta');
+        n('Nova versão pronta');
       },
       onOfflineReady() {
-        notify('Pronto para jogar offline');
+        n('Pronto para jogar offline');
       },
     });
     updateBtn?.addEventListener('click', () => {
       updateBtn.classList.remove('visible');
-      notify('Atualizando…');
+      n('Atualizando…');
       void updateSW(true);
     });
   } catch {
     /* dev sem service worker */
   }
-
-  const showInstall = () => installBtn?.classList.add('visible');
-  const hideInstall = () => installBtn?.classList.remove('visible');
-
-  window.addEventListener('beforeinstallprompt', (event) => {
-    event.preventDefault();
-    deferred = event as InstallPrompt;
-    showInstall();
-  });
-
-  installBtn?.addEventListener('click', () => {
-    void (async () => {
-      if (!deferred) {
-        notify('Use o menu do navegador para instalar');
-        return;
-      }
-      const prompt = deferred;
-      deferred = null;
-      hideInstall();
-      await prompt.prompt();
-      const choice = await prompt.userChoice;
-      if (choice.outcome === 'accepted') notify('Instalando o LoopBound…');
-    })();
-  });
-
-  window.addEventListener('appinstalled', () => {
-    deferred = null;
-    hideInstall();
-    notify('LoopBound instalado!');
-  });
-
-  if (isIOS() && !isStandalone()) showIosHint();
-}
-
-function showIosHint(): void {
-  const banner = document.getElementById('ios-install');
-  const close = document.getElementById('ios-install-close');
-  if (!banner) return;
-  try {
-    if (localStorage.getItem(IOS_HINT_KEY) === '1') return;
-  } catch {
-    /* storage bloqueado */
-  }
-  banner.classList.add('visible');
-  close?.addEventListener('click', () => {
-    banner.classList.remove('visible');
-    try {
-      localStorage.setItem(IOS_HINT_KEY, '1');
-    } catch {
-      /* ignora */
-    }
-  });
 }

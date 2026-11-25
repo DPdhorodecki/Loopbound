@@ -6,6 +6,7 @@ import { CODE_COLORS, ROMAN } from '../game/types';
 import { ENDING, PROLOGUE, SECTORS, StorySlide, sectorForLevel, speakerName } from '../game/story';
 import { portraitDataUrl } from '../render/portraits';
 import { comicArt, preloadComicArt } from '../render/comic';
+import { installHint, installState, promptInstall } from '../pwa';
 import * as api from '../net/api';
 
 type Tab = 'jogar' | 'fases' | 'historia' | 'historico' | 'perfil';
@@ -748,6 +749,29 @@ export class Shell {
       }),
       form,
       error,
+      this.installBlock(),
+    );
+  }
+
+  /** Oferta de instalação do PWA (some quando já instalado ou sem suporte). */
+  private installBlock(): HTMLElement | null {
+    const state = installState();
+    if (state === 'none') return null;
+    if (state === 'ios') {
+      return h('div', { class: 'lb-install' }, h('p', { class: 'lb-note', text: installHint() }));
+    }
+    const note =
+      state === 'manual' ? h('p', { class: 'lb-note', text: installHint() }) : null;
+    return h(
+      'div',
+      { class: 'lb-install' },
+      h('button', {
+        class: 'lb-btn lb-btn-ghost',
+        type: 'button',
+        text: 'INSTALAR COMO APP',
+        onclick: () => void promptInstall(),
+      }),
+      note,
     );
   }
 
@@ -854,6 +878,8 @@ export class Shell {
         text: `${TUTORIAL_ROOMS.length} salas de tutorial ensinam andar, empurrar, eco, chave, alavanca, botão, duto e código.`,
       }),
     );
+    const install = this.installBlock();
+    if (install) box.append(install);
     return box;
   }
 

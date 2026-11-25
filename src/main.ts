@@ -48,12 +48,9 @@ touchEl?.querySelectorAll<HTMLButtonElement>('[data-act]').forEach((btn) => {
   });
 });
 
-// Sem Fullscreen API (iPhone) ou já instalado, o botão não tem função.
-const standalone = window.matchMedia('(display-mode: standalone)').matches;
-if (fullscreenBtn) {
-  const supported = typeof document.documentElement.requestFullscreen === 'function';
-  if (!supported || standalone) fullscreenBtn.hidden = true;
-}
+// O botão TELA continua disponível no app instalado também (esconde as
+// barras do sistema no Android); no iPhone o clique explica a limitação.
+
 
 if (fullscreenBtn) {
   fullscreenBtn.addEventListener('click', (event) => {

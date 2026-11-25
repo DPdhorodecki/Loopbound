@@ -87,9 +87,11 @@ polegares; em **paisagem** a barra some e valem o HUD do canvas e o swipe.
 - `body.touch` é ligado quando o aparelho tem toque (`pointer: coarse` ou
   `maxTouchPoints`); a altura real da barra vira a variável CSS `--touch-h`,
   usada para posicionar botões flutuantes (atualizar/instalar).
-- **Instalar:** no Android/Chromium aparece o botão **INSTALAR APP**
-  (`beforeinstallprompt`); no iOS Safari aparece a dica dispensável
-  *Compartilhar → Adicionar à Tela de Início*.
+- **Instalar:** a tela de login e o menu (aba JOGAR) mostram **INSTALAR COMO
+  APP**. No Android/Chromium o clique abre o diálogo nativo
+  (`beforeinstallprompt`); no iOS Safari, em navegadores sem o evento (Firefox,
+  in-app) aparece a instrução *Compartilhar → Adicionar à Tela de Início* ou
+  *menu do navegador → Instalar app*.
 - **Manifest:** `display: standalone`, `orientation: any`, ícones 192/512 e
   maskable, tema `#0B1220`.
 - **Service worker:** precache só da casca (JS/CSS/HTML/ícones) para a

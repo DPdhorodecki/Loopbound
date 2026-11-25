@@ -837,8 +837,14 @@ export class App {
     if (!doc) return;
     const el = doc.documentElement;
     if (!doc.fullscreenElement) {
-      const request = el.requestFullscreen?.bind(el);
-      void request?.().catch(() => undefined);
+      if (typeof el.requestFullscreen !== 'function') {
+        // iPhone/iPad não expõem a Fullscreen API para elementos.
+        this.showToast('NO IPHONE: ADICIONE À TELA DE INÍCIO', 4);
+        this.sfx.play('blocked');
+        return;
+      }
+      const request = el.requestFullscreen.bind(el);
+      void request().catch(() => undefined);
     } else {
       void doc.exitFullscreen?.().catch(() => undefined);
     }
