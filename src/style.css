@@ -1224,3 +1224,496 @@ body.touch #touch {
     display: none;
   }
 }
+
+/* Login e menu em tela cheia, sobre a arte dos personagens. A barra de toque
+   do jogo fica escondida enquanto qualquer overlay estiver aberto. */
+body.overlay-open #touch {
+  display: none;
+}
+
+/* O aviso de atualização não deve cobrir as abas do menu. */
+body.overlay-open #update {
+  bottom: calc(64px + env(safe-area-inset-bottom));
+}
+
+/* ============================================================ hero do menu */
+
+.lb-auth,
+.lb-menu {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+  background: #04070c;
+}
+
+.lb-hero {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(53, 230, 242, 0.16), transparent 55%),
+    radial-gradient(ellipse at 50% 120%, rgba(18, 127, 142, 0.22), transparent 60%),
+    linear-gradient(180deg, #04070c 0%, #071120 46%, #03060a 100%);
+}
+
+.lb-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.22) 0 1px,
+    transparent 1px 3px
+  );
+  opacity: 0.45;
+}
+
+.lb-hero-stars {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0.8;
+  background-image:
+    radial-gradient(1.5px 1.5px at 20px 30px, rgba(244, 246, 245, 0.8), transparent 70%),
+    radial-gradient(1px 1px at 120px 80px, rgba(143, 179, 166, 0.6), transparent 70%),
+    radial-gradient(2px 2px at 180px 140px, rgba(53, 230, 242, 0.45), transparent 70%);
+  background-size:
+    240px 200px,
+    190px 170px,
+    310px 250px;
+}
+
+.lb-hero-wordmark {
+  position: absolute;
+  left: 50%;
+  top: clamp(48px, 11vh, 110px);
+  z-index: 1;
+  transform: translateX(-50%);
+  font-size: clamp(52px, 14vw, 190px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: rgba(53, 230, 242, 0.06);
+  -webkit-text-stroke: 2px rgba(53, 230, 242, 0.18);
+  text-shadow: 0 0 60px rgba(53, 230, 242, 0.08);
+  user-select: none;
+}
+
+.lb-hero-glow {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  z-index: 2;
+  width: min(520px, 92vw);
+  height: 110px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgba(53, 230, 242, 0.16), transparent 70%);
+  filter: blur(6px);
+}
+
+.lb-hero-ken {
+  position: absolute;
+  left: 50%;
+  top: clamp(58px, 9vh, 100px);
+  z-index: 3;
+  width: auto;
+  height: clamp(200px, 36vh, 360px);
+  image-rendering: pixelated;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 0 18px rgba(53, 230, 242, 0.18));
+  animation: lb-float 4.6s ease-in-out infinite;
+}
+
+.lb-hero-chuchuty {
+  position: absolute;
+  right: clamp(-54px, -3vw, -8px);
+  bottom: clamp(72px, 10vh, 120px);
+  z-index: 2;
+  width: auto;
+  height: clamp(190px, 40vh, 400px);
+  image-rendering: pixelated;
+  opacity: 0.95;
+  filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.5));
+}
+
+.lb-hero-marcinho {
+  position: absolute;
+  left: clamp(-50px, -3vw, -8px);
+  bottom: clamp(84px, 12vh, 140px);
+  z-index: 2;
+  width: auto;
+  height: clamp(160px, 30vh, 300px);
+  image-rendering: pixelated;
+  opacity: 0.92;
+  filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.5));
+}
+
+.lb-hero-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  height: 38%;
+  background: linear-gradient(180deg, transparent, rgba(3, 6, 10, 0.72) 62%, rgba(3, 6, 10, 0.95));
+}
+
+@keyframes lb-float {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lb-hero-ken {
+    animation: none;
+  }
+}
+
+/* --------------------------------------------------------------- login */
+
+.lb-auth-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  width: 100%;
+  min-height: 100%;
+  padding: calc(14px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right))
+    calc(14px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));
+  overflow: auto;
+}
+
+.lb-auth-brand {
+  width: min(560px, 100%);
+  padding: 2px;
+}
+
+.lb-auth-brand .lb-logo {
+  font-size: clamp(24px, 6vw, 34px);
+}
+
+.lb-auth-brand .lb-subtitle {
+  margin: 4px 0 0;
+}
+
+.lb-auth-panel {
+  width: min(480px, 100%);
+  max-height: none;
+  padding: 22px;
+  background: rgba(7, 13, 23, 0.78);
+  border: 2px solid rgba(18, 127, 142, 0.65);
+  box-shadow:
+    0 22px 70px rgba(0, 0, 0, 0.6),
+    inset 0 0 50px rgba(53, 230, 242, 0.035);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.lb-auth-panel .lb-intro {
+  margin-top: 0;
+}
+
+/* ---------------------------------------------------------------- menu */
+
+.lb-menu-shell {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-top: env(safe-area-inset-top);
+}
+
+.lb-menu-shell .lb-header {
+  flex: none;
+  margin: 0;
+  padding: 10px calc(16px + env(safe-area-inset-right)) 10px calc(16px + env(safe-area-inset-left));
+  background: linear-gradient(180deg, rgba(3, 7, 12, 0.86), rgba(3, 7, 12, 0.25) 70%, transparent);
+  border-bottom: 1px solid rgba(18, 127, 142, 0.22);
+}
+
+.lb-menu-shell .lb-avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+}
+
+.lb-menu-shell .lb-who strong {
+  font-size: 13px;
+}
+
+.lb-menu-shell .lb-badge {
+  padding: 5px 8px;
+  font-size: 10px;
+}
+
+.lb-menu-main {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 0;
+  padding: 12px calc(16px + env(safe-area-inset-right)) 14px
+    calc(16px + env(safe-area-inset-left));
+}
+
+.lb-menu-main.has-sheet {
+  align-items: center;
+  padding-top: 10px;
+}
+
+.lb-panel-play {
+  width: min(560px, 100%);
+  min-height: 0;
+  padding: 0 4px 6px;
+  text-align: center;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+}
+
+.lb-panel-play .lb-play {
+  align-items: center;
+  gap: 6px;
+}
+
+.lb-panel-play .lb-kicker {
+  margin: 0;
+}
+
+.lb-panel-play .lb-level-name {
+  font-size: clamp(22px, 4.2vw, 34px);
+}
+
+.lb-panel-play .lb-desc {
+  max-width: 46ch;
+  font-size: 12px;
+}
+
+.lb-panel-play .lb-best {
+  margin: 0;
+}
+
+.lb-play-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 8px 0 2px;
+}
+
+.lb-panel-play .lb-btn-big {
+  min-width: min(320px, 72vw);
+  padding: 16px 42px;
+  font-size: 20px;
+  letter-spacing: 4px;
+  box-shadow: 0 0 34px rgba(53, 230, 242, 0.35);
+}
+
+.lb-panel-play .lb-btn-ghost {
+  padding: 12px 18px;
+}
+
+.lb-panel-play .lb-install {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top-color: rgba(18, 127, 142, 0.22);
+}
+
+.lb-panel-play .lb-install .lb-note {
+  font-size: 9px;
+}
+
+.lb-panel-sheet {
+  width: min(920px, 100%);
+  min-height: 0;
+  max-height: 100%;
+  padding: 18px;
+  overflow: auto;
+  background: rgba(7, 13, 23, 0.92);
+  border: 2px solid rgba(18, 127, 142, 0.6);
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.lb-menu-shell .lb-tabs {
+  flex: none;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  overflow: visible;
+  background: rgba(4, 8, 14, 0.92);
+  border-top: 2px solid rgba(18, 127, 142, 0.55);
+  border-bottom: none;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.lb-menu-shell .lb-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 12px 6px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #8fb3a6;
+  background: transparent;
+  border: none;
+  border-top: 2px solid transparent;
+  cursor: pointer;
+}
+
+.lb-menu-shell .lb-tab.active {
+  color: var(--cyan);
+  background: linear-gradient(180deg, rgba(53, 230, 242, 0.12), transparent);
+  border-top-color: var(--cyan);
+}
+
+@media (max-width: 640px) {
+  .lb-auth-content {
+    gap: 10px;
+    padding: calc(10px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .lb-auth-brand {
+    text-align: center;
+  }
+
+  .lb-auth-brand .lb-logo {
+    font-size: 26px;
+  }
+
+  /* O botão TELA fica no canto superior direito; o subtítulo longo colidiria
+     com ele no celular. A marca principal continua no hero. */
+  .lb-auth-brand .lb-subtitle {
+    display: none;
+  }
+
+  .lb-auth-panel {
+    width: 100%;
+    padding: 16px;
+  }
+
+  .lb-hero-ken {
+    top: 10vh;
+    height: clamp(170px, 28vh, 260px);
+  }
+
+  .lb-hero-chuchuty {
+    right: -34px;
+    bottom: 30vh;
+    height: clamp(160px, 26vh, 260px);
+  }
+
+  .lb-hero-marcinho {
+    display: none;
+  }
+
+  .lb-hero-wordmark {
+    top: 16vh;
+    font-size: clamp(44px, 16vw, 120px);
+  }
+
+  .lb-hero-glow {
+    bottom: 24%;
+  }
+
+  .lb-menu-shell .lb-header {
+    gap: 10px;
+    padding: 8px 12px;
+  }
+
+  .lb-menu-shell .lb-badge {
+    display: none;
+  }
+
+  .lb-menu-main {
+    padding: 8px 10px 10px;
+  }
+
+  .lb-panel-play .lb-desc {
+    display: none;
+  }
+
+  .lb-panel-play .lb-level-name {
+    font-size: 20px;
+  }
+
+  .lb-panel-play .lb-btn-big {
+    width: 100%;
+    min-width: 0;
+    padding: 14px 24px;
+    font-size: 18px;
+  }
+
+  .lb-play-actions {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .lb-panel-play .lb-btn-ghost {
+    width: 100%;
+  }
+
+  .lb-panel-sheet {
+    padding: 14px;
+  }
+
+  .lb-menu-shell .lb-tab {
+    padding: 11px 4px;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+}
+
+/* Celular deitado: personagens menores para o menu caber na altura. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .lb-hero-ken {
+    top: 6vh;
+    height: 54vh;
+  }
+
+  .lb-hero-chuchuty {
+    bottom: 7vh;
+    height: 62vh;
+  }
+
+  .lb-hero-marcinho {
+    display: none;
+  }
+
+  .lb-panel-play .lb-desc {
+    display: none;
+  }
+
+  .lb-menu-main {
+    padding-top: 4px;
+    padding-bottom: 6px;
+  }
+
+  .lb-panel-play .lb-btn-big {
+    padding: 12px 30px;
+    font-size: 17px;
+  }
+
+  .lb-menu-shell .lb-tab {
+    padding: 8px 6px;
+  }
+}

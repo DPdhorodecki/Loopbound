@@ -1,11 +1,11 @@
 import type { App, WinResult } from '../app';
 import { LEVELS } from '../game/levels';
-import { TUTORIAL_ROOMS } from '../game/tutorial';
 import { persistSave } from '../game/save';
 import { CODE_COLORS, ROMAN } from '../game/types';
 import { ENDING, PROLOGUE, SECTORS, StorySlide, sectorForLevel, speakerName } from '../game/story';
 import { portraitDataUrl } from '../render/portraits';
 import { comicArt, preloadComicArt } from '../render/comic';
+import { HERO_CHUCHUTY, HERO_MARCINHO, kenHeroDataUrl } from '../render/menuArt';
 import { installHint, installState, promptInstall } from '../pwa';
 import * as api from '../net/api';
 
@@ -74,6 +74,7 @@ export class Shell {
     this.storyEl = h('div', { class: 'lb-screen lb-story hidden' });
     this.root.append(this.authEl, this.menuEl, this.winEl, this.pauseEl, this.codeEl, this.storyEl);
     document.body.append(this.root);
+    this.watchOverlays();
 
     app.onWin = (result) => this.handleWin(result);
     app.onRequestMenu = () => this.openMenu();
@@ -88,6 +89,37 @@ export class Shell {
   }
 
   // ---------------------------------------------------------------- fluxo
+
+  /**
+   * A barra de toque só serve durante o jogo. Quando qualquer tela DOM
+   * (login, menu, história, pausa...) está aberta, ela é escondida para o
+   * menu ocupar a tela inteira.
+   */
+  private watchOverlays(): void {
+    const screens = [this.authEl, this.menuEl, this.winEl, this.pauseEl, this.codeEl, this.storyEl];
+    const sync = () => {
+      const open = screens.some((el) => !el.classList.contains('hidden'));
+      document.body.classList.toggle('overlay-open', open);
+    };
+    const observer = new MutationObserver(sync);
+    for (const el of screens) observer.observe(el, { attributes: true, attributeFilter: ['class'] });
+    sync();
+  }
+
+  /** Fundo em tela cheia do login/menu com os personagens do jogo. */
+  private heroLayer(): HTMLElement {
+    const hero = h('div', { class: 'lb-hero', 'aria-hidden': 'true' });
+    hero.append(
+      h('div', { class: 'lb-hero-stars' }),
+      h('div', { class: 'lb-hero-wordmark', text: 'LOOPBOUND' }),
+      h('div', { class: 'lb-hero-glow' }),
+      h('img', { class: 'lb-hero-marcinho', src: HERO_MARCINHO, alt: '' }),
+      h('img', { class: 'lb-hero-chuchuty', src: HERO_CHUCHUTY, alt: '' }),
+      h('img', { class: 'lb-hero-ken', src: kenHeroDataUrl(), alt: '' }),
+      h('div', { class: 'lb-hero-fade' }),
+    );
+    return hero;
+  }
 
   private async boot(): Promise<void> {
     if (api.getToken()) {
@@ -140,7 +172,7 @@ export class Shell {
     this.app.menuOpen = true;
     this.menuEl.classList.add('hidden');
     this.authEl.classList.remove('hidden');
-    this.authEl.replaceChildren(this.authCard());
+    this.authEl.replaceChildren(this.heroLayer(), this.authCard());
   }
 
   private openMenu(): void {
@@ -740,16 +772,24 @@ export class Shell {
 
     return h(
       'div',
-      { class: 'lb-card' },
-      h('h1', { class: 'lb-logo', text: 'LOOPBOUND' }),
-      h('p', { class: 'lb-subtitle', text: 'KENNEDYTO — A FUGA DA INSTALAÇÃO ALIENÍGENA' }),
-      h('p', {
-        class: 'lb-intro',
-        text: 'Entre para salvar o seu progresso. O General Marcinho está na frequência de emergência — e o Chuchuty está ouvindo.',
-      }),
-      form,
-      error,
-      this.installBlock(),
+      { class: 'lb-auth-content' },
+      h(
+        'div',
+        { class: 'lb-auth-brand' },
+        h('h1', { class: 'lb-logo', text: 'LOOPBOUND' }),
+        h('p', { class: 'lb-subtitle', text: 'KENNEDYTO — A FUGA DA INSTALAÇÃO ALIENÍGENA' }),
+      ),
+      h(
+        'div',
+        { class: 'lb-card lb-auth-panel' },
+        h('p', {
+          class: 'lb-intro',
+          text: 'Entre para salvar o seu progresso. O General Marcinho está na frequência de emergência — e o Chuchuty está ouvindo.',
+        }),
+        form,
+        error,
+        this.installBlock(),
+      ),
     );
   }
 
@@ -829,14 +869,29 @@ export class Shell {
       ),
     );
 
-    const panel = h('section', { class: 'lb-panel' });
+    const panel = h('section', {
+      class: `lb-panel ${this.tab === 'jogar' ? 'lb-panel-play' : 'lb-panel-sheet'}`,
+    });
     if (this.tab === 'jogar') panel.append(this.panelPlay());
     else if (this.tab === 'fases') panel.append(this.panelLevels());
     else if (this.tab === 'historia') panel.append(this.panelStory());
     else if (this.tab === 'historico') panel.append(this.panelHistory());
     else panel.append(this.panelProfile());
 
-    this.menuEl.replaceChildren(h('div', { class: 'lb-card lb-card-wide' }, header, tabRow, panel));
+    this.menuEl.replaceChildren(
+      this.heroLayer(),
+      h(
+        'div',
+        { class: 'lb-menu-shell' },
+        header,
+        h(
+          'main',
+          { class: `lb-menu-main${this.tab === 'jogar' ? '' : ' has-sheet'}` },
+          panel,
+        ),
+        tabRow,
+      ),
+    );
   }
 
   private bestCount(): number {
@@ -861,7 +916,7 @@ export class Shell {
       }),
       h(
         'div',
-        { class: 'lb-actions' },
+        { class: 'lb-actions lb-play-actions' },
         h('button', {
           class: 'lb-btn lb-btn-big',
           text: 'JOGAR',
@@ -873,10 +928,6 @@ export class Shell {
           onclick: () => this.startTutorial(),
         }),
       ),
-      h('p', {
-        class: 'lb-note',
-        text: `${TUTORIAL_ROOMS.length} salas de tutorial ensinam andar, empurrar, eco, chave, alavanca, botão, duto e código.`,
-      }),
     );
     const install = this.installBlock();
     if (install) box.append(install);

@@ -84,6 +84,10 @@ O jogo é mobile-first: em **retrato** o canvas ocupa a largura e uma barra de
 toque fixa (D-pad + `TAB`, `E`, `Z`, `?`, tampa e pausa) fica ao alcance dos
 polegares; em **paisagem** a barra some e valem o HUD do canvas e o swipe.
 
+- **Login e menu em tela cheia:** o fundo é uma cena com Kennedyto, Chuchuty e
+  General Marcinho sobre um título gigante, e o CTA **JOGAR** fica integrado ao
+  hero. As abas (JOGAR/FASES/HISTÓRIA/HISTÓRICO/PERFIL) viram uma barra fixa no
+  rodapé; a barra de toque do jogo é escondida enquanto uma tela DOM está aberta.
 - `body.touch` é ligado quando o aparelho tem toque (`pointer: coarse` ou
   `maxTouchPoints`); a altura real da barra vira a variável CSS `--touch-h`,
   usada para posicionar botões flutuantes (atualizar/instalar).
@@ -106,7 +110,7 @@ polegares; em **paisagem** a barra some e valem o HUD do canvas e o swipe.
 - **p5.js** para render e loop (canvas virtual 640×360, zoom 2× com escala inteira).
 - **TypeScript puro** para as regras: sem canvas, testável no Node.
 - **Vite** + **vite-plugin-pwa** (Workbox) para build e offline.
-- **UI em HTML/CSS** (login e menu em abas) por cima do canvas.
+- **UI em HTML/CSS** (login e menu em abas, em tela cheia sobre a arte dos personagens).
 - **Node + Express + `pg` + Zod** no backend, com **PostgreSQL** (login, progresso e histórico).
 - **Vitest**: 261 testes — regras, invariantes de design (nenhuma fase tem caminho livre; nenhuma solução estoura o ciclo), senha sorteada por fase, diversidade das fases, layout das salas, narrativa/história, escalada de dicas, auditoria de mecânicas (nenhuma órfã ou decorativa) e replays.
 - Sprites em mapas de caracteres, fonte bitmap 3×5 própria, áudio sintetizado — **zero assets binários** (só os PNGs de ícone gerados no build).
